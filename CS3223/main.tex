@@ -284,25 +284,55 @@
 
 \textbf{Dynamic Hashing - Extendible Hashing}
 \begin{itemize}
+  \item No overflow pages! A bucket can be thought of as a page
+  \item At most 2 Disk I/Os for equality search (at most 1 if directory and bucket fits in memory)
   \item Instead of maintaining data entries, we maintain pointers to data entries in buckets
   \item Instead of maintaining buckets, maintain a directory of pointers to buckets
-  \item The directory has $2^d$ buckets, where d is the global depth
+  \item The directory has $2^d$ buckets, where d is the global depth --> large overhead if hashing is uniform
   \item Each director entry diffets by a unique d-bit adddress
   \item Two directories are corresponding iff their addresses differ only in the dth bit
   \item All entries with the same local depth (l) have the same last l bits in h(k)
 \end{itemize}
 
+\includegraphics[width=7cm, height=4cm]{extendible_hash.png}
 \textbf{Extendible Hashing - Split, Double}
 \begin{itemize}
   \item Split and doubling is checked every time a bucket is full 
   \item Doubling only happens if local depth = global depth
   \item The split image has the same depth as the split bucket
+  \item Other than the split image of the split bucket, split image of other buckets points to the same corresponding bucket
+  \item Each bucket is pointed by $2^(d-l)$ directories
+\end{itemize}
+
+\textbf{Extendible Hashing - Deletion}
+\begin{itemize}
+  \item $B_i$ is deallocated
+  \item l decrement by 1
+  \item Directory Entries that point to $B_i$ points to its corresponding bucket
 \end{itemize}
 
 \textbf{Dynamic Hashing - Linear Hashing}
+\includegraphics[width=7cm, height=4cm]{linear_hash.png}  
 \begin{itemize}
+  \item One I/O for equality search (more per number of overflow pages in bucket)
   \item Performs worse than extendible hashing if distribution is skewed
   \item Does not require a directory
+  \item Higher average space utilisation, but longer overflow chains
+  \item Has a family of hash functions, with each having a range twice of its predecessor
+  \item $N_0$: initial number of buckets
+  \item $N_i = 2^i N_0$: number of buckets at start of round i
+  \item $next$: the next bucket to be split, this is incremented every time split happnes
+  \item $h_i=h(k) mod N_{i}$: hash function for round i, if the bucket $\leq$ next (already split)
+  \item $h_{i+1}=h(k) mod N_{i+1}$: hash function for round i+1, if the bucket $>$ next
+  \item Split Citeria: By default, split when a bucket overflows
+\end{itemize}
+
+\textbf{Linear Hashing - Deletion}
+\begin{itemize}
+  \item Essentially the inverse of insertion
+  \item If the last bucket is empty --> delete it and decrement $next$ by 1
+  \item If $next$ is 0, set it to $M/2 - 1$, and we can decrement level by 1 (half of buckets have been deleted if $next$ is 0)
+  \item Merging with corresponding bucket is optional
 \end{itemize}
 
 \end{multicols}
