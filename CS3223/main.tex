@@ -194,6 +194,116 @@
 \end{itemize}
 
 
+\section{L2 - Indexing}
+\begin{itemize}
+  \item A search key is a sequence of k attributes. If k > 1, composite key
+  \item A search key is an unique index if it is a candidate key
+  \item An index is stored as a file
+\end{itemize}
+
+\textbf{Format of data entries}
+\begin{itemize}
+  \item Format 1: k* is an actual data record with search value k
+  \item Format 2: k* is the form (k, rid)
+  \item Format 3: k* is the form (k, rid-list*)
+  \item Note: Different formats affects the number of data entries stored in a page
+\end{itemize}
+
+\textbf{Clustered Vs Unclustered}
+\begin{itemize}
+  \item \textcolor{red}{Clustered}: Order of data entries is the same as the oreder of data records. Can only be built on ordered field (e.g. primary key)
+  \item \textcolor{green}{Unclustered}: Order of data entries does not correspond to the order of data records
+  \item The implication is that we can read an entire clustered page with 1 I/O
+  \item  B+ Tree: Format 1 is clustered, Format 2 and 3 can be clustered if data records are sorted on the search key
+  \item Hash: Only format 1 is clustered since hashing do not store data entries in search key order
+\end{itemize}
+
+\textbf{Tree Based Index - B+ Tree}
+\begin{itemize}
+  \item Leaf nodes are doubly linked and store Data Entries
+  \item Internal nodes sotre index entries (p0, k, p1 ... pk, k, pk+1)
+  \item Internal nodes contains m entries,  m $\in$ [d, 2d] $\rightarrow$ space utilisation $\geq$ 50\%
+  \item Root contains m entries, m $\in$ [1, 2d]
+\end{itemize}
+
+\textbf{B+ Tree - Split Overflow Nodes}
+\includegraphics[width=7cm, height=4cm]{split_overflow_node.png}
+\begin{itemize}
+  \item Distribute d+1 entries to the new leaf node
+  \item Create new entry index using smallest key in the new node (middle key)
+  \item Insert new entry into parent node of overflowed node
+\end{itemize}
+
+\textbf{B+ Tree - Overflow Propagation}
+\newline
+5 is pushed up
+\includegraphics[width=7cm, height=4cm]{overflow_progpagation1.png}
+17 is pushed up
+\includegraphics[width=7cm, height=4cm]{overflow_progpagation2.png}
+
+\begin{itemize}
+  \item Excess middle node is pushed updated to parent node
+\end{itemize}
+
+\textbf{B+ Tree - Redistribution of data entries}
+\begin{itemize}
+  \item Two nodes are siblings if they have the same parent node
+\end{itemize}
+\includegraphics[width=7cm, height=4cm]{overflow_redistribution.png}
+
+\textbf{B+ Tree - Underflow}
+\begin{itemize}
+  \item Underflow occurs when a node has less than d entries
+  \item Underflow is resolved by redistributing entries between siblings
+  \item An underflow node is merged if each of its adjacent siblings have exactly d entries
+\end{itemize}
+
+\includegraphics[width=7cm, height=2cm]{merge_nodes.png}
+\includegraphics[width=7cm, height=2cm]{merge_parent.png}
+
+\textbf{B+ Tree - Bulk Loading}
+\begin{itemize}
+  \item Initiazing a B+ tree by insertion is expensive (need to traverse tree n times)
+  \item 1. Sort all data entries by search key
+  \item 2. Initialise B+ tree with an empty root page
+  \item 3. Load data entries into leaf pages 
+  \item 4. In asc order, insert the index entry of each leaf page into the rightmost parent node
+\end{itemize}
+
+
+\textbf{Hash Based Index}
+\begin{itemize}
+  \item Does not support range search, only equality queries
+\end{itemize}
+
+\textbf{Static Hashing}
+\begin{itemize}
+  \item N buckets, each bucket has 1 primary page and $\geq$ 0 overflow pages
+  \item To maintain performance, we need to routinely construct bigger hash tables and redistribute data entries
+\end{itemize}
+
+\textbf{Dynamic Hashing - Extendible Hashing}
+\begin{itemize}
+  \item Instead of maintaining data entries, we maintain pointers to data entries in buckets
+  \item Instead of maintaining buckets, maintain a directory of pointers to buckets
+  \item The directory has $2^d$ buckets, where d is the global depth
+  \item Each director entry diffets by a unique d-bit adddress
+  \item Two directories are corresponding iff their addresses differ only in the dth bit
+  \item All entries with the same local depth (l) have the same last l bits in h(k)
+\end{itemize}
+
+\textbf{Extendible Hashing - Split, Double}
+\begin{itemize}
+  \item Split and doubling is checked every time a bucket is full 
+  \item Doubling only happens if local depth = global depth
+  \item The split image has the same depth as the split bucket
+\end{itemize}
+
+\textbf{Dynamic Hashing - Linear Hashing}
+\begin{itemize}
+  \item Performs worse than extendible hashing if distribution is skewed
+  \item Does not require a directory
+\end{itemize}
 
 \end{multicols}
 \end{document}
