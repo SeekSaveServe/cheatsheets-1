@@ -194,7 +194,7 @@
 \end{itemize}
 
 
-\section{L2 - Indexing}
+\section{L2 And L3 - Indexing}
 \begin{itemize}
   \item A search key is a sequence of k attributes. If k > 1, composite key
   \item A search key is an unique index if it is a candidate key
@@ -333,6 +333,112 @@
   \item If the last bucket is empty --> delete it and decrement $next$ by 1
   \item If $next$ is 0, set it to $M/2 - 1$, and we can decrement level by 1 (half of buckets have been deleted if $next$ is 0)
   \item Merging with corresponding bucket is optional
+\end{itemize}
+
+\section{L4: Query Evaluation - Sort, Select}
+\textbf{Sorting - External Merge Sort}
+\newline
+Projection, join, bulk loading etc all require sorting
+
+\includegraphics[width=7cm, height=4cm]{ext_sort.png}
+
+\textbf{External Merge Sort - Bocked I/O}
+\begin{itemize}
+  \item Read and write in blocks of \textbf{b} buffer pages (replace b with 1 for unoptimised)
+  \item $\floor{\frac{B-b}{b}}$ blocks for input, 1 block for output
+  \item Can merge at most $\floor{\frac{B-b}{b}}$ sorted runs in each merge pass
+  \item $F=\floor{\frac{B}{b}} - 1$ runs can be merged at each pass
+  \item Num passes = $\log_{F} N_0$
+\end{itemize}
+
+\textbf{B+ tree sort}
+\begin{itemize}
+  \item B+ Tree is sorted by key
+  \item Format 1 (clustered): Sequential Scan 
+  \item Format 2/3:Retrieve data using RID for each data entry 
+  \item Unclustered implies more I/Os
+\end{itemize}
+
+\textbf{Access Path} refers to the different ways to retrieve tuples from a relation. It is either a \textcolor{red}{file scan} or a \textcolor{green}{index plus matching selection condition}. The more \textbf{selective} the access paths, the fewer pages are read from the disk.
+\begin{itemize}
+  \item Table scan: scan all data pages 
+  \item Index scan: scan all index pages 
+  \item Table intersection: combine results from multiple index scans (union, intersec). Find RIDs of each predicate and get the intersection
+\end{itemize}
+
+\textbf{Query: Selection}
+\textbf{Covering Index}
+\begin{itemize}
+  \item I is a covering index for query Q if I contains all attributes of Q
+  \item No RID lookup is needed
+  \item Index-only plan
+  \item If data is unclustered, unsorted, no index -> best way is to collect all entries and sort by RID before doing I/O 
+\end{itemize}
+
+\textbf{CNF Predicate}
+\begin{itemize}
+  \item Find RIDs of each predicate and get the intersection
+  \item Conjuncts are in the form (R.A op c V R.a op R.b) 
+  \item CNF are conjuncts (or terms) connected by $\land$ 
+\end{itemize}
+
+\textbf{Matching Predicates - B+ Tree}
+\begin{itemize}
+  \item Non-disjunctive CNF (no $\lor$)
+  \item At most one non-equality comparison operator which must be on the \textbf{last attribute in the CNF}
+  \item $(k_1=c_1) \land (k_2=c_2) \land ...k_i op c_i | I=(k_1, k_2...k_n)$ 
+  \item The order of k matters, and there cannot be missing $K_i$ in the middle of the CNF
+  \item Having inequality operator before equality operator makes the query to be less selective 
+\end{itemize}
+
+\textbf{Matching Predicates - Hasing}
+\begin{itemize}
+  \item No inequality operators $(k_1=c_1) \land ... k_i =c_n | I=(k_1, k_2...k_n)$
+  \item Unlike B+ tree, \textbf{all predicates must match}
+\end{itemize}
+
+I=(age, weight, height), p=($age \geq 20 \land age \geq 18 weight=50 \land height=150 \land level=3$) \newline
+\textbf{Primary Conjuncts} : The subset of conjuncts in p that I matches \newline
+Primary Conjuncts: $age \geq 20 \land age \geq 18$ \newline
+\textbf{Covered Conjuncts} : The subset of conjuncts in p that I covers (conjuncts that appear in I). Primary conjunct $\subseteq$ covered conjunct \newline
+Covered Conjuncts: $age \geq 20 \land age \geq 18 \land height=150$ \newline
+
+\textbf{Cost Notation}  \newline
+\includegraphics[width=5cm, height=3cm]{notation.png}
+
+\textbf{Cost of B+-tree index evaluation of p} \newline
+Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
+\begin{itemize}
+  \item[1.] Navigate internal nodes to locate the first leaf page
+  $$
+  Cost_{internal} = \left\{
+    \begin{array}{ll}
+        \ceil{log_F(\ceil{\frac{||R||}{b_d}})} | Format 1 \\
+        \ceil{log_F(\ceil{\frac{||R||}{b_i}})} | Otherwise
+    \end{array}
+\right.
+  $$ \newline
+  \item[1.1] This is traversing the height of B+ tree
+  \item[2.] Scan leaf pages to access all qualifying data entries
+  $$
+  Cost_{leaf} = \left\{
+    \begin{array}{ll}
+        \ceil{\ceil{\frac{||\sigma_{p'}(R)||}{b_d}}} | Format 1 \\
+        \ceil{\ceil{\frac{||\sigma_{p'}(R)||}{b_i}}} | Otherwise
+    \end{array}
+\right.
+  $$ \newline
+  \item[2.1] This is the cost of reading qualifying conjuncts
+  \item[2.2] Using $p_c$ would be wrong since covering conjuncts may be non-matching which results in more reads from the leaves 
+  \item[3] Retrieve qualified data records using RID lookups. 0 if I is covering OR format 1 index. $||\sigma_{p_c}(R)||$ otherwise
+  \item[] \includegraphics[width=5cm, height=1.3cm]{optimisation.png}
+\end{itemize}
+
+\textbf{Cost of Hash index evaluation of p}
+\begin{itemize}
+  \item Format 1: cost to retrieve \textbf{data entries} is at least$\ceil{\frac{||\sigma_{p'}(R)||}{b_d}}$
+  \item Format 2: cost to retrieve \textbf{data entries} is at least $\ceil{\frac{||\sigma_{p'}(R)||}{b_i}}$
+  \item Format 2: Cost to retrieve \textbf{data records} is 0 if it is a covering index (all information in data entry) OR $||\sigma_{p'}(R)||$ otherwise
 \end{itemize}
 
 \end{multicols}
