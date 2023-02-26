@@ -131,8 +131,8 @@
     }
 \end{center}
 
-\section{L1 - Data Storage}
-\subsection{Magnetic Disks}
+\subsection{L1 - Data Storage}
+\textbf{Magnetic Disks} \newline
 
 \includegraphics[width=3.5cm, height =2cm]{magnetic_disk.png}
 
@@ -143,7 +143,7 @@
     \item \textbf{Transfer Time} sectors on the same track * $\tfrac{Time Per Revolution}{Sectors Per Track}$
 \end{itemize}
 
-\subsection{Buffer Manager}
+\textbf{Buffer Manager}
 \begin{itemize}
   \item \textbf{Buffer pool} Main memory allocated for DBMS
   \item \textbf{pin count} is incremented upon pinning
@@ -151,9 +151,9 @@
   \item \textbf Replacement is only possbile if pin count == 0 
 \end{itemize}
 
-\includegraphics[width=5cm, height =3.5cm]{buff_manager_handle_request.png}
+\includegraphics[width=5cm, height =3cm]{buff_manager_handle_request.png}
 
-\subsection{Replacement Policies}
+\textbf{Replacement Policies}
 \textbf{LRU Policy}
 \begin{itemize}
   \item Maintains a queue of pointers to frames with pin count = 0
@@ -161,15 +161,15 @@
 
 
 \textbf{Clock Replacement Policy}
-\includegraphics*[width=5cm, height=3.5cm]{clock.png}
+\includegraphics*[width=5cm, height=3cm]{clock.png}
 \begin{itemize}
   \item Simplifies LRU with a second chance round robin system
   \item Each frame has a \textcolor{red}{reference bit} that is turned on when pin count reaches 0
   \item Repalces a page when referenced bit if off and pin count is 0
 \end{itemize}
 
-\subsection{File Organisation}
-\includegraphics*[width=7cm, height=4cm]{heap_file.png}
+\textbf{File Organisation}
+\includegraphics*[width=7cm, height=3cm]{heap_file.png}
 
 \textbf{Page Formats: Fixed Length Records}
 \begin{itemize}
@@ -177,7 +177,7 @@
   \item \textbf{Unpacked Organisation} Uses a bit array to maintain free slots
 \end{itemize}
 
-\includegraphics*[width=7cm, height=4cm]{page_org.png}
+\includegraphics*[width=5cm, height=2.5cm]{page_org.png}
 
 
 \textbf{Page Formats: Slotted Page (variable length record)}
@@ -186,15 +186,17 @@
   \item Record Offset: Offset of the record from the start of the page
 \end{itemize}
 
-\includegraphics*[width=7cm, height=4cm]{slot_page.png}
+\begin{multicols}{2}
+  \begin{itemize}
+    \item \includegraphics[width=3.5cm, height=2cm]{var_record.png}
+  \end{itemize}  
+  \begin{itemize}
+    \item \includegraphics*[width=4cm, height=3cm]{slot_page.png}
+  \end{itemize}
+\end{multicols}
 
-\textbf{Record Formats}
-\begin{itemize}
-  \item \includegraphics[width=3.5cm, height=2cm]{var_record.png}
-\end{itemize}
 
-
-\section{L2 And L3 - Indexing}
+\subsection{L2 And L3 - Indexing}
 \begin{itemize}
   \item A search key is a sequence of k attributes. If k > 1, composite key
   \item A search key is an unique index if it is a candidate key
@@ -227,12 +229,12 @@
 \end{itemize}
 
 \textbf{B+ Tree - Split Overflow Nodes}
-\includegraphics[width=7cm, height=4cm]{split_overflow_node.png}
 \begin{itemize}
   \item Distribute d+1 entries to the new leaf node
   \item Create new entry index using smallest key in the new node (middle key)
   \item Insert new entry into parent node of overflowed node
 \end{itemize}
+\includegraphics[width=7cm, height=4cm]{split_overflow_node.png}
 
 \textbf{B+ Tree - Overflow Propagation}
 \newline
@@ -240,16 +242,13 @@
 \includegraphics[width=7cm, height=4cm]{overflow_progpagation1.png}
 17 is pushed up
 \includegraphics[width=7cm, height=4cm]{overflow_progpagation2.png}
+Excess middle node is pushed updated to parent node \newline
 
-\begin{itemize}
-  \item Excess middle node is pushed updated to parent node
-\end{itemize}
 
-\textbf{B+ Tree - Redistribution of data entries}
-\begin{itemize}
-  \item Two nodes are siblings if they have the same parent node
-\end{itemize}
-\includegraphics[width=7cm, height=4cm]{overflow_redistribution.png}
+\textbf{B+ Tree - Redistribution of data entries} \newline
+Two nodes are siblings if they have the same parent node \newline
+
+\includegraphics[width=7cm, height=3cm]{overflow_redistribution.png}
 
 \textbf{B+ Tree - Underflow}
 \begin{itemize}
@@ -330,12 +329,12 @@
 \textbf{Linear Hashing - Deletion}
 \begin{itemize}
   \item Essentially the inverse of insertion
-  \item If the last bucket is empty --> delete it and decrement $next$ by 1
+  \item If the last bucket is empty $\rightarrow$ delete it,  $next$--
   \item If $next$ is 0, set it to $M/2 - 1$, and we can decrement level by 1 (half of buckets have been deleted if $next$ is 0)
   \item Merging with corresponding bucket is optional
 \end{itemize}
 
-\section{L4: Query Evaluation - Sort, Select}
+\subsection{L4: Query Evaluation - Sort, Select}
 \textbf{Sorting - External Merge Sort}
 \newline
 Projection, join, bulk loading etc all require sorting
@@ -359,7 +358,7 @@ Projection, join, bulk loading etc all require sorting
   \item Unclustered implies more I/Os
 \end{itemize}
 
-\textbf{Access Path} refers to the different ways to retrieve tuples from a relation. It is either a \textcolor{red}{file scan} or a \textcolor{green}{index plus matching selection condition}. The more \textbf{selective} the access paths, the fewer pages are read from the disk.
+\textbf{Access Path} refers to the different ways to retrieve tuples from a relation. It is either a \textbf{\textcolor{red}{file scan}} or a \textbf{\textcolor{green}{index plus matching selection condition}}. The more \textbf{selective} the access paths, the fewer pages are read from the disk.
 \begin{itemize}
   \item Table scan: scan all data pages 
   \item Index scan: scan all index pages 
@@ -369,9 +368,8 @@ Projection, join, bulk loading etc all require sorting
 \textbf{Query: Selection}
 \textbf{Covering Index}
 \begin{itemize}
-  \item I is a covering index for query Q if I contains all attributes of Q
-  \item No RID lookup is needed
-  \item Index-only plan
+  \item I is a covering index of $query_Q$ if I contains all attributes of Q
+  \item No RID lookup is needed, Index-only plan
   \item If data is unclustered, unsorted, no index -> best way is to collect all entries and sort by RID before doing I/O 
 \end{itemize}
 
@@ -423,8 +421,8 @@ Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
   $$
   Cost_{leaf} = \left\{
     \begin{array}{ll}
-        \ceil{\ceil{\frac{||\sigma_{p'}(R)||}{b_d}}} | Format 1 \\
-        \ceil{\ceil{\frac{||\sigma_{p'}(R)||}{b_i}}} | Otherwise
+        {\ceil{\frac{||\sigma_{p'}(R)||}{b_d}}} | Format 1 \\
+        {\ceil{\frac{||\sigma_{p'}(R)||}{b_i}}} | Otherwise
     \end{array}
 \right.
   $$ \newline
@@ -440,6 +438,89 @@ Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
   \item Format 2: cost to retrieve \textbf{data entries} is at least $\ceil{\frac{||\sigma_{p'}(R)||}{b_i}}$
   \item Format 2: Cost to retrieve \textbf{data records} is 0 if it is a covering index (all information in data entry) OR $||\sigma_{p'}(R)||$ otherwise
 \end{itemize}
+
+\subsection{L5:Query Evaluation - Projection and Join}
+\begin{itemize}
+  \item $\pi^*(R)$ refers to projection without removing duplicates
+  \item $\pi(R)$ involves 1.Removing unwanted attributes 2. Removing duplicates
+  \item Sorting is better if we have many duplicates or if hte distribution is nonuniform(overflow more likely for hashing paritions)
+  \item Sorting allows results to be sorted
+  \item If $B > \sqrt{|\pi^*_L(R)|}$, then both sorting and hashing has similar I/O costs ($\ceil{\frac{\ceil{R}}{B}} \rightarrow |R| + 2*|\pi^*_L(R)|$)
+\end{itemize}
+
+\textbf{Approach 1: project based on sorting}
+\begin{itemize}
+  \item \textbf{\color{red}{Naive}}: Extract attributes L from records $\rightarrow\pi^*_L(R) \rightarrow$ Sort attributes $\rightarrow$ Remove duplicates
+  \item Cost: Cost to scan records ($|R|$) + Cost to output to temporary result ($|\pi^*_L(R)|$) $\rightarrow$ cost to sort records ($2|\pi^*_L(R)|\log_m(N_0)+1$) $\rightarrow$ Cost to scan data records $|\pi^*_L(R)|$
+  \item \textbf{\color{green}{Optimisation}}: Create Sorted runs with attributes L only (Pass 0) $\rightarrow$ Merge sorted runs and remove duplicates $\rightarrow$ $\pi_L(R)$ 
+\end{itemize}
+
+\textbf{Approach 2: project based on hashing}
+\begin{itemize}
+  \item Build a main-memory hash table to detect and remove duplicates. Insert to the hashtable if then entry is not already in it.
+  \item 1. Partition R into $R_1, R_2...R_{B-1}$, hash on $\pi_L(t)$ for $t \in R$ $\leftarrow$ ($\pi^*_L(R_i)$ does not intersect $\pi^*_L(R_j), i!=j$)
+  \item[1.1] Use 1 buffer for input and (B-1) for output
+  \item[1.2] Read R 1 page at a time, and hash tuples into B-1 partitions
+  \item[1.3] Flush output buffer to disk when full  
+  \item 2. Eliminate duplicates in each partition $\pi^*_L(R_i)$
+  \item $\pi_L(R)=\cup^{B-1}_i(\pi_L(R_i))$
+  \item[2.1] For each partition, Initialise an in-memory hash table and insert each tuple into $B_j$ if $t \notin B_j$
+\end{itemize}
+\textbf{Parition overflow:} Hash table $\pi^*_L(R_i)$ is larger than available memory buffers. \newline
+\textbf{Solution:} Recursively apply hash-based partitioning to overflowed partitions. \newline
+\textbf{Analysis:} Effective (no overflow) when B $ > \frac{|\pi^*_L(R)|}{B-1} * f \approx \sqrt{f * \pi^*_L(R)|}$ \newline
+If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)$|\pi^*_L(R)|$ \newline
+\textbf{Index based projection:} Do index scan if the wanted attribtues $\subseteq$ search key\newline
+
+\textbf{Join} $R \Join_\theta S$, where R is the outer relation and S is the inner relation
+
+\begin{multicols}{2}
+
+    \begin{itemize}
+      \item \textbf{Tuple-based} \newline
+      \begin{itemize}
+        \item Cost: $|R| + ||R||*|S|$
+        \item for each tuple r in R 
+        \item for each tuple s in S 
+        \item if (r matches s) then output $(r,s)$4 to result
+      \end{itemize}
+
+      \item \textbf{Page-based} \newline
+      \begin{itemize}
+        \item Load $P_R$ and $P_S$ to main memory
+        \item Cost: $|R| + |R|*|S|$
+        \item for each page $P_R$ in R 
+        \item for each page $P_S$ in S
+        \item for each tuple $r \in P_R$
+        \item for each tuple $s \in P_S$ 
+        \item if (r matches s) then output $(r,s)$4 to result
+      \end{itemize}
+
+
+      \item \textbf{Block-based} \newline
+      \begin{itemize}
+        \item Allocate 1 page for S, 1 for output, B-2 for R $|R| \le |S|$
+        \item Cost:  $|R| + (\ceil{\frac{|R|}B-2{}} * |S|)$
+        \item while Scanning R
+        \item read next (B-2) pages of R to buffer
+        \item for $P_S$ in S
+        \item read $P_S$ into Buffer
+        \item for $r \in buffer \land s \in P_S$
+        \item if (r matches s) then output $(r,s)$4 to result
+      \end{itemize}
+
+      \item \textbf{Index Nested Loop Join} \newline
+      \begin{itemize}
+        \item There is an index on the join attributes of S
+        \item Uniform distribution: r joins $\ceil{\frac{||S||}{||\pi_{B_j}(S)||}}$ tuples in S
+        \item format 1 B+Tree:$R + ||R|| * J$
+        \item J = $\log_F(\ceil{\frac{||S||}{b_d}})$ (tree traversal)+$\ceil{\frac{||S||}{b_d||\pi_{B_j}(S)||}}$ (search leaf nodes)
+        \item Cost:  $\land |R| + (\ceil{\frac{|R|}B-2{}} * |S|)$
+        \item for $r \in R$ 
+        \item use r to probe S's index to find matching tuples
+      \end{itemize}
+    \end{itemize}
+\end{multicols}
 
 \end{multicols}
 \end{document}
