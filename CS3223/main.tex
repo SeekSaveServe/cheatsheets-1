@@ -515,7 +515,6 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item Uniform distribution: r joins $\ceil{\frac{||S||}{||\pi_{B_j}(S)||}}$ tuples in S
         \item format 1 B+Tree:$R + ||R|| * J$
         \item J = $\log_F(\ceil{\frac{||S||}{b_d}})$ (tree traversal)+$\ceil{\frac{||S||}{b_d||\pi_{B_j}(S)||}}$ (search leaf nodes)
-        \item Cost:  $\land |R| + (\ceil{\frac{|R|}B-2{}} * |S|)$
         \item for $r \in R$ 
         \item use r to probe S's index to find matching tuples
       \end{itemize}
