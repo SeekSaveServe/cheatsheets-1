@@ -186,7 +186,7 @@ Selection of r objects out of n. Order is not considered. $C^n_r=C^n_{n-r}$\newl
 $P(A\cap B)=P(B)P(A|B)$ if $P(B)!=0$ \newline
 \textbf{Inverse Probability Formula:} $P(A|B)=\frac{P(B|A)P(A)}{P(B)}$ \newline
 \textbf{Indepenence} $A\bot B iff P(A \cap B)=P(A)P(B)$ This implies $P(A|B)=P(A) \text{ and } P(B|A)=P(B)$ \newline
-\textbf{Partition} $A_1,A_2...A_r {are mutually exclusive and} \sum_{i=1}^{n}A_i=S$ \newline
+\textbf{Partition} $A_1,A_2...A_r$ are mutually exclusive and $\sum_{i=1}^{n}A_i=S$ \newline
 
 \includegraphics[width=7cm, height=3cm]{lotp.png}
 $P(B)=P(A)P(B|A)+P(A')P(B|A')$ \newline
@@ -203,12 +203,70 @@ Lowercase letters denote observed values of random variables \newline
 \includegraphics[width=7cm, height=3cm]{pmf_properties.png}
 \includegraphics[width=7cm, height=3cm]{pdf.png} \newline
 note: $P(a<X<b) = P(a\le X \le B)$ \newline
-To chcek that a function is a PDF, chcek conditions 1 and 2 \newline
+To check that a function is a PDF, chcek conditions 1 and 2 \newline
 
-\textbf{Cumulative Distribution Function:} $F(x)=P(X\le x)$ \newline
+\textbf{Cumulative Distribution Function:} $F(x)=P(X\le x)$ and $P(a \le b) = P(X \le b) - P(X \le a) = F(b) - F(a-)$ \newline
+
+\textbf{Deriving CDF from probability distribution} \newline
+\includegraphics[width=7cm, height=2.3cm]{pf_cdf.png}
 
 
+\textbf{Deriving probability distribution from cdf} \newline
+\begin{multicols*}{2}
+  \begin{itemize}
+    \item[] \includegraphics[width=3cm, height=2cm]{cdf_pf.png}
+    \begin{itemize}
+      \item f(1)=P(X=0)=F(0)-F(0-)=$\frac{1}{4}$-0=$\frac{1}{4}$
+      \item f(2)=P(X=1)=F(1)-F(1-)=$\frac{3}{4}$-$\frac{1}{4}$=$\frac{1}{2}$
+      \item f(3)=P(X=2)=F(2)-F(2-)=1-$\frac{3}{4}$=$\frac{1}{4}$
+    \end{itemize}
+  \end{itemize}
+\end{multicols*}
 
-\textbf{}
+\textbf{CDF - Continuous Random Variable} 
+\begin{itemize}
+  \item F(X) assumes different values in $R_x$ when F(X)!=0 
+  \item F(X) is always non-decreasing (for discrete varaible too) $x_1<x_2 \rightarrow F(x_1)<F(x_2)$
+  \item Probability function and CDF is one-to-one and uniquely determined
+  \item $0<F(x)<1$ 
+  \item (discrete), $0<f(x)<1$
+  \item (continuous), $f(x) \ge 0$ but $f(x)$ is not necessarily $\le 1$. While the PDF itself cannot exceed 1, there are points within its range that are greater than 1
+\end{itemize}
+\includegraphics[width=7cm, height=3.5cm]{cdf_random.png}
+
+\textbf{Find CDF of a continuous random variable} \newline
+\includegraphics[width=7cm, height=1.5cm]{p2.png}
+\includegraphics[width=7cm, height=2cm]{p1.png}
+
+\textbf{Discrete: Expectation (mean) and Variance}
+\begin{itemize}
+  \item $E(X)=\sum_{x \in R_x}x_if(x_i)=\mu_x$
+\end{itemize}
+
+\textbf{Random: Expectation (mean) and Variance}
+\begin{itemize}
+  \item $E(X)=\mu_x=\int_{-\infty}^{\infty}xf(x)dx= \infty_{x \in R_x}xf(x)dx$
+  \item The mean of X is not necessarily a possible value
+\end{itemize}
+
+\textbf{Properties of Expectation}
+\begin{itemize}
+  \item[1] $E(aX+b)=aE(x)+b$
+  \item[2] $E(X+Y)=E(X)+E(Y)$
+  \item[3] (discrete) $E|g(x)|= \sum_{x \in R_x}g(x)f(x)$
+  \item[3] (continuous) $E|g(x)|= \int_{x \in R_x}g(x)f(x)dx$
+  \item Using properties 1, 2 we have $E(a_1X_1+a_2X_2+...+a_kX+k)=a_1E(X_1)+...+a_kE(X_k)$
+\end{itemize}
+
+\textbf{Variance} 
+\begin{itemize}
+  \item $Var(X)=\sigma_x^2=E(X-\mu_x)^2=E(X^2)-E(X)^2$
+  \item (discrete) $Var(X)=\sum_{x \in R_x}(x-\mu_x)^2f(x)$
+  \item (continuous) $Var(X)=\int_{-\infty}^{\infty}(x-\mu_x)^2f(x)dx$
+  \item V(X) $le$ 0 for any X, V(X)=0 when X is a constant
+  \item 
+\end{itemize}
+
+
 \end{multicols}
 \end{document}
