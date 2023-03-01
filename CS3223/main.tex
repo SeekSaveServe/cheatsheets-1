@@ -321,7 +321,7 @@ Two nodes are siblings if they have the same parent node \newline
   \item $N_0$: initial number of buckets
   \item $N_i = 2^i N_0$: number of buckets at start of round i
   \item $next$: the next bucket to be split, this is incremented every time split happnes
-  \item $h_{i+1}=h(k) mod N_{i+1}$: hash function for round i, if the bucket $\leq$ next (already split)
+  \item $h_{i+1}=h(k) mod N_{i+1}$: hash function for round i, if the bucket $>$ next (already split)
   \item $h_{i}=h(k) mod N_{i}$: hash function for round i+1, if the bucket $>$ next
   \item Split Citeria: By default, split when a bucket overflows
 \end{itemize}
