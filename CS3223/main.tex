@@ -500,7 +500,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
       \item \textbf{Block-based} \newline
       \begin{itemize}
         \item Allocate 1 page for S, 1 for output, B-2 for R $|R| \le |S|$
-        \item Cost:  $|R| + (\ceil{\frac{|R|}B-2{}} * |S|)$
+        \item Cost:  $|R| + (\ceil{\frac{|R|}{B-2}} * |S|)$
         \item while Scanning R
         \item read next (B-2) pages of R to buffer
         \item for $P_S$ in S
@@ -520,6 +520,15 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
       \end{itemize}
     \end{itemize}
 \end{multicols}
+
+
+% MID TERM CONTENT ENDS HERE
+% \textbf{Sort-Merge Join: Optimised} \newline
+% \begin{itemize}
+%   \item Create sorted runs of R: Merge partially
+%   \item Create sorted runs of S: Merge partially
+%   \item Merge and join remaining sorted runs of R and S
+% \end{itemize}
 
 \end{multicols}
 \end{document}
