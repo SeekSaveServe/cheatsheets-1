@@ -497,16 +497,18 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
       \end{itemize}
 
 
-      \item \textbf{Block-based} \newline
+      \item \textbf{Block nested-loop} \newline
       \begin{itemize}
         \item Allocate 1 page for S, 1 for output, B-2 for R $|R| \le |S|$
         \item Cost:  $|R| + (\ceil{\frac{|R|}{B-2}} * |S|)$
+        \item $|R|\le |S|$
         \item while Scanning R
         \item read next (B-2) pages of R to buffer
         \item for $P_S$ in S
         \item read $P_S$ into Buffer
         \item for $r \in buffer \land s \in P_S$
         \item if (r matches s) then output $(r,s)$4 to result
+        \item Without materialisation: $\ceil{\frac{|R|}{B-2}}*|T|$
       \end{itemize}
 
       \item \textbf{Index Nested Loop Join} \newline
@@ -518,6 +520,25 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item for $r \in R$ 
         \item use r to probe S's index to find matching tuples
       \end{itemize}
+
+      \item \textbf{Sort-Merge Join} \newline
+      \begin{itemize}
+        \item Sort R and S on join attributes and merge
+        \item Cost: $2|\pi^*_L(R)|(\log_m(N_0)+1)$ + $2|\pi^*_L(S)|(\log_m(N_0)+1)$ + $|\pi^*_L(R)|+|\pi^*_L(S)|$
+        \item merging cost is $|R|$ + $||R||*|S|$ if each tuple of R requires a full scan of S
+        \item Optimisation: $B \ge N(R,i) + N(S,i)$
+        \item Cost: cost of getting R, S + write out ($|R|+|S|$) + merge ($|R|+|S|$)
+      \end{itemize}
+
+      \item \textbf{Grace Hash Join} \newline
+      \begin{itemize}
+        \item Partition into $B-1$ partitions
+        \item If no partition overflow:
+        \item Cost to partition R, S + Cost of probe phase
+        \item Partition cost = cost of getting R + cost to write partitions($|R|$)
+        \item Probe cost = $|R| + |S|$
+      \end{itemize}
+
     \end{itemize}
 \end{multicols}
 
@@ -529,6 +550,132 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 %   \item Create sorted runs of S: Merge partially
 %   \item Merge and join remaining sorted runs of R and S
 % \end{itemize}
+% Lecture 6
+\section{L6: Query Optimisation}
+\textbf{1. Search space: Queries considered} \\ 
+\begin{itemize}
+  \item \textbf{Search Place} Queries being considered
+  \item \textbf{Linear} if at least one operand for each join is a base relation, bushy otherwise
+  \item \textbf{Left-deep} if every right join operand is a base relation 
+  \item \textbf{Right-deep} if every left join operand is a base relation
+\end{itemize}
+
+
+\textbf{2. Plan enumeration - for joins between 2 tables} \\
+\includegraphics[width=7cm, height =3cm]{dp_l6.png}
+
+\begin{itemize}
+  \item Decide on the plan for the 2 operands 
+  \item Decide on the plan to join: Block nested loop, sort merge join, grace hash join
+\end{itemize}
+
+\textbf{3. Cost Model} \\
+\begin{itemize}
+  \item \textbf{Uniformity:} uniform distribution of all values
+  \item \textbf{Independence:} Independent distribution of values in different attributes
+  \item \textbf{Inclusion:} for $R\bowtie S, if ||\pi_A(R)|| \leq ||\pi_B(S)||$ then $\pi_A(R) \subseteq \pi_B(S)$
+\end{itemize}
+
+\textbf{Plans-for one table} \\
+\begin{itemize}
+  \item \textbf{Table scan} Scan the entire table. Cost: $|R|$
+  \item \textbf{Index scan} Scan the index. Cost: 2 + $|$leaf pages satisfying the predicate$|$ + $||$entries satisfying predicate$||$ (unclustered)
+  \item \textbf{Index intersection with $I_a$ $I_b$} Cost to partition predicate1(R) + Cost to partition predicate2(R) + cost to intersect partitions 1,2 + cost to RID lookup
+  \item cost to partition: Scan index for matching pages + cost to write partitions from matching entries
+\end{itemize}
+
+
+\textbf{Histogram} \\ 
+\begin{itemize}
+  \item \textbf{Equiwidth} Each bucket has ~ equal number of values
+  \item \textbf{Equidepth} Each bucket has ~ equal number of tuples
+  \item Sub-ranges can overlap, tuples of the same value can be in 2 adjacent buckets
+\end{itemize}
+% Lecture 7
+\section{L7: Transaction Management}
+\textbf{View Equivalent} \\
+\begin{itemize}
+  \item If $T_i$ reads A from $T_j$ in S, then $T_i$ must also read A from $T_j$ in S'
+  \item For each data object A, the Xact (if any) that performs the final write on A in S must also perform the final write on A in S'
+\end{itemize}
+
+\textbf{Conflicting actions} \\
+\begin{itemize}
+  \item \textbf{Dirty Read} T2 read uncommited write from T1
+  \item \textbf{Unrepeatable Read} T2 updates an object that T1 has previously read and T2 commits while T1 is still in progress $\rightarrow$ T1 can get a different value from read
+  \item \textbf{Lost Update} T2 overwrites the value of an object that has been modified by T1 while T1 is still in progress
+  \item \textbf{Conflict Serializable} Conflict equivalent to serial schedule
+  \item \textbf{Non Conflict Serializable} find conflicting action pairs(R1(x) W1(x)), (R2(x) W1(x))  
+\end{itemize}
+
+\textbf{Schedules} \\
+\begin{itemize} 
+  \item \textbf{Cascading aborts} $T_i$ read from $T_j$ $\rightarrow$ $T_j$ aborts $\rightarrow$ $T_i$ aborts
+  \item \textbf{Recoverable} $\forall T \in S$ T2 must commit after T1 if T2 reads from T1
+  \item \textbf{Cascadeless} Whenever $T_i$ reads from $T_j$ in S, Commit must precede this action
+  \item Theorem 4: Cascadeless $\rightarrow$ Recoverable (not iff)
+  \item \textbf{Strict}  to use before-images, $\forall W_i(O) \in S$, O is not read or written by another Xact until Ti either aborts or commits
+  \item Theorem 5: Strict $\rightarrow$ Cascadless (not iff)
+\end{itemize}
+
+\textbf{2PL} \\
+\begin{itemize} 
+  \item To read an object O, a Xact must hold a S-lock or X-lock on O 
+  \item To write to an object O, a Xact must hold a X-lock on O 
+  \item Once a Xact releases a lock, the Xact can't request any more locks
+  \item Theorem 1: 2PL is conflict serializable
+\end{itemize}
+
+\textbf{Strict 2PL} \\
+\begin{itemize}
+  \item To read an object O, a Xact must hold a S-lock or X-lock on O 
+  \item To write to an object O, a Xact must hold a X-lock on O 
+  \item A Xact must hold on to locks until Xact commits or aborts
+  \item Theorem 2: Strict 2PL is strict and conflict serializable
+\end{itemize}
+
+\textbf{Detect deadlocks} \\
+\begin{itemize}
+  \item Waits-for graph (WFG) → Deadlock is detected if WFG has a cycle
+  \item Breaks a deadlock by aborting a Xact in cycle
+\end{itemize}
+
+\textbf{Deadlock Prevention} \\
+\begin{itemize}
+  \item Each Xact is assigned a timestamp when it starts
+  \item Assume older (smaller time stamp) Xacts have higher priority than younger Xacts
+\end{itemize}
+
+\includegraphics[width=7cm, height =2.5cm]{deadlock_prevention.png}
+
+
+% Lecture 8
+\section{L8: MVCC}
+
+\textbf{Multi Version Serializable Schedle (MVSS)} \\
+\begin{itemize}
+  \item \textbf{multiversion view equivalent} if S and S' have the same set of read-from relationships
+  \item i.e. Ri (xj ) occurs in S iff Ri (xj ) occurs in S'
+  \item \textbf{Monoversion Schedule} each read action returns the most recently created object version
+  \item \textbf{MVSS} if there exists a serial Monoversion schedule that is multiversion view equivalent to S
+  \item Note that a MVSS is not necessarily conflict serializable schedule if it is not a valid monoversion schedule
+  \item E.g. W1(x1), R2(x0), R2(y0), W1(y1), C1, C2 is MVSS with (T2, T1) but contains conflicting actions W1(x1) and R2(X0)
+\end{itemize}
+
+\textbf{Snapshot Isolation (SI)} \\
+\begin{itemize}
+  \item Each Xact has a snapshot of the database at the start of the Xact and sees only versions from that snapshot and \textbf{its own writes}
+  \item \textbf{FUW} T needs to acquire X-lock on O (if not - wait), and if O has been updated by a concurrent T' then T aborts
+  \item \textbf{FCW} (no locks) before commiting T checks if O has been updated, abort if it has been updated
+\end{itemize}
+
+\textbf{Transaction Dependencies} \\
+\begin{itemize}
+  \item \textbf{WW} from T1 to T2: T1 writes some version of X and T2 writes the immediate successor
+  \item \textbf{WR} from T1 to T2: T1 writes some version of X which is read by T2
+  \item \textbf{RW} from T1 to T2: T1 reads some version of X and T2 writes the immediate successor
+  \item \textbf{DSG} V = {xacts}, E = {Dependencies}, use $-->$ for concurrent transactions and $\rightarrow$ for non-concurrent
+\end{itemize}
 
 \end{multicols}
 \end{document}

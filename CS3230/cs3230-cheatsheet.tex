@@ -120,10 +120,12 @@
   \subsubsection{Decision Tree}
 
   \begin{itemize}
+    \item each comparison represents the relationship between two elements
     \item each node is a comparison
     \item each branch is an outcome of the comparison
+    \item log base is determined by the number of branches per node
     \item each leaf is a class label (decision after \textit{all} comparisons)
-    \item \textbf{worst-case} runtime = height of tree
+    \item \textbf{lower bound of worst-case} runtime = height of tree
     \item \# of leaves = \# of permutations $\Rightarrow \lg(n!) = \Theta(n \lg n)$ 
     \item any decision tree that can sort $n$ elements must have height $\Omega (n \lg n)$.
   \end{itemize}
@@ -246,6 +248,7 @@
     \begin{tightbox}
       $0 \leq f(n) \leq cg(n)$
     \end{tightbox}
+    
 
     \ \\ \textbf{lower bound ($\geq$)}: $f(n) = \Omega(g(n))$
     \\* if $\exists c>0, n_0>0$ such that $\forall n \geq n_0$, 
@@ -272,6 +275,10 @@
     \end{tightbox}
   \end{tightcenter}
 
+  \begin{niceproof}
+    $(n+1)! \ne O(n!)$ since $\frac{(n+1)!}{n!}=(n+1)>c$
+  \end{niceproof}
+
   \subsection{Limits}
 
   Assume $f(n), g(n) > 0$.
@@ -284,7 +291,13 @@
   \end{align*}
 
   \begin{niceproof}
-    using delta epsilon definition
+    \begin{enumerate}
+      \item Since $\lim_{n \to \infty} = 0$, we have for all $\epsilon>0$, there exists $\delta>0$ s.t $\frac{f(n)}{g(n)}<\epsilon$ for $n>\delta$
+      \item Set $c=\epsilon$ and $n_0=\delta$
+      \item $\forall n \geq n_0$, $\frac{f(n)}{g(n)}<$c 
+      \item $\forall n \geq n_0$, $f(n) < cg(n)$ 
+     \item By definition, f(n)=o(g(n))
+    \end{enumerate}
   \end{niceproof}
 
   \subsection{Properties of Big O}
@@ -311,7 +324,7 @@
   \end{itemize}
 
   \begin{fixedbox}[0.8]
-    $\log\log n < \log n < (\log n)^k < n^k < k^n$
+    $\log\log n < \log n < (\log n)^k < n^k < (n+1)!< k^n$
   \end{fixedbox}
 
   insertion sort: $O(n^2)$ with worst case $\Theta(n^2)$
@@ -334,13 +347,48 @@
 
   \begin{itemize}
     \item \textbf{insertionSort}: with loop variable as $j$, $A[1..J-1]$ is sorted.
+    \item[] \begin{enumerate}
+      \item A[1...i]=A'[1...i]. Elements not considered are unaffected.
+      \item A[i+2...j]=A'[i+1...j-1]. Relative order of shifted elements is preserved.
+      \item A[i+2...j] $>$key. Elements to its right are sorted and greater.
+    \end{enumerate}
     \item \textbf{selectionSort}: with loop variable as $j$, the array $A[1..j-1]$ is sorted and contains the $j-1$ smallest elements of $A$.
-    \item \textbf{Misra-Gries algorithm} (determines which bit occurs more in an $n$-bit array $A$):
-      \begin{itemize}
-        \item if there is an equal number of 0's and 1's, then $id=\bot$ and $count = 0$
-        \item if $z \in \{0, 1\}$ is the majority element, then $id=z$ and $count$ equals the difference between the count of the bits.
-      \end{itemize}
+    % \item \textbf{Misra-Gries algorithm} (determines which bit occurs more in an $n$-bit array $A$):
+    %   \begin{itemize}
+    %     \item if there is an equal number of 0's and 1's, then $id=\bot$ and $count = 0$
+    %     \item if $z \in \{0, 1\}$ is the majority element, then $id=z$ and $count$ equals the difference between the count of the bits.
+    %   \end{itemize}
+
+    \item \textbf{Dijkstra's}:
+    \item[] \begin{niceproof} 
+      \begin{enumerate}
+        \item \textbf{invariant 1}$\forall x \in R$: $dist[x] = \sigma(s,x)$
+        \item \textbf{invariant 2}$\forall$ y neighbouring $x\in R$: $dist[y]=min_{x\in R}\sigma(s,x)+W(x,y)$
+      \end{enumerate}
+    \end{niceproof}
   \end{itemize}
+
+\subsection{Recursive Algorithm}
+\begin{itemize}
+  \item \definition{recursive} solves sub problems
+  \item Correctness is proven using \textbf{mathematical induction} on size of problem
+  \item Use strong induction, prove base case, show algorithm works assuming it works for all smaller cases
+\end{itemize}
+
+\subsection{Examples}
+\includegraphics[width=0.9\linewidth]{binary_search.png} \\
+
+\begin{itemize}
+  \item \textbf{binary search}(A,a,b,x) returns the correct answer when b-a+1=n
+  \item Base case: n=b-a+1=0, since a=b+1, A[a..b] is empty and the answer is false
+  \item Inductive step: $n=b-a+1 > 0$
+  \item By strong induction, assume (A,a',b',x) returns the correct answer for all $j$ s.t $0\le j\le n-1$ where $j=b'-a'+1$
+  \item By the algorithm, $mid=\lfloor \frac{a+b}{2} \rfloor$ and $a\le mid\le b$
+  \item If $x==A[mid]$ then $x \in A[a..b]$ and the algorithm returns true correctly
+  \item If $x<A[mid]$ then $x \in A[a..mid-1] iff x\in A[a..b]$ 
+  \item By the inductive hypothesis, (A,a,mid-1,x) is correct since $0\le (mid-1)-a+1=mid-a\le n-1$
+  \item The $x>A[mid]$ is similar
+\end{itemize}
 
 
   \subsection{Divide-and-Conquer}
@@ -355,7 +403,7 @@
       \begin{itemize}
         \item $T(n) = T(n-1) + T(1) + \Theta(1) \Rightarrow T(n) = \Theta (n)$
       \end{itemize}
-    \item \textbf{better solution}: divide and conquer
+    \item \textbf{better solution}: divide and conquer (only one sub problem computed)
       \begin{itemize}
         \item divide: trivial
         \item conquer: recursively compute $f(\lfloor n / 2 \rfloor, m)$ 
@@ -368,12 +416,50 @@
       \end{itemize}
   \end{itemize}
 
+    \subsubsection{Peak finding}
+  \textit{problem:} Find the peak element (no neighbours are greater) in 2D array 
+
+\begin{itemize}
+    \item \textbf{\textit{Naive}} O(mn)
+    \item[] \begin{itemize}
+      \item for the middle column, find the maximum element
+      \item return if it is peak
+      \item p1=Find2DPeak(left)
+      \item p2=Find2DPeak(right)
+      \item return p1 or p2 if one is a peak
+    \end{itemize}
+    \item \textbf{\textit{Divide and conquer}} O(mlogn), $T(n)=T(n/2)+O(1)$ n is number of columns 
+    \item \begin{itemize}
+      \item find the middle column, find the maximum element
+      \item if it is a peak, return it
+      \item if not, recurse on the side with a larger element
+    \end{itemize}
+    \item \textbf{\textit{Optimised}} O(m+n)
+    \item[] 
+    \begin{itemize}
+      \item find the middle column, find the maximum element
+      \item recurse on the quarter with the larger element
+    \end{itemize}
+  \end{itemize}
+
+
   \section{Solving Recurrences}
 
   for $a$ sub-problems of size $\frac{n}{b}$ where $f(n)$ is the time to divide and combine, 
   \begin{tightcenter}
     $T(n) = aT(\frac{n}{b}) + f(n)$
   \end{tightcenter}
+
+
+  \subsection{Telescoping}
+  Express $\frac{T(n)}{g(n)} as \frac{T(\frac{n}{b})}{g(\frac{n}{b})} + h(n)$
+  \begin{enumerate}
+    \item Example: T(n) = 2T(n/2) + n
+    \item $\frac{T(n)}{n}=\frac{T(n/2)}{n/2}+1$
+  \end{enumerate}
+  \includegraphics[width=0.9\linewidth]{telescoping.png} \\
+
+  If g(n)=n, we need a=b since g(n) = $n^{\log_b(a)}$
 
   \subsection{Recursion tree}
 
@@ -391,7 +477,10 @@
 
   \subsection{Master method}
 
-  $a \geq 1, b > 1,$ and $f$ is asymptotically positive
+  \begin{itemize}
+    \item  $a \geq 1, b > 1,$ and $f$ is asymptotically positive.
+    \item a (number of sub problems), b(size of sub problems), f(time to divide and combine)
+  \end{itemize} 
 
   \begin{math}
     T(n) = aT(\frac{n}{b}) + f(n) = \begin{cases}
@@ -408,11 +497,12 @@
       \begin{itemize}
         \item $f(n)$ grows polynomially slower than $n^{\log_ba}$ by $n^\epsilon$ factor.
         \item then $T(n) = \Theta(n^{\log_ba})$.
+        \item This is when overhead at leaf $>$ overhead at root
       \end{itemize}
     \item If $f(n) = \Theta(n^{\log_ba} \log^kn) $ for some $k \geq 0$,
       \begin{itemize}
         \item $f(n)$ and $n^{\log_ba}$ grow at similar rates.
-        \item then $T(n) = \Theta(n^{\log_ba}\log n)$
+        \item then $T(n) = \Theta(n^{\log_ba}\log^{k+1} n)$
       \end{itemize}
     \item If $f(n) = \Omega(n^{\log_ba + \epsilon})$ for some constant $\epsilon > 0$, 
       \begin{itemize}
@@ -423,6 +513,7 @@
           \end{itemize} 
         \item $f(n)$ grows polynomially faster than $n^{\log_ba}$ by $n^\epsilon$ factor
         \item then $T(n) = \Theta(f(n))$.
+        \item This is when the root (splitting) $>$ leaf
       \end{itemize}
   \end{enumerate}
 
@@ -454,7 +545,9 @@
     $= 4( 4T(n/4) + \frac{(n/2)^2}{\lg n - lg 2} ) + \frac{n^2}{\lg n}$ \\ 
     $= 16 T(n/4) + \frac{n^2}{\lg n - \lg 2} + \frac{n^2}{\lg n}$ \\
     $= \sum\limits^{\lg n}_{k=1} \frac{n^2}{\lg n - k}$ \\
-    $= n^2 \lg \lg n$ by approx. of harmonic series ($\sum\frac{1}{k}$)
+    $= n^2 \lg \lg n$ by approx. of harmonic series ($\sum\frac{1}{k}$) \\
+
+    Can also be solved via telescoping using g(n)=$n^2$
   \end{niceproof}
 
   \begin{niceproof}
@@ -471,13 +564,32 @@
     \begin{itemize}
       \item by strong induction, assume $T(k) \leq c_1 \cdot k^2 - c_2 \cdot k$ for all $n>k \geq 1$ 
       \item $T(n) = 4T(n/2) + n$ 
-        \\* $\quad\quad = 4(c_1 (n/2)^2 - c_2 (n/2)) + n$
+        \\* $\quad\quad = 4(c_1 (n/2)^2 - c_2(n/2)) + n$
         \\* $\quad\quad = c_1n^2 - 2c_2n + n $
         \\* $\quad\quad = c_1n^2 - c_2n + (1-c_2) n$
         \\* $\quad\quad = c_1n^2 - c_2n \quad $ since $c_2=1 \Rightarrow 1-c_2 = 0$
         \\* \qed
     \end{itemize}
   \end{niceproof}
+  
+  \section{Non-comparison sort}
+  \subsection{Counting sort}
+  \includegraphics[width=0.95\linewidth]{counting_sort.png} 
+
+  \begin{itemize}
+    \item O(n+k), where k is the number of elements
+    \item Stable 
+  \end{itemize}
+
+  \subsection{Radix sort}
+  \includegraphics[width=0.95\linewidth]{radix_sort.png}
+  \begin{itemize}
+    \item Each pass processes r digits at $O(n+2^r)$
+    \item $T(n,b)=\theta(\frac{b}{2}(n+2^r))$ where $b$ is the number of bits in the key
+    \item Optimal r=$\lg n$ T(n,b)=$\theta(\frac{bn}{\lg n})$
+    \item Fast when the number of passes ($\frac{b}{r}$) is small
+    \item Little locality of reference, not cache friendly
+  \end{itemize}
 
   \section{04. AVERAGE-CASE ANALYSIS \& RANDOMISED ALGORITHMS}
 
@@ -541,7 +653,7 @@
       \end{itemize}
     \item issues with quicksort
       \begin{itemize}
-        \item \definition{distribution-sensitive} time taken depends on the initial (input) permutation
+        \item \definition{distribution-sensitive} time taken depends on the initial (input) permutation. Resolved with median pivot or randomised partitions
       \end{itemize}
   \end{itemize}
 
@@ -562,6 +674,15 @@
       \end{itemize}
   \end{itemize}
 
+  \subsection{Balls into bins - Indicator Random Variable}
+  There are $n$ balls and $m$ bins. Each ball is placed into a bin at random. How many empty bins? \\
+  \begin{itemize}
+    \item $X_i$ = 1 if ball $i$ is in bin $j$, 0 otherwise
+    \item $E(X_i)=1*P(i^{th} bin_{empty}) + 0*P(...)$=$(1-\frac{1}{n})^m$
+    \item $E(X)=E(X_1)+E(X_2)+..+E(X_n)=n(1-\frac{1}{n})^m$
+  \end{itemize}
+
+
   \subsubsection{Randomised Quicksort Analysis}
 
   $T(n) = n-1 + T(q-1) + T(n-q)$
@@ -573,6 +694,7 @@
   $\;\quad\quad = n-1 + \frac{2}{n} \sum\limits^{n-1}_{q=1} A(q) $ 
 
   $A(n) = n \log n \quad \Rightarrow$ same as average case quicksort
+
 
   \subsubsection{Randomised Quickselect}
 
