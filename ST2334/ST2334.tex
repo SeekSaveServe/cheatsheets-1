@@ -191,8 +191,10 @@ $P(A\cap B)=P(B)P(A|B)$ if $P(B)!=0$ \newline
 \includegraphics[width=7cm, height=3cm]{lotp.png}
 $P(B)=P(A)P(B|A)+P(A')P(B|A')$ \newline
 
-\textbf{Bayes' theorem} $P(A_k|B=\frac{P(B|A)P(A_k)}{P(A)P(B|A)+P(A')P(B|A')})$ \newline
-\textbf{Bayes' Theorem (n=2):} $P(A|B)=\frac{P(B|A)P(A)}{\sum_{i=1}^{n}P(A_i)P(B|A_k)}$ Denom is P(B) \newline
+\textbf{Bayes' theorem} $P(A_k|B)=\frac{P(B|A)P(A_k)}{P(A)P(B|A)+P(A')P(B|A')}$ \newline
+\textbf{Bayes' Theorem(n=2)} $P(A|B)=\frac{P(B|A)P(A)}{\sum_{i=1}^{n}P(A_i)P(B|A_k)}$ Denom is P(B) \newline
+\textbf{$P(A|B)=1-P(A'|B)$} \newline
+
 
 \subsection*{L2:Random Variables}
 Random variable X is a function from S to $R$ \newline
@@ -211,7 +213,7 @@ To check that a function is a PDF, chcek conditions 1 and 2 \newline
 \includegraphics[width=7cm, height=2.3cm]{pf_cdf.png}
 
 
-\textbf{Deriving probability distribution from cdf} \newline
+\textbf{Deriving probability distribution from cdf} \\a \newline
 \begin{multicols*}{2}
   \begin{itemize}
     \item[] \includegraphics[width=3cm, height=2cm]{cdf_pf.png}
@@ -264,8 +266,62 @@ To check that a function is a PDF, chcek conditions 1 and 2 \newline
   \item (discrete) $Var(X)=\sum_{x \in R_x}(x-\mu_x)^2f(x)$
   \item (continuous) $Var(X)=\int_{-\infty}^{\infty}(x-\mu_x)^2f(x)dx$
   \item V(X) $le$ 0 for any X, V(X)=0 when X is a constant
-  \item 
 \end{itemize}
+
+% Normal distribution
+\textbf{Normal Distribution} \newline
+\begin{itemize}
+  \item $f(x)=\frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
+  \item $f(z) = \frac{1}{\sqrt{2\pi}}e^{-\frac{z^2}{2}}$
+  \item Shape is identical if two curves share the same $\sigma$
+  \item Curve flattens as $\sigma$ increases
+  \item $\Phi(x)$ is the CDF of the normal distribution
+  \item $\Phi(x)$ = $P(x<2)$, $\Phi(-x)$ = $1-\Phi(x)$
+  \item $P(|x|<2) = 2\Phi(x)-1 = p(-2<x<2)$
+  \item $P(x_1<x<x_2)=\Phi(\frac{x_2-\mu}{\sigma})-\Phi(\frac{x_1-\mu}{\sigma})$
+  \item $z=\frac{x-\mu}{\sigma}$
+  \item $\phi(z)=f_Z(z)$
+  \item $\Phi(z)=\int_{-\infty}^{z}(\phi(t))dt=\frac{1}{\sqrt{2\pi}}\int_{-\infty}^{z}(e^{-\frac{t^2}{2}})dt$
+\end{itemize}
+
+% Central Limit Theorem
+\textbf{Central Limit Theorem} \newline
+\begin{itemize}
+  \item Under CLT, sample mean approaches population mean as n increases
+  \item Law of large numbers: $P(|\bar{x}-\mu_x|>\epsilon) \rightarrow 0$ as n increases
+  \item Symmetric no outliers: 15-20
+  \item Skewed: 30-50, heavily skewed: $>1000$
+  \item $\sigma_{\bar{x}} = \frac{\sigma}{\sqrt{n}} \rightarrow$ large n, higher accuracy 
+\end{itemize}
+
+
+% Sample Mean and Variance
+
+
+% Margin of error
+\textbf{Margin of Error}\\
+\includegraphics[width=7cm, height=3cm]{moe.png}
+
+% Confidence Interval
+\textbf{Confidence Interval}\\
+\includegraphics[width=7cm, height=3cm]{ci.png}
+
+\textbf{Alternative pooled variance: $s^2_p = \frac{\sum_{n_1}^{i=1}(x_i-\bar{x})^2 + \sum_{n_2}^{i=1}(y_i-\bar{y})^2}{n_1+n_2-2}$}
+
+% Hypothesis Testing - different tests
+
+% P-value test
+
+\textbf{Equal Variance Assumption: $\frac{1}{2} < \frac{s_1}{s_2} < 2$}
+
+% Assumptions
+\textbf{Assumptions} \\
+\begin{itemize}
+  \item Normal population (esp for small samples)
+  \item Random and independent sampling
+\end{itemize}
+
+\includegraphics[width=7cm, height=6cm]{errors.png}
 
 
 \end{multicols}

@@ -524,17 +524,19 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
       \item \textbf{Sort-Merge Join} \newline
       \begin{itemize}
         \item Sort R and S on join attributes and merge
-        \item Cost: $2|\pi^*_L(R)|(\log_m(N_0)+1)$ + $2|\pi^*_L(S)|(\log_m(N_0)+1)$ + $|\pi^*_L(R)|+|\pi^*_L(S)|$
+        \item Cost: $2|\pi^*_L(R)|(\log_{B-1}(\sqrt{\frac{|R|}{B}})+1)$ + $2|\pi^*_L(S)|(\log_{B-1}(\frac{|S|}{B})+1)$ + $|\pi^*_L(R)|+|\pi^*_L(S)|$
         \item merging cost is $|R|$ + $||R||*|S|$ if each tuple of R requires a full scan of S
-        \item Optimisation: $B \ge N(R,i) + N(S,i)$
-        \item Cost: cost of getting R, S + write out ($|R|+|S|$) + merge ($|R|+|S|$)
+        \item Optimisation: $B \ge N(R,i) + N(S,i) + 1 \ge \sqrt{|R|+|S|}$ 
+        \item We can choose which relation to partition again if this is not met
+        \item Cost: cost of getting R, S + k(write out ($|R|+|S|$)) + m(merge ($|R|+|S|$))
+        \item If sorted on join column: $|R|+|S|$
       \end{itemize}
 
       \item \textbf{Grace Hash Join} \newline
       \begin{itemize}
         \item Partition into $B-1$ partitions
-        \item If no partition overflow:
-        \item Cost to partition R, S + Cost of probe phase
+        \item If no partition overflow ($B > \sqrt{f*|S|}$):
+        \item k(Cost to partition R, S) + Cost of probe phase
         \item Partition cost = cost of getting R + cost to write partitions($|R|$)
         \item Probe cost = $|R| + |S|$
       \end{itemize}
@@ -576,7 +578,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item \textbf{Inclusion:} for $R\bowtie S, if ||\pi_A(R)|| \leq ||\pi_B(S)||$ then $\pi_A(R) \subseteq \pi_B(S)$
 \end{itemize}
 
-\textbf{Plans-for one table} \\
+\textbf{Plans-no join, 1 table} \\
 \begin{itemize}
   \item \textbf{Table scan} Scan the entire table. Cost: $|R|$
   \item \textbf{Index scan} Scan the index. Cost: 2 + $|$leaf pages satisfying the predicate$|$ + $||$entries satisfying predicate$||$ (unclustered)
@@ -588,9 +590,20 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \textbf{Histogram} \\ 
 \begin{itemize}
   \item \textbf{Equiwidth} Each bucket has ~ equal number of values
+  \item Estimate: $\frac{1}{|bucket|}$ * $||bucket||$
   \item \textbf{Equidepth} Each bucket has ~ equal number of tuples
   \item Sub-ranges can overlap, tuples of the same value can be in 2 adjacent buckets
+  \item $\frac{1}{|bucke_A|}$ * $||bucket_A||$ + $\frac{1}{|bucke_B|}$ * $||bucket_B||$ + ...
+  \item \textbf{MCV} Separately track the top-k MCV and exclude them from the bucket
 \end{itemize}
+
+\textbf{Size of query}  \\
+\begin{itemize}
+  \item \textbf{Join} $||R||*||S||* \frac{1}{max(||\pi_b(R)||,||\pi_b(S)||)}$
+  \item \textbf{Select - OR} $(1-(p(~a=x)*p(~b=y))*||R||)$
+  \item \textbf{Select - AND} $p(a=x)*p(b=y)*||R||$
+\end{itemize}
+
 % Lecture 7
 \section{L7: Transaction Management}
 \textbf{View Equivalent} \\
@@ -599,14 +612,23 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item For each data object A, the Xact (if any) that performs the final write on A in S must also perform the final write on A in S'
 \end{itemize}
 
-\textbf{Conflicting actions} \\
+\textbf{Conflicting actions - WW, WR} \\
 \begin{itemize}
   \item \textbf{Dirty Read} T2 read uncommited write from T1
   \item \textbf{Unrepeatable Read} T2 updates an object that T1 has previously read and T2 commits while T1 is still in progress $\rightarrow$ T1 can get a different value from read
   \item \textbf{Lost Update} T2 overwrites the value of an object that has been modified by T1 while T1 is still in progress
-  \item \textbf{Conflict Serializable} Conflict equivalent to serial schedule
+  \item View serializable prevents These
+  \item \textbf{Blind write} $R_1(X), W_2(Y) , W_1(X)$ Blind write: $W_2(Y)$
+  \item \textbf{Conflict Serializable} Conflict equivalent to serial schedule, view serializable and not blind write
   \item \textbf{Non Conflict Serializable} find conflicting action pairs(R1(x) W1(x)), (R2(x) W1(x))  
 \end{itemize}
+
+\textbf{Conflict Serializability Graph} \\
+\begin{itemize}
+  \item V contains a node for each committed Xact in S
+  \item E contains $(T_i, T_j)$ if an action precedes and conflicts with one of $T_j$'s actions
+\end{itemize}
+\includegraphics[width=7cm, height =2.5cm]{csg.png}
 
 \textbf{Schedules} \\
 \begin{itemize} 
@@ -632,6 +654,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item To write to an object O, a Xact must hold a X-lock on O 
   \item A Xact must hold on to locks until Xact commits or aborts
   \item Theorem 2: Strict 2PL is strict and conflict serializable
+  \item Strict 2PL prevents cascading rollback and deadlock and ensures recoverability
 \end{itemize}
 
 \textbf{Detect deadlocks} \\
@@ -667,6 +690,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item Each Xact has a snapshot of the database at the start of the Xact and sees only versions from that snapshot and \textbf{its own writes}
   \item \textbf{FUW} T needs to acquire X-lock on O (if not - wait), and if O has been updated by a concurrent T' then T aborts
   \item \textbf{FCW} (no locks) before commiting T checks if O has been updated, abort if it has been updated
+  \item Write-skew anomaly, not MVSS: $R_1(X_0), R_2(X_0), R_1(Y_1), R_2(Y_2), W_1(X_1),$ $ Commit1, W_2(Y_2), Commit2$
 \end{itemize}
 
 \textbf{Transaction Dependencies} \\
