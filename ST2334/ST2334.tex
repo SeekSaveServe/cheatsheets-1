@@ -185,7 +185,7 @@ Selection of r objects out of n. Order is not considered. $C^n_r=C^n_{n-r}$\newl
  $P(A\cap B)=P(A)P(B|A)$ if $P(A)!=0$ \newline
 $P(A\cap B)=P(B)P(A|B)$ if $P(B)!=0$ \newline
 \textbf{Inverse Probability Formula:} $P(A|B)=\frac{P(B|A)P(A)}{P(B)}$ \newline
-\textbf{Indepenence} $A\bot B iff P(A \cap B)=P(A)P(B)$ This implies $P(A|B)=P(A) \text{ and } P(B|A)=P(B)$ \newline
+\textbf{Indepedence} $A\bot B iff P(A \cap B)=P(A)P(B)$ This implies $P(A|B)=P(A) \text{ and } P(B|A)=P(B)$ \newline
 \textbf{Partition} $A_1,A_2...A_r$ are mutually exclusive and $\sum_{i=1}^{n}A_i=S$ \newline
 
 \includegraphics[width=7cm, height=3cm]{lotp.png}
@@ -268,6 +268,32 @@ To check that a function is a PDF, chcek conditions 1 and 2 \newline
   \item V(X) $le$ 0 for any X, V(X)=0 when X is a constant
 \end{itemize}
 
+% Joint probability distribution
+\textbf{Joint Probability Distribution} \newline
+\includegraphics[width=7cm, height=6cm]{joint_discrete.png}
+
+\includegraphics[width=7cm, height=6cm]{joint_continuous.png}
+
+\textbf{Marginal Probability Distribution} \newline
+\includegraphics[width=7cm, height=3cm]{joint_marginal.png} 
+\includegraphics[width=7cm, height=3cm]{joint_marginal_table.png}
+\begin{itemize}
+  \item Each cell is $P(X=x, Y=y)$
+  \item Column total represents $f_Y(y)$
+  \item Row total represents $f_X(x)$
+\end{itemize}
+
+\textbf{Conditional Distribution} \\
+$f_{Y,X}(y|x)=\frac{f_{X,Y}(x,y)}{f_X(x)}$, $f_{X,Y}(x|y)=\frac{f_{X,Y}(x,y)}{f_Y(y)}$ \\
+\begin{itemize}
+  \item Only defined for $f_X(x)>0$ and $f_Y(y)>0$
+  \item the summation of the PDF is 1
+  \item $P(Y \le y|X=x)= \int_{-\infty}^{y}f_{Y|X}(y|x)dy$
+  \item $E(Y|X=x)=\int_{-\infty}^{\infty}yf_{Y|X}(y|x)dy$
+  \item Replace bound with actual bounds
+\end{itemize}
+
+
 % Normal distribution
 \textbf{Normal Distribution} \newline
 \begin{itemize}
@@ -283,6 +309,17 @@ To check that a function is a PDF, chcek conditions 1 and 2 \newline
   \item $\phi(z)=f_Z(z)$
   \item $\Phi(z)=\int_{-\infty}^{z}(\phi(t))dt=\frac{1}{\sqrt{2\pi}}\int_{-\infty}^{z}(e^{-\frac{t^2}{2}})dt$
 \end{itemize}
+
+% Properties of independent random variables
+\textbf{Properties of Independent Random Variables} \newline
+\includegraphics[width=7cm, height=2cm]{indepdent_random_var.png}
+\begin{itemize}
+  \item $R_{x,y}$ must be a product space (not a square)
+  \item Any zeroes in the table indicate that $R_{x,y}$ is not product space
+  \item If f(x,y) can be easily factorised to $c*g(x)*g(y)$, it is a product space
+\end{itemize}
+\includegraphics[width=7cm, height=3.5cm]{properties_independent_random.png}
+
 
 % Central Limit Theorem
 \textbf{Central Limit Theorem} \newline

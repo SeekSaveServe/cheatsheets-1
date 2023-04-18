@@ -553,7 +553,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 %   \item Merge and join remaining sorted runs of R and S
 % \end{itemize}
 % Lecture 6
-\section{L6: Query Optimisation}
+\subsection{L6: Query Optimisation}
 \textbf{1. Search space: Queries considered} \\ 
 \begin{itemize}
   \item \textbf{Search Place} Queries being considered
@@ -605,11 +605,11 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \end{itemize}
 
 % Lecture 7
-\section{L7: Transaction Management}
+\textbf{\large{L7: Transaction Management}} \\
 \textbf{View Equivalent} \\
 \begin{itemize}
   \item If $T_i$ reads A from $T_j$ in S, then $T_i$ must also read A from $T_j$ in S'
-  \item For each data object A, the Xact (if any) that performs the final write on A in S must also perform the final write on A in S'
+  \item For each data object A, Xact (if any) that performs final write on A in S must also perform final write on A in S'
 \end{itemize}
 
 \textbf{Conflicting actions - WW, WR} \\
@@ -628,7 +628,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item V contains a node for each committed Xact in S
   \item E contains $(T_i, T_j)$ if an action precedes and conflicts with one of $T_j$'s actions
 \end{itemize}
-\includegraphics[width=7cm, height =2.5cm]{csg.png}
+\includegraphics[width=7cm, height =2cm]{csg.png}
 
 \textbf{Schedules} \\
 \begin{itemize} 
@@ -673,7 +673,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 
 
 % Lecture 8
-\section{L8: MVCC}
+\subsection{L8: MVCC}
 
 \textbf{Multi Version Serializable Schedle (MVSS)} \\
 \begin{itemize}
@@ -690,16 +690,62 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item Each Xact has a snapshot of the database at the start of the Xact and sees only versions from that snapshot and \textbf{its own writes}
   \item \textbf{FUW} T needs to acquire X-lock on O (if not - wait), and if O has been updated by a concurrent T' then T aborts
   \item \textbf{FCW} (no locks) before commiting T checks if O has been updated, abort if it has been updated
-  \item Write-skew anomaly, not MVSS: $R_1(X_0), R_2(X_0), R_1(Y_1), R_2(Y_2), W_1(X_1),$ $ Commit1, W_2(Y_2), Commit2$
+  \item \textbf{Write-skew anomaly}, not MVSS: $R_1(X_0), R_2(X_0), R_1(Y_1), R_2(Y_2), W_1(X_1),$ $ Commit1, W_2(Y_2), Commit2$
+  \item \textbf{Read-only anomaly},not MVSS: $R_1(b), R_2(a), W_1(b), C_1, R_2(b), W_2(a),R_3(a), R_3(b), C_3, C_2$
 \end{itemize}
 
 \textbf{Transaction Dependencies} \\
 \begin{itemize}
-  \item \textbf{WW} from T1 to T2: T1 writes some version of X and T2 writes the immediate successor
-  \item \textbf{WR} from T1 to T2: T1 writes some version of X which is read by T2
-  \item \textbf{RW} from T1 to T2: T1 reads some version of X and T2 writes the immediate successor
-  \item \textbf{DSG} V = {xacts}, E = {Dependencies}, use $-->$ for concurrent transactions and $\rightarrow$ for non-concurrent
+  \item \textbf{WW} from T1 to T2: T1 commits some version of X and T2 writes the immediate successor
+  \item \textbf{WR} from T1 to T2: T1 commits some version of X which is read by T2
+  \item \textbf{RW} from T1 to T2: T1 reads some version of X and T2 commits the immediate successor
+  \item \textbf{DSG} V = {xacts}, E = {Dependencies}, use --$>$ for concurrent transactions and $\rightarrow$ for non-concurrent
 \end{itemize}
+
+\subsection{L10-Recovery}
+\textbf{Policies} \\
+\begin{itemize}
+  \item \textbf{Steal:} Allows dirty pages to be written to disk before commit
+  \item \textbf{Force:} Requires all dirty pages to be written to disk when commit
+  \item No-steal: no undo, Force: no redo. Pgsql uses steal and no-force
+\end{itemize}
+
+\textbf{Restart: analysis, redo, undo} \\
+\begin{itemize}
+  \item Analysis: identifies dirtied pool pages and active Xacts at time of crush
+  \item Redo: redo actions to restore db to pre-crush
+  \item Undo: undo actions of Xacts that did not commit
+\end{itemize}
+
+\textbf{Analysis: Xact table} \\
+\begin{enumerate}
+  \item When the first log record is created, create a new entry T with status U
+  \item Update lastLSN for T to be r's LSN
+  \item Remove T if end log is seen
+\end{enumerate}
+
+\textbf{Analysis: Dirty Page Table} \\
+\begin{enumerate}
+  \item New dirtied page will be added to the DPT with recLSN=r.LSN
+  \item Remove entry when it is flushed to disk
+\end{enumerate}
+
+\includegraphics[width=7cm, height =1.5cm]{analysis_log.png}
+
+\textbf{Redo Phase} \\
+\begin{enumerate}
+  \item Redo LSN = min(LSNs), then fetch page LSN, 
+  \item if r.LSN $>$ pageLSN and Page is in DPT, redo
+  \item Update pageLSN to r.LSN
+\end{enumerate}
+
+\textbf{Undo Phase} \\
+\begin{enumerate}
+  \item Start from largest LSN from L
+  \item if update, create CLR with undoNextLSN=r's prevLSN, update-L-TT(r.prevLSN)
+  \item if CLR, update-L-TT(r.undoNextLSN)
+  \item update-L-TT(lsn): add lsn to L if its not null, else add end log record for T and remove it from TT
+\end{enumerate}
 
 \end{multicols}
 \end{document}
