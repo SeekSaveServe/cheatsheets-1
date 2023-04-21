@@ -1225,6 +1225,7 @@
   \begin{itemize}
     \item \definition{cut-and-paste proof} proof by contradiction - suppose you have an optimal solution. Replacing ("cut") subproblem solutions with this subproblem solution ("paste" in) should improve the solution. If the solution doesn't improve, then it's not optimal (contradiction).
     \item \textbf{overlapping subproblems} - recursive solution contains a small number of distinct subproblems repeated many times
+    \item \textbf{optimal substructure} - optimal solution to a problem contains optimal solutions to subproblems
   \end{itemize}
 
   \subsection{Longest Common Subsequence}
@@ -1339,6 +1340,7 @@
     \item solve only one subproblem at each step
     \item beats DP and divide-and-conquer when it works
     \item \definition{greedy-choice property} a locally optimal choice is globally optimal
+    \item \textbf{Note:} This is not true for DP, a clear counter-example is that the LCS of a substring is not necessarily in the LCS of the entire string
   \end{itemize}
 
   \subsection{Examples}

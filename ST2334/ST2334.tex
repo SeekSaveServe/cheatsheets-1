@@ -205,7 +205,7 @@ Lowercase letters denote observed values of random variables \newline
 \includegraphics[width=7cm, height=3cm]{pmf_properties.png}
 \includegraphics[width=7cm, height=3cm]{pdf.png} \newline
 note: $P(a<X<b) = P(a\le X \le B)$ \newline
-To check that a function is a PDF, chcek conditions 1 and 2 \newline
+To check that a function is a PDF, check conditions 1 and 2 \newline
 
 \textbf{Cumulative Distribution Function:} $F(x)=P(X\le x)$ and $P(a \le b) = P(X \le b) - P(X \le a) = F(b) - F(a-)$ \newline
 
@@ -310,6 +310,13 @@ $f_{Y,X}(y|x)=\frac{f_{X,Y}(x,y)}{f_X(x)}$, $f_{X,Y}(x|y)=\frac{f_{X,Y}(x,y)}{f_
   \item $\Phi(z)=\int_{-\infty}^{z}(\phi(t))dt=\frac{1}{\sqrt{2\pi}}\int_{-\infty}^{z}(e^{-\frac{t^2}{2}})dt$
 \end{itemize}
 
+\textbf{Normal apprximation to Binomail} \\
+As $n \rightarrow \infty$, $Z = \frac{X-np}{\sqrt{np(1-p)}}$ \\ 
+
+\textbf{Continuity Correction} \\ 
+\includegraphics[width=7cm, height=6cm]{continuity.png}
+
+
 % Properties of independent random variables
 \textbf{Properties of Independent Random Variables} \newline
 \includegraphics[width=7cm, height=2cm]{indepdent_random_var.png}
@@ -317,9 +324,25 @@ $f_{Y,X}(y|x)=\frac{f_{X,Y}(x,y)}{f_X(x)}$, $f_{X,Y}(x|y)=\frac{f_{X,Y}(x,y)}{f_
   \item $R_{x,y}$ must be a product space (not a square)
   \item Any zeroes in the table indicate that $R_{x,y}$ is not product space
   \item If f(x,y) can be easily factorised to $c*g(x)*g(y)$, it is a product space
+  \item \textbf{Cov(x,y)=0} if X and Y are independent
 \end{itemize}
 \includegraphics[width=7cm, height=3.5cm]{properties_independent_random.png}
 
+
+% Uniform distribution
+\textbf{Uniform Distribution} \newline
+\includegraphics[width=7cm, height=4cm]{uniform1.png}
+\includegraphics[width=7cm, height=3cm]{uniform2.png}
+
+% Exponential distribution
+\textbf{Exponential Distribution} \newline
+\begin{itemize}
+  \item \textbf{Theorem 15} $\lambda>0 P(X>(s+t)|X>s)=P(X>t)$ for positive values of s and t
+  \item This is because exponential distribution is memoryless 
+\end{itemize}
+\includegraphics[width=7cm, height=6cm]{exp_mean_Var.png}
+\includegraphics[width=7cm, height=3cm]{exp2.png}
+\includegraphics[width=7cm, height=3  cm]{exp3.png}
 
 % Central Limit Theorem
 \textbf{Central Limit Theorem} \newline
