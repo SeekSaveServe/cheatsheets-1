@@ -313,8 +313,8 @@ $f_{Y,X}(y|x)=\frac{f_{X,Y}(x,y)}{f_X(x)}$, $f_{X,Y}(x|y)=\frac{f_{X,Y}(x,y)}{f_
 \textbf{Normal apprximation to Binomail} \\
 As $n \rightarrow \infty$, $Z = \frac{X-np}{\sqrt{np(1-p)}}$ \\ 
 
-\textbf{Continuity Correction} \\ 
-\includegraphics[width=7cm, height=6cm]{continuity.png}
+\textbf{Continuity Correction - approximating normal using binomial} \\ 
+\includegraphics[width=7cm, height=7cm]{continuity.png}
 
 
 % Properties of independent random variables
@@ -342,7 +342,7 @@ As $n \rightarrow \infty$, $Z = \frac{X-np}{\sqrt{np(1-p)}}$ \\
 \end{itemize}
 \includegraphics[width=7cm, height=6cm]{exp_mean_Var.png}
 \includegraphics[width=7cm, height=3cm]{exp2.png}
-\includegraphics[width=7cm, height=3  cm]{exp3.png}
+\includegraphics[width=7cm, height=3cm]{exp3.png}
 
 % Central Limit Theorem
 \textbf{Central Limit Theorem} \newline
@@ -361,16 +361,21 @@ As $n \rightarrow \infty$, $Z = \frac{X-np}{\sqrt{np(1-p)}}$ \\
 % Margin of error
 \textbf{Margin of Error}\\
 \includegraphics[width=7cm, height=3cm]{moe.png}
+\textbf{$n \ge (\frac{z_{\alpha}*\sigma}{E})^2$}
 
 % Confidence Interval
-\textbf{Confidence Interval}\\
+\textbf{Confidence Interval}
 \includegraphics[width=7cm, height=3cm]{ci.png}
 
-\textbf{Alternative pooled variance: $s^2_p = \frac{\sum_{n_1}^{i=1}(x_i-\bar{x})^2 + \sum_{n_2}^{i=1}(y_i-\bar{y})^2}{n_1+n_2-2}$}
+\textbf{Alternative pooled variance: $s^2_p = \frac{\sum_{n_1}^{i=1}(x_i-\bar{x})^2 + \sum_{n_2}^{i=1}(y_i-\bar{y})^2}{n_1+n_2-2}$} \\ 
+
+\textbf{Sample Variance: $S^2=\frac{\Sigma(X_i-\bar{x})^2}{n-1}$} \\
 
 % Hypothesis Testing - different tests
 
 % P-value test
+\textbf{P-value} is the probability of obtaining a test statistic at least as extreme than the observed sample value, given $H_0$ is true. P-value of one sided test is half of that of a two sided.\\
+
 
 \textbf{Equal Variance Assumption: $\frac{1}{2} < \frac{s_1}{s_2} < 2$}
 
