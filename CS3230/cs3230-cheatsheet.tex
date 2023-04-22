@@ -1333,6 +1333,14 @@
     \item runtime: $O(nk)$ for $n$ cents, $k$ denominations
   \end{itemize}
 
+  \subsection{Dijsktra's Algorithm}
+  \begin{itemize}
+    \item \textbf{property 1}: The nearest neighbor is also the vertex nearest to s
+    \item Violated by \textbf{negative edges} since there can exist a shorter path to a vertex that is not the nearest neighbor
+    \item \textbf{property 2}: Optimal subpath property 
+    \item Violated when there are \textbf{negative cycles} since the final parth can consist of a subparth that is not the optimal subpath
+  \end{itemize}
+
 
   \section{09. GREEDY ALGORITHMS}
 
@@ -1798,5 +1806,26 @@ $f(n) = O(g(n))$ means $f(n) \in O(g(n))$
 \begin{itemize}
   \item $\bot$ - false
 \end{itemize}
+
+\pagebreak
+\begin{multicols*}{4}
+  \section{NP-Complete problems}
+\begin{enumerate}
+  \item Circuit-SAT
+  \item CNF-SAT
+  \item 3-SAT
+  \item Independent Set
+  \item Vertex Cover
+  \item Max-Clique
+  \item Hamiltonian Cycle (both directed and undirected)
+  \item Hamiltonian Path (undirected)
+  \item Traveling Sales Person
+  \item Subset Sum
+  \item Knapsack
+  \item Hitting Set 
+\end{enumerate}
+
+\end{multicols*}
+
 
 \end{document}

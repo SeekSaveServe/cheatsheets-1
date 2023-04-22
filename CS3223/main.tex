@@ -477,7 +477,16 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 
 \begin{multicols}{2}
 
+
     \begin{itemize}
+
+      \item \textbf{Optimal join} \newline
+      \begin{itemize}
+        \item Cost: $|R| + |S|$
+        \item load smaller relation into memory
+        \item requires: $|S|+2$ buffers
+      \end{itemize}
+
       \item \textbf{Tuple-based} \newline
       \begin{itemize}
         \item Cost: $|R| + ||R||*|S|$
@@ -485,6 +494,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item for each tuple s in S 
         \item if (r matches s) then output $(r,s)$4 to result
       \end{itemize}
+
+      
 
       \item \textbf{Page-based} \newline
       \begin{itemize}
@@ -517,7 +528,9 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item There is an index on the join attributes of S
         \item Uniform distribution: r joins $\ceil{\frac{||S||}{||\pi_{B_j}(S)||}}$ tuples in S
         \item format 1 B+Tree:$|R| + ||R|| * J$
-        \item J = $\log_F(\ceil{\frac{||S||}{b_d}})$ (tree traversal)+$\ceil{\frac{||S||}{b_d||\pi_{B_j}(S)||}}$ (search leaf nodes)
+        \item Assuming unclustered:
+        \item J = height of tree + reading leaf pages + RID Look up
+        \item J = $\log_F(\ceil{\frac{||S||}{b_d}})$ (tree traversal)+$\ceil{\frac{||\pi_{p'}(S)||}{b_i}}$ (search leaf nodes) + RID lookup
         \item for $r \in R$ 
         \item use r to probe S's index to find matching tuples
       \end{itemize}
