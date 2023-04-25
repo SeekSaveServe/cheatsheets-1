@@ -371,7 +371,7 @@ Projection, join, bulk loading etc all require sorting
 \begin{itemize}
   \item I is a covering index of $query_Q$ if I contains all attributes of Q
   \item No RID lookup is needed, Index-only plan
-  \item If data is unclustered, unsorted, no index -> best way is to collect all entries and sort by RID before doing I/O 
+  \item If data is unclustered, unsorted, no index $\rightarrow$ best way is to collect all entries and sort by RID before doing I/O 
 \end{itemize}
 
 \textbf{CNF Predicate}
@@ -406,7 +406,7 @@ Covered Conjuncts: $age \geq 20 \land age \geq 18 \land height=150$ \newline
 \includegraphics[width=5cm, height=3cm]{notation.png}
 
 \textbf{Cost of B+-tree index evaluation of p} \newline
-Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
+Let p'=primary conjuncts of p (\textbf{matching}) | $p_c$=covered conjuncts of p \newline
 \begin{itemize}
   \item[1.] Navigate internal nodes to locate the first leaf page
   $$
@@ -427,13 +427,14 @@ Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
     \end{array}
 \right.
   $$ \newline
-  \item[2.1] This is the cost of reading qualifying conjuncts
-  \item[2.2] Using $p_c$ would be wrong since covering conjuncts may be non-matching which results in more reads from the leaves 
-  \item[3] Retrieve qualified data records using RID lookups. 0 if I is covering OR format 1 index. $||\sigma_{p_c}(R)||$ otherwise
-  \item[] \includegraphics[width=5cm, height=1.3cm]{optimisation.png}
+  \item This is the cost of reading qualifying conjuncts
+  \item Using $p_c$ would be wrong since covering conjuncts may be non-matching which results in more reads from the leaves. 
+  \item Conversely, non-matching (but covered) conjuncts cannot be derived from the B+ tree and needs to be read from disk
+  \item Retrieve qualified data records using RID lookups. 0 if I is covering OR format 1 index. $||\sigma_{p_c}(R)||$ otherwise
+  \item includegraphics[width=5cm, height=1.3cm]{optimisation.png}
 \end{itemize}
 
-\textbf{Cost of Hash index evaluation of p}
+\textbf{Cost of Hash index evaluation of p (all covered index are matched)} \\
 \begin{itemize}
   \item Format 1: cost to retrieve \textbf{data entries} is at least$\ceil{\frac{||\sigma_{p'}(R)||}{b_d}}$
   \item Format 2: cost to retrieve \textbf{data entries} is at least $\ceil{\frac{||\sigma_{p'}(R)||}{b_i}}$
@@ -447,16 +448,16 @@ Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
   \item Sorting is better if we have many duplicates or if hte distribution is nonuniform(overflow more likely for hashing paritions)
   \item Sorting allows results to be sorted
   \item If $B > \sqrt{|\pi^*_L(R)|}$, then both sorting and hashing has similar I/O costs ($\ceil{\frac{\ceil{R}}{B}} \rightarrow |R| + 2*|\pi^*_L(R)|$)
-\end{itemize}
+\end{itemize} 
 
-\textbf{Approach 1: project based on sorting}
+\textbf{Approach 1: project based on sorting}\\
 \begin{itemize}
   \item \textbf{\color{red}{Naive}}: Extract attributes L from records $\rightarrow\pi^*_L(R) \rightarrow$ Sort attributes $\rightarrow$ Remove duplicates
   \item Cost: Cost to scan records ($|R|$) + Cost to output to temporary result ($|\pi^*_L(R)|$) $\rightarrow$ cost to sort records ($2|\pi^*_L(R)|\log_m(N_0)+1$) $\rightarrow$ Cost to scan data records $|\pi^*_L(R)|$
   \item \textbf{\color{green}{Optimisation}}: Create Sorted runs with attributes L only (Pass 0) $\rightarrow$ Merge sorted runs and remove duplicates $\rightarrow$ $\pi_L(R)$ 
 \end{itemize}
 
-\textbf{Approach 2: project based on hashing}
+\textbf{Approach 2: project based on hashing}\\
 \begin{itemize}
   \item Build a main-memory hash table to detect and remove duplicates. Insert to the hashtable if then entry is not already in it.
   \item 1. Partition R into $R_1, R_2...R_{B-1}$, hash on $\pi_L(t)$ for $t \in R$ $\leftarrow$ ($\pi^*_L(R_i)$ does not intersect $\pi^*_L(R_j), i!=j$)
@@ -471,23 +472,25 @@ Let p'=primary conjuncts of p | $p_c$=covered conjuncts of p \newline
 \textbf{Solution:} Recursively apply hash-based partitioning to overflowed partitions. \newline
 \textbf{Analysis:} Effective (no overflow) when B $ > \frac{|\pi^*_L(R)|}{B-1} * f \approx \sqrt{f * \pi^*_L(R)|}$ \newline
 If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)$|\pi^*_L(R)|$ \newline
-\textbf{Index based projection:} Do index scan if the wanted attribtues $\subseteq$ search key\newline
-
-\textbf{Join} $R \Join_\theta S$, where R is the outer relation and S is the inner relation
-
-\begin{multicols}{2}
 
 
-    \begin{itemize}
+\textbf{Join} \\$R  \Join_\theta S$, where R is the outer relation and S is the inner relation
 
-      \item \textbf{Optimal join} \newline
+% \begin{multicols}{2}
+
+
+    % \begin{itemize}
+
+      % \item \textbf{Optimal join} \newline
+      \textbf{Optimal join} \newline
       \begin{itemize}
         \item Cost: $|R| + |S|$
         \item load smaller relation into memory
         \item requires: $|S|+2$ buffers
       \end{itemize}
 
-      \item \textbf{Tuple-based} \newline
+      % \item \textbf{Tuple-based} \newline
+      \textbf{Tuple-based} \newline
       \begin{itemize}
         \item Cost: $|R| + ||R||*|S|$
         \item for each tuple r in R 
@@ -495,9 +498,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item if (r matches s) then output $(r,s)$4 to result
       \end{itemize}
 
-      
-
-      \item \textbf{Page-based} \newline
+      % \item \textbf{Page-based} \newline
+      \textbf{Page-based} \newline
       \begin{itemize}
         \item Load $P_R$ and $P_S$ to main memory
         \item Cost: $|R| + |R|*|S|$
@@ -509,7 +511,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
       \end{itemize}
 
 
-      \item \textbf{Block nested-loop} \newline
+      % \item \textbf{Block nested-loop} \newline
+      \textbf{Block nested-loop} \newline
       \begin{itemize}
         \item Allocate 1 page for S, 1 for output, B-2 for R $|R| \le |S|$
         \item Cost:  $|R| + (\ceil{\frac{|R|}{B-2}} * |S|)$
@@ -523,7 +526,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item Without materialisation: $\ceil{\frac{|R|}{B-2}}*|T|$
       \end{itemize}
 
-      \item \textbf{Index Nested Loop Join} \newline
+      % \item \textbf{Index Nested Loop Join} \newline
+      \textbf{Index Nested Loop Join} \newline
       \begin{itemize}
         \item There is an index on the join attributes of S
         \item Uniform distribution: r joins $\ceil{\frac{||S||}{||\pi_{B_j}(S)||}}$ tuples in S
@@ -535,7 +539,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item use r to probe S's index to find matching tuples
       \end{itemize}
 
-      \item \textbf{Sort-Merge Join} \newline
+      % \item \textbf{Sort-Merge Join} \newline
+      \textbf{Sort-Merge Join} \newline
       \begin{itemize}
         \item Sort R and S on join attributes and merge
         \item Cost: $2|\pi^*_L(R)|(\log_{B-1}(\frac{|R|}{B})+1)$ + $2|\pi^*_L(S)|(\log_{B-1}(\frac{|S|}{B})+1)$ + $|\pi^*_L(R)|+|\pi^*_L(S)|$
@@ -546,7 +551,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item If sorted on join column: $|R|+|S|$
       \end{itemize}
 
-      \item \textbf{Grace Hash Join} \newline
+      % \item \textbf{Grace Hash Join} \newline
+      \textbf{Grace Hash Join} \newline
       \begin{itemize}
         \item Partition into $B-1$ partitions
         \item If no partition overflow ($B > \sqrt{f*|S|}$):
@@ -555,8 +561,8 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
         \item Probe cost = $|R| + |S|$
       \end{itemize}
 
-    \end{itemize}
-\end{multicols}
+%     \end{itemize}
+% \end{multicols}
 
 
 % MID TERM CONTENT ENDS HERE
@@ -576,14 +582,12 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item \textbf{Right-deep} if every left join operand is a base relation
 \end{itemize}
 
-
 \textbf{2. Plan enumeration - for joins between 2 tables} \\
-\includegraphics[width=7cm, height =3cm]{dp_2.png}
-
 \begin{itemize}
-  \item Decide on the plan for the 2 operands 
-  \item Decide on the plan to join: Block nested loop, sort merge join, grace hash join
+  \item Basic DP is not always Optimal since it goes for lowest current cost and ignores the sorted property of outputs
+  \item \textbf{Enhanced DP:} left-deep only, avoids cross products, considers early selection and projections, considers order of output
 \end{itemize}
+\includegraphics[width=7cm, height =3cm]{dp_2.png}
 
 \textbf{3. Cost Model} \\
 \begin{itemize}
@@ -596,7 +600,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \begin{itemize}
   \item \textbf{Table scan} Scan the entire table. Cost: $|R|$
   \item \textbf{Index scan} Scan the index. Cost: 2 + $|$leaf pages satisfying the predicate$|$ + $||$entries satisfying predicate$||$ (unclustered)
-  \item \textbf{Index intersection with $I_a$ $I_b$} Cost to partition predicate1(R) + Cost to partition predicate2(R) + cost to intersect partitions 1,2 + cost to RID lookup
+  \item \textbf{Index intersection with $I_a$ $I_b$} Cost to find relevant entries from index and materialise(R and s) + cost to intersect partitions 1,2 (block nested, grace hash, sort merge)+ cost to RID lookup (if more attributes are needed)
   \item cost to partition: Scan index for matching pages + cost to write partitions from matching entries
 \end{itemize}
 
@@ -614,7 +618,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \textbf{Size of query}  \\
 \begin{itemize}
   \item \textbf{Join} $||R||*||S||* \frac{1}{max(||\pi_b(R)||,||\pi_b(S)||)}$
-  \item \textbf{Select - OR} $(1-(p(~a=x)*p(~b=y))*||R||)$
+  \item \textbf{Select - OR} $(1-(p(~a!=x)*p(~b!=y))*||R||)$
   \item \textbf{Select - AND} $p(a=x)*p(b=y)*||R||$
 \end{itemize}
 
@@ -622,21 +626,21 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \textbf{\large{L7: Transaction Management}} \\
 \textbf{View Equivalent} \\
 \begin{itemize}
-  \item If $T_i$ reads A from $T_j$ in S, then $T_i$ must also read A from $T_j$ in S'
+  \item If $R_i$ reads A from one write $W_j$ in S, then $R_i$ must also read A from the same write $W_j$ in S'
   \item For each data object A, Xact (if any) that performs final write on A in S must also perform final write on A in S'
 \end{itemize}
 
 \textbf{Conflicting actions - WW, WR} \\
 \begin{itemize}
-  \item \textbf{Dirty Read} T2 read uncommited write from T1
-  \item \textbf{Unrepeatable Read} T2 updates an object that T1 has previously read and T2 commits while T1 is still in progress $\rightarrow$ T1 can get a different value from read
-  \item \textbf{Lost Update} T2 overwrites the value of an object that has been modified by T1 while T1 is still in progress
-  \item View serializable prevents These
+  \item \textbf{Dirty Read-WR} T2 read uncommited write from T1
+  \item \textbf{Unrepeatable Read-WR} T2 updates an object that T1 has previously read and T2 commits while T1 is still in progress $\rightarrow$ T1 can get a different value from read
+  \item \textbf{Lost Update-WW} T2 overwrites the value of an object that has been modified by T1 while T1 is still in progress
+  \item \textbf{View serializable - view equivalent to some serial S} cannot be view serializable if the above anomalies occur. Conversely, no anomalies occur if view serializable.
   \item \textbf{Blind write} $R_1(X), W_2(Y) , W_1(X)$ Blind write: $W_2(Y)$
   \item \textbf{Conflict Serializable} Conflict equivalent to serial schedule, view serializable and not blind write
   \item \textbf{Non Conflict Serializable} find conflicting action pairs(R1(x) W2(x)), (R2(x) W1(x))  
   \item Conflicting actions does not mean not serializable, there needs to be a cycle
-  \item \textbf{$CSS \subsetneq VSS \subsetneq MVSS$} 
+  \item \textbf{$CSS \subsetneq VSS \subsetneq MVSS$}. The more restrictive, the less concurrent and less resources are needed to check serializability
 \end{itemize}
 
 \textbf{Conflict Serializability Graph} \\
@@ -646,13 +650,28 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \end{itemize}
 \includegraphics[width=7cm, height =2cm]{csg.png}
 
+
+\textbf{ACID}
+\begin{itemize}
+  \item \textbf{Atomicity} Either all actions of a transaction are committed or none are
+  \item \textbf{Consistency} Each transaction is consistent and DB begins in a consistent state $\rightarrow$ DB ends in a consistent state
+  \item \textbf{Isolation} Execution of one xact is isolated from other Xacts 
+  \item \textbf{Durability} Once a transaction is committed, its effects persists
+  \item Concurrency control ensures isolation 
+  \item Recovery manager ensures atomicity and durabilitt
+  \item Consistency is ensured by constraints, cascades and triggers
+\end{itemize}
+
+
 \textbf{Schedules} \\
 \begin{itemize} 
-  \item \textbf{Cascading aborts} $T_i$ read from $T_j$ $\rightarrow$ $T_j$ aborts $\rightarrow$ $T_i$ aborts
-  \item \textbf{Recoverable} $\forall T \in S$ T2 must commit after T1 if T2 reads from T1 (or T2 aborts before T1)
-  \item \textbf{Cascadeless} Whenever $T_i$ reads from $T_j$ in S, Commit must precede this action
+  \item \textbf{Cascading aborts} $T_i$ read from $T_j$ $\rightarrow$ $T_j$ aborts $\rightarrow$ $T_i$ aborts. This requires high book keeping efforts, so we turn to recoverable schedules instead.
+  \item \textbf{Recoverable} $\forall T \in S$ T2 must commit after T1 if T2 reads from T1 (or T2 aborts before T1). Can still have cascading aborts. Is compulsory. 
+  \item \textbf{Cascadeless} Whenever $T_i$ reads from $T_j$ in S, Commit must precede this action. This is desirable, not compulsory.
   \item Theorem 4: Cascadeless $\rightarrow$ Recoverable (not iff)
-  \item \textbf{Strict}  to use before-images, $\forall W_i(O) \in S$, O is not read or written by another Xact until Ti either aborts or commits
+  \item \textbf{Recovery with before image} Store the before image before write, restore this before image if write aborts. This can lead to \textbf{lost update} anomaly if the before image overwrites another Xact's write.
+  \item \textbf{Strict}  to use before-images, $\forall W_i(O) \in S$, O is not read or written by another Xact until Ti either aborts or commits. This ensures no lost update anomaly during recovery.
+  \item Strict schedules allows recovery using before images to be more efficient but restricts concurrency
   \item Theorem 5: Strict $\rightarrow$ Cascadless (not iff)
 \end{itemize}
 
@@ -662,6 +681,14 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item To write to an object O, a Xact must hold a X-lock on O 
   \item Once a Xact releases a lock, the Xact can't request any more locks
   \item Theorem 1: 2PL is conflict serializable
+\end{itemize}
+
+% Lecture 8
+\subsection{L8: Concurrency Control}
+
+\textbf{Lock based concurrency control} \\ 
+\begin{itemize}
+  \item If lock request is not granted, then T becomes blocked and gets added to O's request queue
 \end{itemize}
 
 \textbf{Strict 2PL} \\
@@ -685,10 +712,6 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \end{itemize}
 
 \includegraphics[width=7cm, height =2.5cm]{deadlock_prevention.png}
-
-
-% Lecture 8
-\subsection{L8: MVCC}
 
 \textbf{Multi Version Serializable Schedle (MVSS)} \\
 \begin{itemize}
