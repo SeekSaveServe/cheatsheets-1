@@ -1864,27 +1864,66 @@ $f(n) = O(g(n))$ means $f(n) \in O(g(n))$
 \pagebreak
 \begin{multicols*}{4}
   \section{NP-Complete problems}
-\begin{enumerate}
+\begin{enumerate}  
   \item Circuit-SAT
   \item CNF-SAT
   \item 3-SAT
+  
   \item Independent Set \\ 
   \textbf{Problem} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be an independent set if for each pair of vertices $u,v \in X$, $(u,v) \notin E$. \\ 
   \textbf{Optimisation} Compuete the IS of the maximum size  \\
   \textbf{Decision} Does there exist an independent set of size $\ge$ k\\
+
   \item Vertex Cover \\ 
   \textbf{Problem} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be a vertex cover if for each edge $(u,v) \in E$, either $u \in X$ or $v \in X$.
+
   \item Max-Clique \\
-  \textbf{Problme} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be a clique if for each pair of vertices $u,v \in X$, $(u,v) \in E_X$. The maximum clique is the largest clique in the graph.
-  \item Hamiltonian Cycle (both directed and undirected)
+  \textbf{Problem} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be a clique if for each pair of vertices $u,v \in X$, $(u,v) \in E_X$. The maximum clique is the largest clique in the graph. \\ 
+  \textbf{Optimisation} Compute the maximum clique \\
+  \textbf{Decision} Is there a clique of size $\ge$ k?\\
+
+
+  \item Hamiltonian Cycle (both directed and undirected)\\
+  \textbf{Problem} Given an undirected graph G = (V,E), a Hamiltonian cycle passes through each vertex exactly once  \\ 
+  \textbf{Optimisation} Determine largest HC 
+  \textbf{Decision} Is there a HC?
+
   \item Hamiltonian Path (undirected)
+  \textbf{Problem} Path in a graph that visits each vertex exactly once
+  
   \item Traveling Sales Person \\ 
-  \textbf{Problem} Given a complete graph G = (V,E), find a Hamiltonian cycle of minimum weight.
+  \textbf{Problem} Given a complete graph G = (V,E) with non-negative edges, a tour is a Hamiltonian Cycle and the cost is the sum of all edge weights in the cycle. \\ 
+  \textbf{Optimisation} Compute the minimum cost tour \\
+  \textbf{Decision} Is there a TSP of cost $le$ b?\\
+
   \item Subset Sum \\ 
   \textbf{Problem} Given a set of n non-negative integers S = ${w_1, \dots, w_n}$ and a target W, decide if there exists a subset $I \subseteq {1,\dots, n}$ s.t $\Sigma_{i\in I}(w_i) = W$
-  \item Knapsack
+
+  \item Knapsack \\
+  \textbf{Problem} Given n items described by non-negative value pairs S = ${(w_1,v_1),\dots, (w_n,v_n)}$ and a knapsack of capacity W. Given a threshold V, determine whether there is a subset $s' \subseteq {1,\dots, n}$ s.t $\Sigma_{i\in s'}(w_i) \leq W$ and $\Sigma_{i\in s'}(v_i) \geq V$
+
   \item Hitting Set \\
   \textbf{Problem} Given ${S_1, \dots, S_n}$ and a non-negative intege k, decide whether there exists a hitting set of at most k. A hitting set,h, is $\forall S_i, H \cap S_i != \null$
+
+\vfill\null
+\columnbreak
+
+\subsection*{Proof Templates}
+
+\textbf{Greedy - Optimal Substructure:}
+\begin{niceproof}
+  Let S be the optimal solution to P.  Using the greedy property, we reduce P to $P'$. Let $S'$ be the optimal solution to P'.
+  Clearly, $f(S) = f(S')$ +$ <relationship>$
+  Therefore, optimal substructure holds.    
+\end{niceproof}
+
+\textbf{Greedy Property}
+\begin{niceproof}
+  (show that there exists an optimal solution which uses the greedy choice)
+  Let g be the greedy choice.
+  Suppose there exists an optimal solution S that did not use g.  Then, we can "exchange something in $S'$ with $g"$ to form $S'$ where $S' \geq S$.
+\end{niceproof}
+
 \end{enumerate}
 
 \end{multicols*}
