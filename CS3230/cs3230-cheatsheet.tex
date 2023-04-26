@@ -453,7 +453,7 @@
 
   \subsection{Telescoping}
   Express $\frac{T(n)}{g(n)} as \frac{T(\frac{n}{b})}{g(\frac{n}{b})} + h(n)$ \\
-  Choose the poly(n) part of f(n) as $\frac{f(n)}{b}$
+  Choose the poly(n) part of f(n) as $\frac{f(n)}{b}$, and divide both sides by $\frac{f(n)}{b}$
   \begin{enumerate}
     \item Example: T(n) = 2T(n/2) + n
     \item $\frac{T(n)}{n}=\frac{T(n/2)}{n/2}+1$
@@ -1222,7 +1222,7 @@
 
 
   \section{08. DYNAMIC PROGRAMMING}
-
+  \textbf{Intuition:} Find the number of sub problems and distinct sub-problems \\ 
   \begin{itemize}
     \item \definition{cut-and-paste proof} proof by contradiction - suppose you have an optimal solution. Replacing ("cut") subproblem solutions with this subproblem solution ("paste" in) should improve the solution. If the solution doesn't improve, then it's not optimal (contradiction).
     \item \textbf{overlapping subproblems} - recursive solution contains a small number of distinct subproblems repeated many times
@@ -1281,6 +1281,24 @@
         \item to use $O(\min \{m, n\})$ space: bottom-up approach, column by column 
         \item memoize for DP $\Rightarrow$ makes it $O(mn)$ instead of exponential time
       \end{itemize}
+      \textbf{O(n) space code} \\
+      \begin{minipage}[c]{0.65\linewidth}
+        \begin{verbatim} 
+# O(n) space solution
+dp = [0] * (len(s) + 1)
+for i in range(1, len(s)+1):
+    prev = dp[0] # dp[i-1][j-1]
+    for j in range(1, len(s)+1):
+        temp = dp[j] # the next dp[i-1][j-1]
+        if s[i-1] == s_reverse[j-1]:
+            dp[j] = prev + 1 
+        else:
+            # max(dp[i-1][j], dp[i][j-1])
+            dp[j] = max(dp[j], dp[j-1])
+        prev = temp
+return dp[len(s)]
+        \end{verbatim}
+      \end{minipage}
   \end{itemize}
 
   \subsection{Knapsack Problem}
@@ -1472,6 +1490,20 @@ Huffman(C):
   \end{minipage}
 
 
+  \subsection{Longest Increasing Subsequence} 
+  \begin{itemize}
+    \item \textbf{Problem:} Given a sequence of n numbers, find a LIS 
+    \textbf{Naive soln} 
+    \item 1. Sort the sequence
+    \item 2. Find LCS in sorted sequence and original sequence in O($n^2$)
+    \textbf{Observation from Solataire}
+    \item Any increasing subsequence contains 1 card from each pile
+    \item length(LIS) $\le$ number of piles $le$ number of piles in greedy
+    \textbf{Greedy property}
+    \item Place on leftmost allowed pile, otherwise create a new pile 
+    \item Find leftmost allowed pile using binary search
+  \end{itemize}
+ 
   \section{10. REDUCTIONS \& INTRACTABILITY}
 
   \subsection{Reduction}
@@ -1836,15 +1868,23 @@ $f(n) = O(g(n))$ means $f(n) \in O(g(n))$
   \item Circuit-SAT
   \item CNF-SAT
   \item 3-SAT
-  \item Independent Set
-  \item Vertex Cover
-  \item Max-Clique
+  \item Independent Set \\ 
+  \textbf{Problem} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be an independent set if for each pair of vertices $u,v \in X$, $(u,v) \notin E$. \\ 
+  \textbf{Optimisation} Compuete the IS of the maximum size  \\
+  \textbf{Decision} Does there exist an independent set of size $\ge$ k\\
+  \item Vertex Cover \\ 
+  \textbf{Problem} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be a vertex cover if for each edge $(u,v) \in E$, either $u \in X$ or $v \in X$.
+  \item Max-Clique \\
+  \textbf{Problme} Given an undirected graph G = (V,E), a subset $X \subseteq V$ is said to be a clique if for each pair of vertices $u,v \in X$, $(u,v) \in E_X$. The maximum clique is the largest clique in the graph.
   \item Hamiltonian Cycle (both directed and undirected)
   \item Hamiltonian Path (undirected)
-  \item Traveling Sales Person
-  \item Subset Sum
+  \item Traveling Sales Person \\ 
+  \textbf{Problem} Given a complete graph G = (V,E), find a Hamiltonian cycle of minimum weight.
+  \item Subset Sum \\ 
+  \textbf{Problem} Given a set of n non-negative integers S = ${w_1, \dots, w_n}$ and a target W, decide if there exists a subset $I \subseteq {1,\dots, n}$ s.t $\Sigma_{i\in I}(w_i) = W$
   \item Knapsack
-  \item Hitting Set 
+  \item Hitting Set \\
+  \textbf{Problem} Given ${S_1, \dots, S_n}$ and a non-negative intege k, decide whether there exists a hitting set of at most k. A hitting set,h, is $\forall S_i, H \cap S_i != \null$
 \end{enumerate}
 
 \end{multicols*}

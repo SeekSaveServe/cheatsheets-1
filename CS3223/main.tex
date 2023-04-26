@@ -336,11 +336,11 @@
 % \end{itemize}
 
 \subsection{L4: Query Evaluation - Sort, Select}
-\textbf{Sorting - External Merge Sort}
-\newline
-Projection, join, bulk loading etc all require sorting
+% \textbf{Sorting - External Merge Sort}
+% \newline
+% Projection, join, bulk loading etc all require sorting
 
-\includegraphics[width=7cm, height=4cm]{ext_sort.png}
+% \includegraphics[width=7cm, height=4cm]{ext_sort.png}
 
 \textbf{External Merge Sort - Bocked I/O}
 \begin{itemize}
@@ -349,6 +349,7 @@ Projection, join, bulk loading etc all require sorting
   \item Can merge at most $\floor{\frac{B-b}{b}}$ sorted runs in each merge pass
   \item $F=\floor{\frac{B}{b}} - 1$ runs can be merged at each pass
   \item Num passes = $\log_{F} N_0$
+  \item New cost: $2N(\ceil{\log_{F} N_0} + 1)$
 \end{itemize}
 
 \textbf{B+ tree sort}
@@ -403,7 +404,7 @@ Primary Conjuncts: $age \geq 20 \land age \geq 18$ \newline
 Covered Conjuncts: $age \geq 20 \land age \geq 18 \land height=150$ \newline
 
 \textbf{Cost Notation}  \newline
-\includegraphics[width=5cm, height=3cm]{notation.png}
+\includegraphics[width=4cm, height=2cm]{notation.png}
 
 \textbf{Cost of B+-tree index evaluation of p} \newline
 Let p'=primary conjuncts of p (\textbf{matching}) | $p_c$=covered conjuncts of p \newline
@@ -587,7 +588,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item Basic DP is not always Optimal since it goes for lowest current cost and ignores the sorted property of outputs
   \item \textbf{Enhanced DP:} left-deep only, avoids cross products, considers early selection and projections, considers order of output
 \end{itemize}
-\includegraphics[width=7cm, height =3cm]{dp_2.png}
+% \includegraphics[width=7cm, height =3cm]{dp_2.png}
 
 \textbf{3. Cost Model} \\
 \begin{itemize}
@@ -632,9 +633,9 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 
 \textbf{Conflicting actions - WW, WR} \\
 \begin{itemize}
-  \item \textbf{Dirty Read-WR} T2 read uncommited write from T1
-  \item \textbf{Unrepeatable Read-WR} T2 updates an object that T1 has previously read and T2 commits while T1 is still in progress $\rightarrow$ T1 can get a different value from read
-  \item \textbf{Lost Update-WW} T2 overwrites the value of an object that has been modified by T1 while T1 is still in progress
+  \item \textbf{Dirty Read-WR} T2 read uncommited write from T1. $W_1(X), R_2(X)$
+  \item \textbf{Unrepeatable Read-WR} T2 updates an object that T1 has previously read and T2 commits while T1 is still in progress $\rightarrow$ T1 can get a different value from read. $R_1(X), W_2(X), C_2, R_1(X)$
+  \item \textbf{Lost Update-WW} T2 overwrites the value of an object that has been modified by T1 while T1 is still in progress. $R_1(X), R_2(X), W_1(X), W_2(X)$
   \item \textbf{View serializable - view equivalent to some serial S} cannot be view serializable if the above anomalies occur. Conversely, no anomalies occur if view serializable.
   \item \textbf{Blind write} $R_1(X), W_2(Y) , W_1(X)$ Blind write: $W_2(Y)$
   \item \textbf{Conflict Serializable} Conflict equivalent to serial schedule, view serializable and not blind write
@@ -667,20 +668,12 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \begin{itemize} 
   \item \textbf{Cascading aborts} $T_i$ read from $T_j$ $\rightarrow$ $T_j$ aborts $\rightarrow$ $T_i$ aborts. This requires high book keeping efforts, so we turn to recoverable schedules instead.
   \item \textbf{Recoverable} $\forall T \in S$ T2 must commit after T1 if T2 reads from T1 (or T2 aborts before T1). Can still have cascading aborts. Is compulsory. 
-  \item \textbf{Cascadeless} Whenever $T_i$ reads from $T_j$ in S, Commit must precede this action. This is desirable, not compulsory.
+  \item \textbf{Cascadeless} Whenever $T_i$ reads from $T_j$ in S, Commit must precede this action. Desirable, not compulsory.
   \item Theorem 4: Cascadeless $\rightarrow$ Recoverable (not iff)
   \item \textbf{Recovery with before image} Store the before image before write, restore this before image if write aborts. This can lead to \textbf{lost update} anomaly if the before image overwrites another Xact's write.
   \item \textbf{Strict}  to use before-images, $\forall W_i(O) \in S$, O is not read or written by another Xact until Ti either aborts or commits. This ensures no lost update anomaly during recovery.
   \item Strict schedules allows recovery using before images to be more efficient but restricts concurrency
   \item Theorem 5: Strict $\rightarrow$ Cascadless (not iff)
-\end{itemize}
-
-\textbf{2PL} \\
-\begin{itemize} 
-  \item To read an object O, a Xact must hold a S-lock or X-lock on O 
-  \item To write to an object O, a Xact must hold a X-lock on O 
-  \item Once a Xact releases a lock, the Xact can't request any more locks
-  \item Theorem 1: 2PL is conflict serializable
 \end{itemize}
 
 % Lecture 8
@@ -691,6 +684,14 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item If lock request is not granted, then T becomes blocked and gets added to O's request queue
 \end{itemize}
 
+\textbf{2PL} \\
+\begin{itemize} 
+  \item To read an object O, a Xact must hold a S-lock or X-lock on O 
+  \item To write to an object O, a Xact must hold a X-lock on O 
+  \item Once a Xact releases a lock, the Xact can't request any more locks
+  \item Theorem 1: 2PL is conflict serializable
+\end{itemize}
+
 \textbf{Strict 2PL} \\
 \begin{itemize}
   \item A Xact must hold on to locks until Xact commits or aborts
@@ -698,51 +699,87 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item Strict 2PL prevents cascading rollback and deadlock and ensures recoverability
 \end{itemize}
 
-\textbf{Detect deadlocks} \\
+\textbf{Anomalies not dealt by strict 2PL} \\
+\begin{itemize}
+  \item \textbf{Phantom Read:} T1 reads a set of objects, T2 inserts a new object in that set, T1 reads the set again and gets a different set of objects. 2PLS cannot prevent this as locks are held at the object level.
+  \item Solved by \textbf{predicate locking}, which is done in practice by \textbf{index locking}
+\end{itemize}
+\includegraphics[width=7cm, height =1.5cm]{ansi_iso.png}
+
+\textbf{Deadlock Detection} \\
 \begin{itemize}
   \item Waits-for graph (WFG) → Deadlock is detected if WFG has a cycle. ($V_i, V_j \rightarrow T_i waits-for T_j$)
   \item Breaks a deadlock by aborting a Xact in cycle
+  \item Alt: timeout mechanism 
 \end{itemize}
 
 \textbf{Deadlock Prevention} \\
 \begin{itemize}
   \item Each Xact is assigned a timestamp when it starts
   \item Assume older (smaller time stamp) Xacts have higher priority than younger Xacts
-  \item Tie between blocked/restarted xact brokered by priority, priority is maintained after abort
+  \item Tie between blocked/restarted xact brokered by priority, original timestamp is maintained to prevent starvation
+  \item \textbf{Wait-die} Higher priority waits for lower priority, lower priority dies if higher priority holds lock (lower never waits)
+  \item \textbf{Wound-wait} Higher priority kills lower priority, lower priority waits for higher priority to release lock (higher never waits)
 \end{itemize}
 
-\includegraphics[width=7cm, height =2.5cm]{deadlock_prevention.png}
+% \includegraphics[width=7cm, height =2.5cm]{deadlock_prevention.png}
+
+\textbf{Lock Conversion} \\
+\begin{itemize}
+  \item Allows for greater concurrency 
+  \item Conversion is only allowed if the Xact has not released any lock 
+  \item \textbf{Upgrade(A)} blocked if another Xact holds shared or exclusive lock on A
+  \item \textbf{Downgrade(A)} allowed if Xact has not modified A and Xact has not released any lock
+\end{itemize}
+
+\textbf{Improve System Throughput} \\
+\begin{itemize}
+  \item Reduce Lock Granularity, Reduce time of lock being held, reduce hotspots in DB by changinge schema design
+\end{itemize}
 
 \textbf{Multi Version Serializable Schedle (MVSS)} \\
+\textbf{Benefits} \\
+\begin{itemize}
+  \item $W_i(O)$ Creates new version
+  \item Read-only Xact are not blocked by update xact (vice versa). Mono version (e.g. 2PL) blocks
+  \item Read-only xacts are never aborted (no deadlocks due to Multi-version) or blocked
+\end{itemize}
+
 \begin{itemize}
   \item \textbf{multiversion view equivalent} if S and S' have the same set of read-from relationships
   \item i.e. Ri (xj ) occurs in S iff Ri (xj ) occurs in S'
-  \item \textbf{Monoversion Schedule} each read action returns the most recently created object version
+  \item \textbf{Monoversion Schedule} each read action returns the most recently created object version. Not necessarily serializable
   \item \textbf{MVSS} if there exists a serial Monoversion schedule that is multiversion view equivalent to S
   \item Note that a MVSS is not necessarily conflict serializable schedule if it is not a valid monoversion schedule
   \item E.g. W1(x1), R2(x0), R2(y0), W1(y1), C1, C2 is MVSS with (T2, T1) but contains conflicting actions W1(x1) and R2(X0)
 \end{itemize}
 
-\textbf{Snapshot Isolation (SI)} \\
+\textbf{Snapshot Isolation (SI) [NOT always serializable]} \\
 \begin{itemize}
+  \item Similar performance as Read Committed but does not suffer from lost update, unrepeatable read.
   \item Each Xact has a snapshot of the database at the start of the Xact and sees only versions from that snapshot and \textbf{its own writes}
   \item \textbf{FUW} T needs to acquire X-lock on O (if not - wait), and if O has been updated by a concurrent T' then T aborts
   \item \textbf{FCW} (no locks) before commiting T checks if O has been updated, abort if it has been updated
-  \item \textbf{Write-skew anomaly}, not MVSS: $R_1(X_0), R_2(X_0), R_1(Y_1), R_2(Y_2), W_1(X_1),$ $ Commit1, W_2(Y_2), Commit2$
-  \item \textbf{Read-only anomaly},not MVSS: $R_1(b), R_2(a), W_1(b), C_1, R_2(b), W_2(a),R_3(a), R_3(b), C_3, C_2$
+  \item \textbf{Write-skew anomaly}, not MVSS: $R_1(X_0), R_2(X_0), R_1(Y_1), R_2(Y_2), W_1(X_1),$ $ C_1, W_2(Y_2), C_2$
+  \item \textbf{Read-only anomaly},not MVSS: $R_1(b), R_2(a),$\\$ W_1(b), C_1, R_2(b), W_2(a),R_3(a), R_3(b), C_3, C_2$
+  \item \textbf{Non-MVSS SI} At least one cycle in DSG(s) with $T_i, T_j, T_k$ s.t $T_i,T_k$ are possibly the same xact, $T_i, T_j$ are concurrent with an edge $T_i$ rw $T_j$ and $T_j$ rw $T_k$
 \end{itemize}
 
-\textbf{Transaction Dependencies} \\
+\textbf{Transaction Dependencies - Making SI serializable} \\
 \begin{itemize}
   \item \textbf{WW} from T1 to T2: T1 commits some version of X and T2 writes the immediate successor
   \item \textbf{WR} from T1 to T2: T1 commits some version of X which is read by T2
   \item \textbf{RW} from T1 to T2: T1 reads some version of X and T2 commits the immediate successor
   \item \textbf{DSG} V = {xacts}, E = {Dependencies}, use --$>$ for concurrent transactions and $\rightarrow$ for non-concurrent
 \end{itemize}
-\includegraphics[width=5cm, height =1.2cm]{multigranular_locks.png}
+
+\textbf{Locking Granularity} \\ 
+(Most coarse) DB, relation, page, tuple (Finest, more concurrency, less scalable) \\ 
+Locks are acquired in a top down manner.
+\includegraphics[width=4cm, height =1cm]{multigranular_locks.png}
 
 
-\subsection{L10-Recovery}
+\subsection{L9-Crash Recovery}
 \textbf{Policies} \\
 \begin{itemize}
   \item \textbf{Steal:} Allows dirty pages to be written to disk before commit
@@ -770,7 +807,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item Remove entry when it is flushed to disk
 \end{enumerate}
 
-\includegraphics[width=7cm, height =1.5cm]{analysis_log.png}
+\includegraphics[width=7cm, height =2cm]{analysis_log.png}
 
 \textbf{Redo Phase (DPT)} \\
 \begin{enumerate}
