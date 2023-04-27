@@ -360,7 +360,7 @@
   \item Unclustered implies more I/Os
 \end{itemize}
 
-\textbf{Access Path} refers to the different ways to retrieve tuples from a relation. It is either a \textbf{\textcolor{red}{file scan}} or a \textbf{\textcolor{green}{index plus matching selection condition}}. The more \textbf{selective} the access paths, the fewer pages are read from the disk.
+\textbf{Access Path} refers to the different ways to retrieve tuples from a relation.The more \textbf{selective} the access paths, the fewer pages are read from the disk.
 \begin{itemize}
   \item Table scan: scan all data pages 
   \item Index scan: scan all index pages 
@@ -370,8 +370,7 @@
 \textbf{Query: Selection}
 \textbf{Covering Index}
 \begin{itemize}
-  \item I is a covering index of $query_Q$ if I contains all attributes of Q
-  \item No RID lookup is needed, Index-only plan
+  \item I is a covering index if I contains all attributes of query
   \item If data is unclustered, unsorted, no index $\rightarrow$ best way is to collect all entries and sort by RID before doing I/O 
 \end{itemize}
 
@@ -403,8 +402,8 @@ Primary Conjuncts: $age \geq 20 \land age \geq 18$ \newline
 \textbf{Covered Conjuncts} : The subset of conjuncts in p that I covers (conjuncts that appear in I). Primary conjunct $\subseteq$ covered conjunct \newline
 Covered Conjuncts: $age \geq 20 \land age \geq 18 \land height=150$ \newline
 
-\textbf{Cost Notation}  \newline
-\includegraphics[width=4cm, height=2cm]{notation.png}
+% \textbf{Cost Notation}  \newline
+% \includegraphics[width=4cm, height=2cm]{notation.png}
 
 \textbf{Cost of B+-tree index evaluation of p} \newline
 Let p'=primary conjuncts of p (\textbf{matching}) | $p_c$=covered conjuncts of p \newline
@@ -588,7 +587,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item Basic DP is not always Optimal since it goes for lowest current cost and ignores the sorted property of outputs
   \item \textbf{Enhanced DP:} left-deep only, avoids cross products, considers early selection and projections, considers order of output
 \end{itemize}
-% \includegraphics[width=7cm, height =3cm]{dp_2.png}
+\includegraphics[width=7cm, height =3cm]{dp_2.png}
 
 \textbf{3. Cost Model} \\
 \begin{itemize}
@@ -659,7 +658,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
   \item \textbf{Isolation} Execution of one xact is isolated from other Xacts 
   \item \textbf{Durability} Once a transaction is committed, its effects persists
   \item Concurrency control ensures isolation 
-  \item Recovery manager ensures atomicity and durabilitt
+  \item Recovery manager ensures atomicity and durability
   \item Consistency is ensured by constraints, cascades and triggers
 \end{itemize}
 
@@ -696,7 +695,7 @@ If no partition overflow: (partition)$|R|+\pi^*_L(R)|$ + (duplicate elimination)
 \begin{itemize}
   \item A Xact must hold on to locks until Xact commits or aborts
   \item Theorem 2: Strict 2PL is strict and conflict serializable
-  \item Strict 2PL prevents cascading rollback and deadlock and ensures recoverability
+  \item Strict 2PL prevents cascading rollback and ensures recoverability
 \end{itemize}
 
 \textbf{Anomalies not dealt by strict 2PL} \\
@@ -808,7 +807,6 @@ Locks are acquired in a top down manner.
 \textbf{Analysis: Dirty Page Table} \\
 \begin{enumerate}
   \item New dirtied page will be added to the DPT with recLSN=r.LSN
-  \item Remove entry when it is flushed to disk
 \end{enumerate}
 
 \includegraphics[width=7cm, height =2cm]{analysis_log.png}
@@ -830,8 +828,8 @@ Locks are acquired in a top down manner.
 
 \textbf{Checkpointing} \\
 \begin{itemize}
-  \item Normal(no ECPLR): CPLR's TT, empty DPT
-  \item Fuzzy: BeginCPLR's TT and BCPLR's DPT  
+  \item Normal(no ECPLR): CPLR's TT, empty DPT. Blocking.
+  \item Fuzzy (nonquiescent): BeginCPLR's TT, BCPLR's DPT, non-blocking. Start analysis from BCPLR if ECPLR exists. Else begin analysis from first log.
 \end{itemize}
 
 \end{multicols}
