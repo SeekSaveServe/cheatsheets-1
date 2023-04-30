@@ -1,0 +1,898 @@
+\documentclass[10pt, landscape]{article}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{calc}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{ifthen}
+\usepackage[a4paper,margin=3mm,landscape]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{color,graphicx,overpic}
+\usepackage{hyperref}
+\usepackage{newtxtext} 
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{mathtools}
+\usepackage[document]{ragged2e}
+\usepackage{listings}
+\setlist{nosep}
+\usepackage{subfig}
+
+
+% for including images
+\graphicspath{ {./images/} }
+
+
+\pdfinfo{
+  /Title (CS3211.pdf)
+  /Creator (TeX)
+  /Producer (pdfTeX 1.40.0)
+  /Author (Pei Cheng Yi)
+  /Subject (CS3211)
+  /Keywords (CS3211, nus,cheatsheet,pdf)}
+
+% Turn off header and footer
+\pagestyle{empty}
+
+\newenvironment{tightcenter}{%
+  \setlength\topsep{0pt}
+  \setlength\parskip{0pt}
+  \begin{center}
+}{%
+  \end{center}
+}
+
+% redefine section commands to use less space
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%x
+                                {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-1explus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%
+                                {\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {1ex plus .2ex}%
+                                {\normalfont\small\bfseries}}%
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand\rmdefault{\sfdefault}
+%  makes nested numbering (e.g. 1.1.1, 1.1.2, etc)
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+\renewcommand\labelitemii{•}
+\renewcommand\labelitemiii{•}
+%  convenient absolute value symbol
+\newcommand{\abs}[1]{\vert #1 \vert}
+%  convenient floor and ceiling
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+%  convenient modulo
+\newcommand{\Mod}[1]{\ \mathrm{mod}\ #1}
+%  for logical not operator, iff symbol, convenient "if/then"
+\renewcommand{\lnot}{\mathord{\sim}}
+\let\then\Rightarrow
+\let\Then\Rightarrow
+%  vectors
+\newcommand{\vv}[1]{\boldsymbol{#1}}
+\newcommand{\VV}[1]{\overrightarrow{#1}}
+%  column vector
+\newcommand{\cvv}[1]{\left(\begin{smallmatrix}#1\end{smallmatrix}\right)}
+\newcommand{\code}[1]{\textcolor{myblue}{\texttt{#1}}}
+\newcommand\bggreen{\cellcolor{green!10}}
+
+\makeatother
+\definecolor{myblue}{cmyk}{1,.72,0,.38}
+\everymath\expandafter{\the\everymath \color{myblue}}
+% Define BibTeX command
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+%% this changes all items (enumerate and itemize)
+\setlength{\leftmargini}{0.5cm}
+\setlength{\leftmarginii}{0.4cm}
+\setlength{\leftmarginiii}{0.5cm}
+\setlist[enumerate,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,2]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,3]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+
+%My Environments
+\newtheorem{example}[section]{Example}
+% -----------------------------------------------------------------------
+
+\begin{document}
+\raggedright
+\footnotesize
+\begin{multicols}{4}
+
+
+% multicol parameters
+% These lengths are set only within the two main columns
+\setlength{\columnseprule}{0.25pt}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+    \fbox{%
+        \parbox{0.8\linewidth}{\centering \textcolor{black}{
+            {\Large\textbf{CS3211}}
+            \\ \normalsize{AY22/23 Sem 2}}
+            \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
+        }%
+    }
+\end{center}
+
+% LECTURES
+
+\section{Lectures}
+\subsection{L1: Introduction to Concurrency}
+\textbf{Concurrency} \\ 
+\begin{itemize}
+    \item Concurency is pervasive when modern computers have several cores and types of memory
+    \item $\ge$ 2 activities making progress at the same time (overlaping time periods)
+    \item Involves interleaving of instructions from different activities
+\end{itemize}
+
+\textbf{Parallelism} \\
+\begin{itemize}
+    \item $\ge$ 2 processes executing and making progress \textit{simultaneously} 
+    \item Hardware dependent: requires hyperthreading (SMT), or multi-core and hardware threads
+\end{itemize}
+
+\textbf{Processes Vs threads} \\
+\begin{itemize}
+    \item Independent Vs Shared memory (address) space 
+    \item Both use independet stack 
+    \item Expensive Vs Cheap context switch 
+    \item OS facilitated vs Non OS facilitated inter-process/thread Communication
+    \item Expensive (copy on write mediates this somewhat) Vs Cheap creation
+\end{itemize}
+
+\textbf{Interrupts} \\
+\begin{itemize}
+    \item Asynchronous (independent to program execution) 
+    \item Used by OS to interact with the programme
+    \item Triggered by external events (e.g. I/O, timer, hardware failure)
+\end{itemize}
+
+\textbf{Exceptions} \\ 
+\begin{itemize}
+    \item Synchronous (dependent on program execution)
+    \item Used by process to interact with the OS
+    \item Triggered by process error (e.g. underflow, overflow)
+\end{itemize}
+
+\textbf{User thread} \\ 
+\begin{itemize}
+    \item Library created, linked to one kernel thread
+\end{itemize}
+
+\textbf{Race condition} \\
+\begin{itemize}
+    \item Outcome depends on reltive ordering of operations on $ge$ 2 Threads
+    \item a flaw that occurs when the timing or ordering of events affects a program's correctness
+\end{itemize}
+
+\textbf{Data Race} \\ 
+\begin{enumerate}
+    \item $\ge$ 2 concurrent threads concurrently access a shared resource without Synchronisation / fixed ordering
+    \item At least one modifies shared resource
+    \item Causes undefined behaviour
+\end{enumerate}
+
+\textbf{Mutex} \\ 
+\begin{itemize}
+    \item Creates critical section can be treated as a large atomic blocks
+    \item Only one thread at a a time
+    \item Supported by a hardware instruction (CAS, test and set etc)
+    \item \textbf{Properties:} Mutex, progres, bounded wait, performance 
+    \item Provides \textbf{serialisation} (less concurrency)
+\end{itemize}
+
+\textbf{Critical section} \\ 
+\begin{itemize}
+    \item Safety: nothing bad happens
+    \item Liveness: Something good (progress) happens 
+    \item Performance: depends on aggregate performance of all threads
+\end{itemize}
+
+\textbf{Locks} \\ 
+\begin{itemize}
+    \item Primitive that is provided b the hardware, minimal semantic 
+    \item E.g. Test and set 
+\end{itemize}
+
+\textbf{Deadlock iff} \\ 
+\begin{enumerate}
+    \item Mutex: One resource held in a non-shareable state
+    \item Hold and wait: One proces holding one resource and waiting for another resource 
+    \item No-preemption: Resource and critical section cannot be aborted externally 
+    \item Circular wait
+    \item Note: Lock free can deadlock
+\end{enumerate}
+
+\textbf{Dealing with deadlock} \\
+\begin{itemize}
+    \item Prevention: Eliminate one of the above conditions (E.g. hold all locks at the start)
+    \item Detection and recovery: Look for cycles in dependencies (E.g. wait for graph)
+    \item Avoidance: Control allocation of resources
+\end{itemize}
+
+\textbf{Starvation} \\ 
+\begin{itemize}
+    \item One process cannot progress becausee another process is holding on a resource it needs
+    \item Side effect of scheduling algorithm 
+    \item Wait-die and wound-wait are possible solutions, if priority of processes is preserved
+\end{itemize}
+
+\textbf{Advantages of concurrency} \\ 
+\begin{itemize}
+    \item Performance
+    \item Separation of concerns
+\end{itemize}
+
+\textbf{Disadvanageous of concurrency} \\ 
+\begin{itemize}
+    \item Maintenance and debugging
+\end{itemize}
+
+\textbf{Task parallelism} \\ 
+\begin{enumerate}
+    \item Do the \textbf{same type of} work faster
+    \item Task dependency graph can be parallel
+    \item Make tasks specialists: Same type of tasks are assigned to the same thread
+    \item Divide a sequence of tasks among threads to solve complexed task 
+    \item \textbf{Pipeline:} 1 type of thread for one phase of execution
+\end{enumerate}
+
+\textbf{Data parallelism} \\ 
+\begin{enumerate}
+    \item Do \textbf{more work} in the same amount of time
+    \item Divide data to chunks and execute by different threads
+    \item Embarasingly parallel tasks
+\end{enumerate}
+
+\textbf{Challenges of concurrency} \\
+\begin{enumerate}
+    \item Finding enough parallelism: Amadahl's law
+    \item Granularity of tasks
+    \item Locality
+    \item Coordination and Synchronisation
+    \item debugging
+    \item Performance and monitroring
+\end{enumerate}
+
+\subsection*{L2: Tasks, threads, synchronisation in modern C++}
+\textbf{History of CPP} \\
+\begin{itemize}
+    \item 1998: No support for multithreading
+    \begin{enumerate}
+        \item Effects of language model are assumed to be sequential and there are no established memory model
+        \item Different libraries used different memory models
+        \item Execution threads were not acknowledged
+    \end{enumerate}
+    \item 2011: C++11
+    \begin{enumerate}
+        \item Standard threads are implemented
+        \item Thread aware memory model.Do not rely on platform specific extensions to guarantee behaviour
+        \item Atomic operations library, class to manage threads, protected shared data etc. 
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Four ways to manage threads} \\ 
+\begin{enumerate}
+    \item Declare a function that returns a thread
+
+    \begin{lstlisting}[language=c++,breaklines=true, breakatwhitespace=true]
+void hello() {
+    std::cout << "Hello Concurrent World\n";
+}
+int main() {
+    std::thread t(hello);
+    t.join();// existing thread waits for t to finish
+}
+    \end{lstlisting}
+
+    \item Thread with a function object 
+    \begin{lstlisting}[language=c++, breaklines=true, breakatwhitespace=true]
+class background_task {
+public: 
+    void operator()() const {
+        do_something();
+        do_something_else();
+    }
+};
+/* Calleable object */
+background_task f;
+std::thread my_thread(f);
+    \end{lstlisting}
+    \begin{itemize}
+        \item  $std:: my\_thread(background\_task())$ declares a function that takes a single parameter (type *f() $\rightarrow$ object)
+        \item This is not the same as using a function object!
+    \end{itemize}
+\item Threads with a lambda expression (local fn instead of a calleable object) 
+\begin{lstlisting}[language=c++, breaklines=true, breakatwhitespace=true]
+std::thread my_thread([]{
+    do_something();
+    do_something_else();
+});
+\end{lstlisting}
+\end{enumerate}
+
+\textbf{Wait} \\ 
+\begin{itemize}
+    \item Uses join() on the thread instance exactly once 
+    \item Use joinable to check
+    \item Local variables do not go out of scope 
+    \item Blocking
+\end{itemize}
+
+\textbf{Detach()} \\ 
+\begin{itemize}
+    \item Local variable passed might go out of scope and 'disappear' during runtime, causing invalid access for the detached thread 
+    \item Example 
+    \begin{lstlisting}[language=c++, breaklines=true, breakatwhitespace=true]
+void oops(){
+    int local_state = 0;
+    /* Reference passed might become invalid */
+    func my_func(local_state);
+    std::thread my_thread(my_func);
+    my_thread.detach();
+} /*oops ends here and local_state will be destroyed */
+    \end{lstlisting}
+    \item Not blocking 
+\end{itemize}
+
+
+\textbf{Passing arguments} \\
+\begin{enumerate}
+    \item by value $std::thread t(f, 3, "hello")$
+    \item by reference $std::thread t(f, 3, buffer)$
+    \begin{itemize}
+        \item Buffer is a charbuffer that only gets converted to str when we call f
+        \item Hence it is possible for buffer to go out of scope 
+        \item Fix: Use explicit cast $std::thread(f, 3, std::string(buffer))$ 
+        \item \textbf{Major issue} with passing by reference is that threads outside of the scope can use it in \textbf{unsafe} ways. E.g. Not using mutex on shared data, deletion etc 
+    \end{itemize}
+
+    \item by copy
+    \begin{lstlisting}[language=c++, breaklines=true, breakatwhitespace=true]
+void update_data_for_widget(widget_id w, widget_data& data);
+void oops_again(widget_id w) {
+    widget_data data;
+    /* a copy of data is passed */
+    std::thread t(update_data_for_widget, w, data);
+    display_status();
+    t.join();
+    /* changes made to the copy is not reflected to other threads */
+    process_widget_data(data);
+}
+    \end{lstlisting}
+    \begin{itemize}
+        \item Fix: use reference $std::thread t(update_data_for_widget, w, std::ref(data))$
+    \end{itemize} 
+\end{enumerate}
+
+
+
+\textbf{Ownership in C++} \\ 
+\begin{itemize}
+    \item Owner is an object containing a pointer to an object allocated by $new$ for which the owner is responsible for deleting
+    \item Every object on free store (heap, dynamic store) must have \textbf{exactly one} owner
+\end{itemize}
+
+\textbf{C++ Resource Management} \\ 
+\begin{itemize}
+    \item For scoped objects, desctructor is implicit at scope exit 
+    \item Free store objects (created using $new$) requires explicit delete
+\end{itemize}
+
+
+\textbf{RAII} \\ 
+\begin{itemize}
+    \item Binds the lifetime of a resource that must be acquired before use to the lifetime of an object
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+/* Handle interrupts using RAII */
+void enqueue(Job job) {
+    std::unique_lock lock{mut}; // constructor locks mutex
+    jobs.push(job);// destructor unlocks mutex
+}
+\end{lstlisting}
+
+\textbf{Lifetime} \\
+\begin{itemize}
+    \item Lifetime begins when storage is obtained and its initialization is complete (except std::allocator::allocate)   
+    \item Lifetime ends when :
+    \begin{itemize}
+        \item Non-class type (int): destroyed
+        \item Class type: When destructor is called 
+        \item Reference: begins with initialisation and ends when destroyed. A dangling reference is possible.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Ownership of thread} \\ 
+\begin{itemize}
+    \item Moveable but not copyable
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+void some_function();
+void some_other_function();
+std::thread t1(some_function);
+/* t1 no longer references the thread */
+std::thread t2 = std::move(t1); 
+/* t1 now owns a new thread */
+t1 = std::thread(some_other_function);
+std::thread t3;
+/* t3 owns the thread running some function */
+t3 = std::move(t2);
+/* t1 already owns a thread, this will trigger a runtime error */
+t1 = std::move(t3); 
+    \end{lstlisting}
+    \begin{itemize}
+        \item C++ compiler cannot catch this
+    \end{itemize}
+    \item Ownerhship can be moved out of a function and moved into another function
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+
+/* Transferrring out of a function */
+std::thread g() {
+    void some_function();
+    std::thread t(some_function);
+    return t; // ownership transferred out of g()
+}
+
+/* Transferring into a function */
+void f(std::thread t);
+void g() {
+    void some_other_function();
+    std::thread t(some_other_function);
+    f(std::move(t)); // ownership transferred into f()
+}
+    \end{lstlisting}
+\end{itemize}
+
+
+\textbf{Mutex in C++} \\
+\begin{itemize}
+    \item $std::lock_guard$ locks the mutex upon initialisation, unlocks upon destruction
+    \item $std::lock_guard<std::mutex>{some_mutex};$ 
+    \item Group mutex and protected data together in a class rather than use global variables
+    \item Never pass data or pointers (via returns, sotring in externally visible memory, as input to functions etc) when their usage is not guaranteed to be safe
+\end{itemize}
+
+
+\textbf{Types of lock guards}
+\begin{itemize}
+    \item \textbf{lock guard} no manual lock, can lock many or one mutex at once without deadlock
+    \item \textbf{Scoped lock} accepts and locks a list of mutexes. Can be unintentionally initialized without a mutex
+    \item \textbf{unique lock} manual unlock, defers locking using $std::defer_lock$, only single mutex. 
+\end{itemize}
+
+\textbf{Condition Variable} \\
+\begin{itemize}
+    \item Use condition variables to wait for a an event to be triggered by another thread
+    \item Avoids busy waiting 
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+std::condition_variable.wait(lock, []{return predicate});
+    \end{lstlisting}
+    \item if condition is satisfied, returns
+    \item unlocks the mutex and places the thread in block state if condition is not satisfied
+    \item $std::condition_variable.nofiy_one();$ to notify one thread waiting on the cond
+\end{itemize}
+
+
+\textbf{Spurious Wake} \\ 
+\begin{itemize}
+    \item Thread wakes up from waiting, but is blocked again as the resource required is not available
+    \item Leads to unnecessary context switching
+    \item Use conditionals to prevent spurious wake
+\end{itemize}
+
+\end{itemize}
+
+\textbf{Shared DS - Invariants} \\ 
+\begin{itemize}
+    \item Often broken during an update 
+    \item \textbf{Case study: Doubly LL}
+\includegraphics*[width=7cm, width=7cm]{dll.png}
+    \item  invariant is temporarily broken during an update, and we need to prevent objects from accessing the DS during this time
+\end{itemize}
+
+\subsection{L3: Atomics and Memory Model in C++} 
+
+\textbf{Reordering of operations} \\ 
+\begin{itemize}
+    \item Compiler may reorder (potentially conflicting) actions for performance 
+    \item Not visible to programmers
+\end{itemize}
+
+\textbf{As-if rule} \\
+\begin{itemize}
+    \item Reordering is allowed as long as:
+    \begin{enumerate}
+        \item At termination, data written to files is exactly as if the program was executed as written (same final state)
+        \item Prompting text that is sent to interactive devices will be shown before the program waits for input
+        \item Programs with undefined behaviour is exempted from these rules.
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Multi-threading aware memory model} \\ 
+\begin{itemize}
+    \item Using synchronisation constructs (mutexes, barriers etc) should preclude the need for a memory model since they serialise threads 
+    \item Memory model gives us more flexibility and speed by getting us closer to the machine
+\end{itemize}
+
+\textbf{Stucture of memory model} \\
+\begin{itemize}
+    \item Every object has a memory location, some occupy exactly one, some occupy many 
+    \item The changes in memory location / what is stored there affects other threads
+\end{itemize}
+
+\textbf{Modification Order} \\ 
+\begin{itemize}
+    \item Compose of all writes to an object from all threads in the program
+    \item MO varies between runs, each object has their own MO
+    \item The programmer is responsible that threads agree on the MO (if not, race condition happens)  
+\end{itemize}
+
+\textbf{MO - Requirements} \\ 
+\begin{itemize}
+    \item The MO of each object is monotonic within a thread 
+    \item But the relative ordering of MO of different objects is not guaranteed
+\end{itemize}
+
+\textbf{MO - Building Blocks} \\
+\begin{itemize}
+    \item \textbf{Sequenced-before (SB)}
+    \begin{itemize}
+        \item Each lines of code in a thread is sequenced before the next line
+        \item There is \textbf{NO} sequenced before in a statement with many function calls 
+    \end{itemize}
+    \item \textbf{Synchronises-with (SW)}
+    \begin{itemize}
+        \item Established by a $load$ from $T_i$ reading $T_j$'s $store$ 
+        \item Both $T_i$ and $T_j$ are synced with respect to the common value in the MO
+    \end{itemize}
+    \item \textbf{Happens-before (HB)} When an operation happens before another operation due to SW or SB
+    \item \textbf{Interthread Happens Before (IHB)}
+    \begin{itemize}
+        \item When a $store$ in $T_i$ established a sequenced before a $load$ in $T_j$, $sotre_i$ happens before $load_j$ 
+        \item IHB $\subseteq$ HB
+    \end{itemize}
+    \item \textbf{Visible Side effects} 
+    \begin{itemize}
+        \item Side effect of write A on O is visible to a read B on O if:
+        \begin{enumerate}
+            \item A HB B
+            \item There is no other side effects to O that happens between A and B
+        \end{enumerate}
+        \item If the side effect of A is visible to B then the longest contiguous subset of the side-effects to O (that B does not HB) is known as the visible sequence of side effects 
+        \item Do not think of ordering, think in terms of side effects that are visible
+    \end{itemize}
+    \item \textbf{Modification Order}
+\end{itemize}
+
+\textbf{MO - Seq Const} \\
+\begin{itemize}
+    \item The default
+    \item All threads must see the same ordering of operation
+    \item Synchronises with a sequentially consistent load of the same variable that reads the value loaded 
+    \item Does not apply to atomic operations with relaxed ordering
+    \item Performance penalty when working with weakly ordered machine instructions (common) 
+    \item Essentially a serailised monoversion - global total order enforced    
+    \item Only guaranteed for data-race free programs (which is difficult since C++ is not as safe as Rust)
+\end{itemize}
+
+\textbf{MO - Relaxed} \\ 
+\begin{itemize}
+    \item Atomic operations don't conform with SW relationships
+    \item Happens before still applies within the thread $\rightarrow$ monotonicity and SB within the thread is preserved
+    \item No HB between load and store, different store operations from T1 can be viewed out of order by reads in T2
+    \item T1: $x=1, y=0$. T2 can see y=0 without seeing x=1 since there is no SW between the two threads even though x=1 HB y=1 in T1.  
+\end{itemize}
+
+
+\textbf{MO - Acquire Release} \\
+\begin{itemize}
+    \item No total modification order, but there is a partial order
+    \item Read - acquire updates about the memory order, load - release updates about the memory order
+    \item A link between acquire and release acts like a barrier 
+\end{itemize}
+
+
+\textbf{MO - Mixing Models} \\
+\begin{itemize}
+    \item Seq const and Release Acquire: load and store of seq const behaves similar to release acquite 
+    \item any MO and relaxed: Relaxed behaves like relaxed but is bounded by the other more limiting MO 
+    \begin{lstlisting}[language=C++]
+// T1
+x.store(true, std::memory_order_relaxed);
+y.store(true, std::memory_order_release);
+// T2
+while (!y.load(std::memory_order_acquire) );
+/* Never fires because acquire and release */
+/* x.store HB y.store  & y.store SW y.load */
+assert(x.load(std::memory_order_relaxed)); 
+    \end{lstlisting}
+\end{itemize}
+
+\textbf{Atomic Operations} \\ 
+\begin{itemize}
+    \item Compiler ensures necesary synchronisation is in place and enforces MO 
+    \item Atomic ops are indivisible
+    \item Atomic load loads either the initial value or the value stored by one of the modifications (cannot be half-done)
+    \item Can be lock free or be implemented using mutex (which wipes off performance gains)
+    \item Not necessarily race free
+\end{itemize}
+
+
+\subsection*{L4: Testing and debugging in C++} 
+\textbf{Concurrency related bugs}\\
+\begin{itemize}
+    \item Unwanted blocking: Deadlock, livelock, blocking while waiting on I/O
+    \item Race conditions:  
+    \begin{enumerate}
+        \item Data races: Undefined behaviour due to unsynchronised access to a shared memory locaiton. Obseravable.
+        \item Broken Invariants:
+        \begin{itemize}
+            \item Dangling pointers: another thread deleted the data being accessed
+            \item Random memory corruption: Inconsitent values being read due to partial updates
+            \item Double free: Two threads pop the same value from a queue / deleting the same memory address twice - causes possible memory leak
+            \item Use After Free - Reading or writing after a memory has been freed
+            \item Uinitialised variables - Reading from a variable that has not been initialised
+        \end{itemize}
+        \item Lifetime issues:
+        \begin{itemize}
+            \item Thread outlives data
+            \item Call to join skipped doe to an exception thrown
+        \end{itemize}
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Techniques to locate concurrency bugs} \\ 
+\begin{itemize}
+    \item Look at the code 
+    \item Testing: Difficult to reproduce, Tests do not always fail (Heisenbug)
+\end{itemize}
+
+\textbf{Guidelines for testing} \\ 
+\begin{itemize}
+    \item Run the smallest amount of code that could potentially demonstrate the bug to locate faulty code 
+    \item Do single threaded tests to verify the bug is concurrency related 
+    \item Run on sinlge core system to identify issues with interleavings
+\end{itemize}
+
+\textbf{Test environment} \\
+\begin{itemize}
+    \item Number of threads: More threads increases the chance of deadlock (at least 2), contention (blocking while contending for shared resources, degrades performance), overhead
+    \item Architecture 
+    \item Number of cores 
+    \item Having memory fences and barriers to sync threads
+\end{itemize}
+
+
+\textbf{Designs for testability}\\
+\begin{itemize}
+    \item Responsiblity for each function and thread should be clear 
+    \item Check that library calls are thread safe (e.g. do they use internal states to ensure correctness?)
+\end{itemize}
+
+\textbf{Techniques for testing} \\
+\begin{enumerate}
+    \item Stress testing
+    \item Use special implementation of synchronisation primitives (e.g. log when mutexes are locked, unlocked)
+    \item \textbf{Scalability} does the speedup scale when the number of threads increase? Contention to 
+\end{enumerate}
+
+\textbf{Debugging Tools} \\
+\begin{itemize}
+    \item Identify bugs: 
+    \begin{enumerate}
+        \item Valgrind (dynamic instrumentation)
+        \begin{itemize}
+            \item Shadow memory: track and store information on the memory that is used by a program during its execution. A bits and V bits must match for valid.
+            \item 20x slowdown
+        \end{itemize}
+        \includegraphics*[width=6cm,height=2.5cm]{valgrind.png}
+
+        \item Helgrind (dynamic instrumentation)
+        \begin{itemize}
+            \item 100x slow down
+            \item intercepts function calls to functions and instruments
+            \item Detects: misuses of POSIX threads API, potential deadlocks (checking cyclic lock acquisition), data races (checks existence of HB between memory accesses)
+        \end{itemize}
+
+        \item Sanitizers (compilation-based approach)
+        \begin{itemize}
+            \item 5-10x overhead (lmao just use rust)
+            \item $-fsanitize=address$ or $-fsanitize=thread$ or $-fsanitize=memory$ (to catch unitialised memory)
+            \item Output is verbose (unlike rust compiler)
+        \end{itemize}
+
+        \item Adress Sanitizers (compilation-based approach)
+        \begin{itemize}
+            \item 2x slowdown, 3x overhead
+            \item More efficient shadowing than valgrind 
+        \end{itemize}
+        \includegraphics*[width=6cm,height=2cm]{asan.png}
+
+        \item Thread Sanitizer 
+        \begin{itemize}
+            \item 5-10x slow down, 5-15x overhead
+            \item Function entry/exit and memory access are logged
+            \item An 8-byte shadow cell represents one memory access
+            \item Epoch: time of access
+            \item Pos: location accessed
+            \item If there is an overlap in Pos, we check epoch for evidence of HB. If no HB, then there might be a data race
+            \item Use graph-based deadlock detection
+        \end{itemize}
+        \includegraphics*[width=6cm,height=2.5cm]{tsan_1.png}
+
+    \end{enumerate}
+
+\end{itemize}
+
+\pagebreak
+% TUTORIALS
+\section{Tutorials}
+\subsection*{T1: Threads and Synchronisation}
+\textbf{Why mutexes work - standard argument}\\ 
+\begin{itemize}
+    \item Define a critical section that contains all acesses to the shared resource 
+    \item Argue that mutex guarantees mutual exclusivity of threads - removes interleaving, data race precluded
+\end{itemize}
+
+\textbf{Why mutexes work - theoretical argument}\\
+\begin{itemize}
+    \item Lock and unlock appears in a single total order
+    \item Only one thread owns the lock at any pointer
+    \item Unlock happens after lock, creating a synchronises with relationship between processes and \textbf{serialises the interleaving} - no concurrent access
+\end{itemize}
+
+
+\textbf{Monitor} \\
+\begin{itemize}
+    \item Allows us to block until a condition becomes true
+    \item The monitor has: 
+    \begin{enumerate}
+        \item A mutex on the critical section
+        \item A condition variable
+        \item A condition to wait for 
+    \end{enumerate}
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+std::condition_variable cond;
+
+Job dequeue() {
+    std::unique_lock lock{mut};
+    /* wait until there is a job */
+    cond.wait(lock, [this]() { return !jobs.empty(); });
+    Job job = jobs.front();
+    jobs.pop();
+    return job;
+    }
+
+void enqueue(Job job) {
+    {
+        std::unique_lock lock{mut};
+        jobs.push(job);
+    }
+    /* notify one thread waiting on the condition variable */
+    cond.notify_one();
+    }
+    \end{lstlisting}
+\end{itemize}
+
+
+\subsection*{T2: Atomics in C++}
+
+\textbf{Data races and undefined behaviour} \\
+\begin{itemize}
+    \item For undefined behaviour, the C++ compiler \textbf{will allow it to be compiled}
+    \item Compilers are free to do any reordering and the answer cannot be predicted. 
+    \item E.g. GCC and Clang will return different runtime outputs as they compile it differently
+    \item See snipet 1
+\end{itemize}
+
+\textbf{Mutexes Vs Atomics} \\
+\begin{itemize}
+    \item Consider the following implementation of a counter
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+int counter = 0
+std::mutex m;
+void t1 {
+    for (int i = 0; i < 1000000; i++) {
+        std::lock_guard lock{mut};
+        counter++;
+    }
+}
+
+std::atomic<int> atomic_counter = 0
+void t2 {
+    for (int i = 0; i < 1000000; i++) {
+        atomic_counter.fetch_add(1, std::memory_order_seq_cst);
+    }
+}
+    \end{lstlisting}
+    \item The atomic version is much faser than the mutex version
+    \item Mutex calls lock and unlock multiple times around the add operation, which compiles to more instructions and may cause the threads to sleep / fight for access
+    \item The atomic version is a single instruction $lock$ $addl$ $\$1$, which is much faster
+\end{itemize}
+
+\textbf{Memory order and performance} \\ 
+\begin{itemize}
+    \item Seq cst $\ge$ Acquire-Release $\ge$ Relaxed
+    \item Seq cst's store uses $xchg$ (requires the processor to have exclusive access to shared mem) while the other orders allows x86 to use a simple $mov$ instruction
+\end{itemize}
+
+\textbf{Forcing ordering with $std::atomic<int>$} \\
+\begin{itemize}
+    \item Compiler reorders instructions to preserve visible side effects and optimise 
+    \item We can use atomics to force the compiler to preserve ordering
+    \item But this also forces the compiler to use the more expensive $xchg$ instruction, since atomics use seq cst by default
+\end{itemize}
+
+\textbf{Memory order - atomics} \\
+\begin{itemize}
+    \item Note: data races \textbf{is not possible} when atomics are used. If load and store are not atomic, then the output can theoretically be anything (segfault, garbage value etc)
+    \includegraphics*[width=7cm,height=2.2cm]{t2_1.png}
+    \item The first cout can print 1,3,5. The secon cout can print 3,5. They will never print 0 due to the acquire release.
+\end{itemize}
+
+\textbf{Fences} \\
+\begin{itemize}
+    \item Enforces memory order without modifying the data 
+    \item Can be used with Relaxed MO to enforce ordering while preserving concurrency 
+    \item \textbf{Memory Barrier} puts a line that certain operations cannot pass 
+    \item \textbf{Atomic fence} with acquire release MO prevents all preceding read and writes from moving past all subsequent stores
+\end{itemize}
+
+\subsection*{T3: Debugging Concurrent C++ Programs}
+
+\textbf{Protecting shared resource with unique$\_$ptr} \\
+\begin{itemize}
+    \item std::unique$\_$ptr is a smart pointer that owns and manages another object through a pointer and disposes of that object when the unique$\_$ptr goes out of scope.
+    \item Destroys object with the provided $deleter$
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+{ 
+std::unique_ptr<int> foo = std::make_unique<int>(5);
+/* custom deleter for File */
+auto deleter = [](FILE* f) { fclose(f); };
+auto bar = std::unique_ptr<FILE, decltype(deleter)>(fopen("file.txt", "w"), deleter);
+}
+/* Foo and bar are destroyed here */
+    \end{lstlisting}
+\end{itemize}
+
+\textbf{Protecting against shared lifetimes} \\
+\begin{itemize}
+    \item std::shared$\_$ptr is a smart pointer that retains shared ownership of an object through a pointer.
+    \item When shared ptr is copied, we increase the count by 1. When it is destroyed, we decrease the count by 1. When count is 0, we delete the object
+    \item While deleting shared ptr is thread safe (since it just deceremnts the counter), the object wrapped by shared ptr may not be (data races can still happen)
+\end{itemize}
+
+\pagebreak
+% USEFULE FACTS
+\subsection*{Classical Synchronisation Problems}
+
+\subsection*{Comparison between Rust, Go, C++}
+\textbf{Ownership} \\ 
+\begin{itemize}
+    \item C++ has RAII to manage resources, moveable but not copyable reference
+\end{itemize}
+
+\textbf{Testing and debugging} \\
+\begin{itemize}
+    \item C++ cannot catch many race conditions and concurrency bugs at compile time, and requires testing at run time 
+    \item Tsan and Asan has verbose output (unlike rust compiler)
+\end{itemize}
+
+\end{multicols}
+\end{document}
