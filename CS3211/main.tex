@@ -700,6 +700,7 @@ assert(x.load(std::memory_order_relaxed));
         \begin{itemize}
             \item Shadow memory: track and store information on the memory that is used by a program during its execution. A bits and V bits must match for valid.
             \item 20x slowdown
+            \item Provides more details than sanitizers despite its performance overhead
         \end{itemize}
         \includegraphics*[width=6cm,height=2.5cm]{valgrind.png}
 
@@ -739,6 +740,171 @@ assert(x.load(std::memory_order_relaxed));
     \end{enumerate}
 
 \end{itemize}
+
+
+\subsection*{L5: Concurrent DS in modern C++}
+\textbf{Goal} \\
+\begin{itemize}
+    \item Multiple threads can access the same DS concurrently
+    \item The scope of concurrency (all operations, some operations, one operation) depends
+    \item Each thread has a self-consistent view of the DS 
+    \item \textbf{Broken invariants} should not be visible E.g. delete() of DLL
+    \item Avoid race conditions
+    \item Handle exceptions, prevent exceptions from exposing broken invariants. E.g. UAF when a thread aborts after freeing
+    \item \textbf{Thread safe}
+    \begin{itemize}
+        \item No data is lost or corrupted
+        \item All invariants are kept 
+        \item No problematic race conditions
+    \end{itemize}
+\end{itemize}
+
+\textbf{Problems with mutex} \\
+\begin{itemize}
+    \item Prevents true concurrent access to DS - Serialisation
+    \item Possible for deadlocks (well, same for lock-free but harder)
+\end{itemize}
+
+\textbf{Concurrency while calling functions} \\
+\begin{itemize}
+    \item Constructors and destructors require exclusive access to the DS - users should not access DS before construction is complete and after desctruction
+    \item Swap(), assignment, copy(): Can they be used concurrently with other operations in the DS?
+\end{itemize}
+
+\textbf{Design Principles} \\
+\begin{itemize}
+    \item Smaller the protected region, the better - fewer serialised region
+    \item Provide opportunities for concurrency to threads accessing a thread safe DS - what can be called concurrently?
+    \item One type of operation can be performing one type of operation exclusively from another type of operation (reader writer) - consider shared mutex
+    \item Or allow different types of operations to happen concurrently but disallow the same type to be used by concurrent threads
+\end{itemize}
+
+\textbf{Maximising concurrency} \\
+\begin{itemize}
+    \item Use different mutexes to protect different parts 
+    \item Give more concurrency to more frequent operations
+\end{itemize}
+
+
+\textbf{Example: threadsafe stack} \\
+\begin{enumerate}
+    \item Exception Safety - safe!
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+std::shared_ptr<T> pop() {
+    std::lock_guard<std::mutex> lock(m);
+    /* This is safe */
+    if (data.empty()) throw empty_stack();
+    /* Potential out of memory error */
+    /* This is fine since the mutex will be unlocked during exception */
+    std::shared_ptr<T> const res(
+std::make_shared<T>(std::move(data.top()));
+    )
+    value = std::move(data.top());
+    data.pop(); 
+    return res;
+}
+\end{lstlisting}
+
+    \item Work is serialized for the DS - low concurrency
+    \item Should use a monitor to allow waiting for an item to be added
+\end{enumerate}
+
+\textbf{Example: threadsafe Queue} \\
+\begin{enumerate}
+    \item Exception Safety: Suppose a thread is woken up by the monitor and that an exception occuring after this point will cause nothing to be popped from the queue.
+    \item And other threads waiting on the condition variable is not able to be notified of the non-empty queue
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+void wait_and_pop(T & value) {
+    std::unique_lock<std::mutex> lock(m);
+    data_cond.wait(lock, [this]{return !data.empty();});
+    std::shared_ptr<T> res(
+/* Exception here is problematic */
+std::make_shared<T>(std::move(data.top()))
+    );
+    value = std::move(data.top());
+    /* Important to pop after moving */
+    data.pop();
+    return res;
+}
+    \end{lstlisting}
+\item Fix 1 Notify All: Works ... but cause spurious wakes 
+\item Fix 2: Put the shared pointer in the queue directly, so we can obtain a shared pointer directly by popping from the queue
+\item Shared pointer helps us to handle deallocation
+
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+class threadsafe_queue {
+    private:
+    std::mutex m;
+    std::queue<std::shared_ptr<T>> data_queue;
+    std::condition_variable data_cond;
+    public:
+    ... 
+void push(T new_value) {
+    /* Creation of new data takes place outside mutex */
+    /* This is exception safe */
+    std::shared_ptr<T> data(
+std::make_shared<T>(std::move(new_value))
+    );
+    std::lock_guard<std::mutex> lock(m);
+    data_queue.push(data);
+    data_cond.notify_one();
+}
+}
+        \end{lstlisting}
+\item Share-pointers are exception safe
+\item The creation now takes place outside the mutex - improves performance 
+\item However, using the standard container and mutex limits concurrency as the queue is either protected or not 
+\item For a more fine-grained locking, we need to write a customised DS
+\end{enumerate}
+
+\textbf{Example: threadsafe stack with fine-grained locks} \\
+\includegraphics*[width=7cm,height=1.5cm]{finegrained_queue.png}
+\begin{itemize}
+    \item \textbf{Node}
+    \begin{enumerate}
+        \item Data is not meant to be shared, so shared ptr is not used 
+        \item Pointers to nodes should only be modified by one thread, so we use an unique poitner 
+        \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+struct node {
+    T data;
+    /* Only one copy of next */
+    std::unique_ptr<node> next;
+    node(T data_):
+            data(std::move(data_))
+    {}
+};
+        \end{lstlisting}
+    \end{enumerate}
+    \item \textbf{Push - attempt 1} \\
+    \begin{enumerate}
+        \item Modify the front of the queue if it is empty
+        \item Else we modify the back
+        \item Using a lock for checking front and back is problematic as we need to lock both mutexes if the queue is initially empty (front=back, potential for deadlock if two threads tries to push concurrently). This also serialises the queue 
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+void push(T new_value) {
+    std::unique_ptr<node> p(new node(std::move(new_value)));
+    node* const new_back = p.get();
+    std::lock_guard<std::mutex> lock(tail_mutex);
+    if (back) {
+        back->next = std::move(p);
+    } else {
+        front = std::move(p);
+    }
+    back = new_back;
+}
+\end{lstlisting}
+    \end{enumerate}
+
+\item \textbf{Push - attempt 2} \\
+\begin{enumerate}
+    \item Ensure that there's always $ge$1 node in the queue to separate the node being accessed at the front from the node being accessed at the back 
+    \item Empty queue: front and back point at a dummy node 
+    \item No race on front.next  and back.next (additional layer of indirection) \\
+    \includegraphics*[width=5cm,height=1.5cm]{dummy.png}
+
+\end{enumerate}
+\end{itemize}
+
 
 \pagebreak
 % TUTORIALS
@@ -878,6 +1044,34 @@ auto bar = std::unique_ptr<FILE, decltype(deleter)>(fopen("file.txt", "w"), dele
     \item While deleting shared ptr is thread safe (since it just deceremnts the counter), the object wrapped by shared ptr may not be (data races can still happen)
 \end{itemize}
 
+\textbf{Possible bugs with shared$\_$ptr} \\
+\begin{itemize}
+    \item Unsynchronised access to managed object - WR, WW can still happen if exclusive lock is not used 
+    \item Data race on ptr (UAF): Overwrites to ptr deletes the old value and make a new one. But the reader may still be using the old ptr. Do not pass shared ptr by reference. 
+    \item Circular reference: A points to B, B points to A. Both will never be deleted since the reference count will be at least 1. E.g. A.prev = B, B.next = A. 
+    \begin{itemize}
+        \item Using DLLNode* prev and DLLNode next. Only the next pointer copies the shared pointer, so there is no cycle.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Implementing shared ptr} \\
+\begin{itemize}
+    \item The semantics of a shared ptr is that it manages when to destroy a shared resource.
+    \item This means that we need to keep a shared count, that is stored as a reference
+    \item Since this is shared, we need to use a mutex (see 3.4) or atomic operations (see 3.5) to protect it
+    \item During deletion (count == 0), we cannot delete the mutex in the critical section since the std::unique lock will call unlock when exiting the CS
+    \item So we store the decremented value of counter in a temp var and check $temp==0$ outside of the critical section
+    \item This is correct since $temp==0$ implies no thread can modify the counter so no data race
+    \item Note: Use an atomic int for the atomic implementation
+\end{itemize}
+
+\textbf{Extra overhead of shared pointer} \\
+\begin{itemize}
+    \item Ambiguous ownership: Most resources should have a single owner using std::unique ptr and use a singleton pattern
+    \item Memory leaks: Cyclic references, as shown above, can cause memory leaks. Std::unique ptr does not face this. 
+    \item Performance overhead: Maintaining reference counts result in unnecessary synchronisation. Initialising memory on the heap instead of the stack (since shared ptr is shared) may slow down the program and reduce cache locality
+\end{itemize}
+
 \pagebreak
 % USEFULE FACTS
 \subsection*{Classical Synchronisation Problems}
@@ -892,6 +1086,7 @@ auto bar = std::unique_ptr<FILE, decltype(deleter)>(fopen("file.txt", "w"), dele
 \begin{itemize}
     \item C++ cannot catch many race conditions and concurrency bugs at compile time, and requires testing at run time 
     \item Tsan and Asan has verbose output (unlike rust compiler)
+    \item Catching concurrent bugs at run time runs into heisenbugs
 \end{itemize}
 
 \end{multicols}
