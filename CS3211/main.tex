@@ -502,7 +502,7 @@ std::condition_variable.wait(lock, []{return predicate});
 \begin{itemize}
     \item Often broken during an update 
     \item \textbf{Case study: Doubly LL}
-\includegraphics*[width=7cm, width=7cm]{dll.png}
+\includegraphics*[width=7cm]{dll.png}
     \item  invariant is temporarily broken during an update, and we need to prevent objects from accessing the DS during this time
 \end{itemize}
 
@@ -862,11 +862,10 @@ std::make_shared<T>(std::move(new_value))
 \begin{itemize}
     \item \textbf{Node}
     \begin{enumerate}
-        \item Data is not meant to be shared, so shared ptr is not used 
         \item Pointers to nodes should only be modified by one thread, so we use an unique poitner 
         \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
 struct node {
-    T data;
+    std::shared_ptr<T> data;
     /* Only one copy of next */
     std::unique_ptr<node> next;
     node(T data_):
@@ -877,14 +876,14 @@ struct node {
     \end{enumerate}
     \item \textbf{Push - attempt 1} \\
     \begin{enumerate}
-        \item Modify the front of the queue if it is empty
+        \item Modify the of the queue if it is empty
         \item Else we modify the back
         \item Using a lock for checking front and back is problematic as we need to lock both mutexes if the queue is initially empty (front=back, potential for deadlock if two threads tries to push concurrently). This also serialises the queue 
 \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
 void push(T new_value) {
     std::unique_ptr<node> p(new node(std::move(new_value)));
     node* const new_back = p.get();
-    std::lock_guard<std::mutex> lock(tail_mutex);
+    std::lock_guard<std::mutex> lk(mut);
     if (back) {
         back->next = std::move(p);
     } else {
@@ -897,14 +896,82 @@ void push(T new_value) {
 
 \item \textbf{Push - attempt 2} \\
 \begin{enumerate}
-    \item Ensure that there's always $ge$1 node in the queue to separate the node being accessed at the front from the node being accessed at the back 
+    \item Ensure that there's always $\ge$1 node in the queue to separate the node being accessed at the front from the node being accessed at the back 
     \item Empty queue: front and back point at a dummy node 
-    \item No race on front.next  and back.next (additional layer of indirection) \\
-    \includegraphics*[width=5cm,height=1.5cm]{dummy.png}
-
+    \item No race on front.next  and back.next (but with additional layer of indirection) \\
+    \includegraphics*[width=6cm,height=3cm]{dummy2.png}
 \end{enumerate}
+
+\item With the use of dummy nodes, we can do more fine grained locking since we can now lock the front and back separately without the chance of Deadlock 
+\item Pop and push can now occur concurrently\\
+\includegraphics*[width=7cm,height=5.5cm]{queue1.png}
+\includegraphics*[width=7cm,height=5cm]{queue2.png} \\
+\item This can be even more fine grained by having a per-node mutex, which establishes a SW between push and pop threads
+\item However this doesn't really make sense (unless we are supporting search etc) as pop and push only accesses the front and back of the queue 
+\item We also have to use raw pointers since the mutex is in the Node and we cannot delete the Node before unlocking (otherwise UAF)
 \end{itemize}
 
+\textbf{Lock-free concurrent DS} \\
+\begin{itemize}
+    \item Non-blocking Mutexes: Spinning lock with test and set 
+    \item A blocked thread is suspended by the OS
+    \item Non-blocking DS: 
+    \begin{enumerate}
+        \item \textbf{Obstruction-free:} if all threads paused, then any thread will complete in a bounded number of threads
+        \item \textbf{Lock-free:} if multiple threads are operating on a DS, then after a bounded number of steps, one of them will complete (note: deadlock  still possible)
+        \begin{itemize}
+            \item \textbf{Pros}
+            \item Enable max concurrency; some thread makes progress with every step
+            \item Robust: One thread dying doesn't affect the other threads using the DS, threads will not be excluded from accessing the DS 
+            \item Need to ensure that the invariants are upheld, and that changes become visible to other threads in the correct order
+            \item \textbf{Cons}
+            \item live locks are possible (changes made by one thread requires the others to restart) 
+            \item Decrease overall performance even though individual waiting time is reduced
+            \item Atomic operations can be expensive
+            \item Hardware need to use more expensive operations to synchronise data
+        \end{itemize}
+        \item \textbf{Wait-free:} every thread will complete in a bounded number of steps, even if other threads are operating on the DS (note: starvation still possible)
+        \begin{itemize}
+            \item Lock free with loops (CAS) can result in one being subjected to starvation 
+            \item E.g. A spins, but B progresses and sets the condition to false again 
+        \end{itemize}
+        \item wait-free $subseteq$ lock-free $subseteq$ obstruction-free
+        \item lock-free is not always wait-free
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Contention and Cache Ping Pong} \\
+\begin{itemize}
+    \item Change made by one thread takes time to propagate to the other cores
+    \item This contention makes other threads wait for the change to propagate across memory
+    \item Accessing data from the cache line with multiple threads can cause false sharing (hard to catch) 
+    \item 
+\end{itemize}
+
+\subsection*{L6: Concurrency in GO} 
+\textbf{About GO} \\
+\begin{itemize}
+    \item Statically typed 
+    \item Compiled PL 
+    \item More memory safety, garbage collection, CSP style concurrency than C
+\end{itemize}
+
+\textbf{Task Concurency Graph} \\
+\begin{itemize}
+    \item Node: Task, value is the expected execution time 
+    \item Edge: Represent control dependency between tasks (v wait-for u)
+    \item Critical path length: slowest completion time 
+    \item Degree of concurrency: Total work / critical path length 
+    \includegraphics*[width=7cm,height=2.5cm]{taskconcurrency.png}\\
+\end{itemize}
+
+\textbf{Speed up gained from concurrency} \\
+$S_p(n) = \frac{T_{best seq}(n)}{T_{parallel}(n)}$, we aim to gain a $S_p$ of p, where p is the number of processors \\
+
+\textbf{Amadahl's Law} \\
+\begin{itemize}
+    \item 
+\end{itemize}
 
 \pagebreak
 % TUTORIALS
@@ -1072,6 +1139,130 @@ auto bar = std::unique_ptr<FILE, decltype(deleter)>(fopen("file.txt", "w"), dele
     \item Performance overhead: Maintaining reference counts result in unnecessary synchronisation. Initialising memory on the heap instead of the stack (since shared ptr is shared) may slow down the program and reduce cache locality
 \end{itemize}
 
+\subsection*{T4 - lock free programming} 
+This tutorial implements the threadsafe queue in L5 using atomics.\\
+
+\textbf{Problems faced by producers} \\
+\begin{itemize}
+    \item  Producers may data race by overwritting each other's job
+    \begin{enumerate}
+        \item Use queue$\_$back.exchange(new dummy), which returns the current work node to the producer to edit while setting the back to be a new dummy node (contains null)
+    \end{enumerate}
+    \item A producer may not be synchronised with consumers, causing consumers to read an invalid state
+    \begin{enumerate}
+        \item Use acquire release to update the $next$ pointers 
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Problems faced by consumers} \\
+\begin{enumerate}
+    \item Consumer may race wuth each other (by consuming a node twice, consuming another consumer's node, deleting the node (UAF))
+    \begin{itemize}
+        \item Doing queue$\_$front.exchange(queue$\_$front.next) is not good enough as ew only want to exchange if the current node does not contain null 
+        \item A \textbf{CAS} is needed
+    \end{itemize}
+    \item Consumers may not be synced with producers 
+    \begin{itemize}
+        \item Use acquire release to update the $next$ pointers
+    \end{itemize}
+\end{enumerate}
+
+\textbf{CAS pattern} \\
+\begin{itemize}
+    \item Performs a comparison on the memory location, checking if the current value is the same as the expected value. Exchange if true
+    \item If the side effect is not monotonic, we might face \textbf{ABA} problem
+    \item \textbf{Weak CAS} is conducted in a sequence of instructions. It is possible for it to fail spuriously. It is cheaper and should be used if CAS is used in a loop and each loop is cheap.
+    \item \textbf{Strong CAS} is conducted in a single $cmpxchng$ instruction. It is more expensive but will not fail spuriously.
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+/* Ensures that the value read gets more updated with each loop */
+Node* old_front_next = old_front.node -> next.load(stdmo::acquire);
+... 
+/* Can be relaxed because of the previous acuire */
+m_queue_front.compare_exchange_weak(old_front, old_front_next, std::memory_order_relaxed)
+    \end{lstlisting}
+\end{itemize}
+
+\textbf{ABA problem} \\
+\begin{itemize}
+    \item The next pointer in a Node is obviously non-monotonic (and so are the values stored in the nodes)
+    \item It is possible for an old front to be consumed, and then re-inserted with the same value (but not necessarily at the front). A thread that read the old front before it was consumed will not be able to detect this, and CAS succeeds \\
+    \includegraphics*[width=7cm, height = 2.5cm]{aba1.png}
+
+    \item But the new old front may not contain the same next pointer as the value read by the thread from the old old front.\\
+    \includegraphics*[width=7cm, height =2cm]{aba2.png}
+\end{itemize}
+
+\textbf{Solving ABA with generation-counted pointers} \\ 
+\begin{itemize}
+    \item Include a generation counter alongside the data we are performing CAS on  to differentiate between versions
+    \begin{lstlisting}[language=c++,breaklines=true, breakatwhitespace=true]
+struct alignas(16) GenNodePtr
+{
+    Node* node;
+    uintptr_t gen;
+};
+
+static_assert(
+std::atomic<GenNodePtr>::is_always_lock_free
+);
+
+alignas(64) std::atomic<Node*> m_queue_back;       // producer end
+alignas(64) std::atomic<GenNodePtr> m_queue_front; // consumer end
+    \end{lstlisting}
+    \item When we initialise the new front, we set its gen to be old front.gen + 1.
+    \item (Of course, overflow is possible so it is not fool proof)
+\end{itemize}
+
+\textbf{UAF} \\ 
+\begin{itemize}
+    \item gen ptr ensures that CAS fails when other consumers have changed the queue, but it is possible to dereference a pointer froma possible stale value of m$\_$queue$\_$front
+    \item Then, that node may be allocated again on the same address. And the constructor of std::atomic will raise with the load()
+    \item \textbf{Solutions:} 
+    \begin{enumerate}
+        \item Never free anything (let the memory leak )
+        \item Mark nodes for deletion, and delay the deletion when the entire queue is free (no other threads acccessing queue)
+        \item Use reference counting (atomic::shared ptr) to know when there are no more remaining references. This is not lock free.
+        \item Hazard pointers to track which threads have references to which objects
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Recycling center} \\
+\begin{itemize}
+    \item Suppose we go with solution 2, we can set up a recycling center that maintains a concurrent stack of free nodes (see 4.1 for implementation details) so we can reuse deleted nodes.
+    \item Push will obtain the node from the recycling center if it is not empty, or allocate a new node if it is empty
+    \item Since nothing is freed, we cannot get UAF
+\end{itemize}
+
+\textbf{Data race in recycling stack} \\
+\includegraphics*[width=7cm,height=2.5cm]{recycling1.png}
+
+\begin{itemize}
+    \item The race happens because consumer tries to read from the work$\_$node before the producer has written to it
+    \item This is possible since htere is no synchronisation between T1 and T3 
+    \item To fix this, we can make the load store of node.next acquire release such that T1 and T2 (by transitive T3 as well) are in sync
+\end{itemize}
+\includegraphics*[width=7cm,height=2.5cm]{recycling2.png} \\
+
+\textbf{Internal Data Race} \\
+\includegraphics*[width=7cm,height=2.5cm]{recycling3.png}
+\begin{itemize}
+    \item By allowing consumers to overtake producers threads (use yield), we can have a seemingly-impossible data race
+    \item The fix is to slap acquire release on the load store of m$\_$queue$\_$front
+\end{itemize}
+\includegraphics*[width=7cm,height=2.5cm]{recycling4.png}\\
+
+\textbf{Benchmarking} \\
+\begin{itemize}
+    \item Some common metrices are: CPU cycles, real clock time, MFLOPs (floating point operations per second) 
+    \item There are 4 possible set ups to test for 
+    \begin{enumerate}
+        \item Single Producer, Single Consumer (SPSC)
+        \item Single Producer, Multiple Consumers (SPMC)
+        \item Multiple Producers, Single Consumer (MPSC)
+        \item Multiple Producers, Multiple Consumers (MPMC)
+    \end{enumerate}
+    \item Use barier to ensure that all producers and consumer threads arrive at the the start of the benchmark before starting the timer and commencing the execution
+\end{itemize}
 \pagebreak
 % USEFULE FACTS
 \subsection*{Classical Synchronisation Problems}
@@ -1087,6 +1278,18 @@ auto bar = std::unique_ptr<FILE, decltype(deleter)>(fopen("file.txt", "w"), dele
     \item C++ cannot catch many race conditions and concurrency bugs at compile time, and requires testing at run time 
     \item Tsan and Asan has verbose output (unlike rust compiler)
     \item Catching concurrent bugs at run time runs into heisenbugs
+\end{itemize}
+
+\subsection*{Random Trivia}
+
+\textbf{Atomic shared ptr but not atomic unique ptr} \\
+\begin{itemize}
+    \item std::shared$\_$ptr needs to allocate a control-block where the strong and weak count are kept, so type-erasure of the deleter came at a trivial cost (a simply slightly larger control-block).
+    \item Note: Atmoic shared$\_$ptr is not lock free
+    \item std::unique$\_$ptr has a zero-overhead policy; using a std::unique$\_$ptr should not incur any overhead compared to using a raw pointer.
+    \item But the deleter of a std::unique$\_$ptr may not be zero cost (that is, it may stores some state)
+    \item Since there is no guarantee that we can do CAS on the deleter without the use of mutex (which comes with extra overhead), we cannot do CAS on the unique ptr
+    \item Another argument is that implementing an atomic unique ptr requires weakening the precondition on the atomic template parameter to avoid deadlocks. And that there is no effective mechanism to test for the weaker property
 \end{itemize}
 
 \end{multicols}
