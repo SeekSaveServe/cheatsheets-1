@@ -949,12 +949,6 @@ void push(T new_value) {
 \end{itemize}
 
 \subsection*{L6: Concurrency in GO} 
-\textbf{About GO} \\
-\begin{itemize}
-    \item Statically typed 
-    \item Compiled PL 
-    \item More memory safety, garbage collection, CSP style concurrency than C
-\end{itemize}
 
 \textbf{Task Concurency Graph} \\
 \begin{itemize}
@@ -970,8 +964,463 @@ $S_p(n) = \frac{T_{best seq}(n)}{T_{parallel}(n)}$, we aim to gain a $S_p$ of p,
 
 \textbf{Amadahl's Law} \\
 \begin{itemize}
+    \item Speed up of parallel execution is limited by the fraction of the algorithm that cannot be parallelised
+    \item f($0\le f \le 1)$ is the sequential fraction
+    \includegraphics*[width=7cm,height=2.5cm]{amdahl.png}\\
+\end{itemize}
+
+
+\textbf{About GO} \\
+\begin{itemize}
+    \item Statically typed 
+    \item Compiled PL 
+    \item More memory safety, garbage collection, CSP style concurrency than C
+\end{itemize}
+
+\textbf{Go routeins} \\
+\begin{itemize}
+    \item Runs on OS threads - any type of threads the OS provides (go routines are tasks, not threads)
+    \item A function running independently
+    \item Cheaper than threads (a few kbs, 3 instructions to create) + lightweight    
+    \item Follow the fork-join model
+    \item Not garbage collected - programmers to prevent leaks
+    \item Goroutines are multiplexed to OS threads: allows scheduling and goroutines to be multiplexed to threads.
+    \item Decouples concurrency from parallelism
+    \item Go routine blocks $\rightarrow$ thread blocks. But other goroutines can still run
+\end{itemize}
+
+\textbf{Communicating Sequential Processes (CSP)} \\
+\begin{itemize}
+    \item Concurrency: structure a program by breaking it into pieces that can be executed indepedently
+    \item Go Routines:
+    \begin{itemize}
+        \item A function running independently
+    \end{itemize}
+    \item Communication: Coordinate the independent executions
+    \item Channels:
+    \begin{itemize}
+        \item Read: <- Channel
+        \item Write: channel <-
+    \end{itemize}
+    \begin{itemize}
+        \item 
+    \end{itemize}
+\end{itemize}
+
+\textbf{Wait groups} \\
+\begin{itemize}
+    \item A blocking call that waits for n goroutines to finish (n can be incremented)
+\begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+var wg sync.WaitGroup
+for _, salutations := range []string{"hello", "greetings", "good day"} {
+    wg.Add(1)
+    go func(salutation string) {
+        # called when scope ends
+        defer wg.Done() # decrements counter of wg
+        # Salutation is passed by value
+        fmt.Println(salutation)
+    }(salutations)
+}
+wg.Wait()
+\end{lstlisting}
+\end{itemize}
+
+\textbf{Shared memory} \\ 
+\begin{itemize}
+    \item Similar to C++, need to synchronise access to shared memory 
+    \item Use channels instead of modifying shared memory
+\end{itemize}
+
+\textbf{Channels} \\ 
+\begin{itemize}
+    \item Channel is a reference to a place in memory where the channel resides 
+    \item Typed 
+    \item Bi directional or unidirectional
+    \item Blocking 
+    \begin{itemize}
+        \item Writing to full Channels
+        \item Reading from empty channel 
+        \item can cause deadlock
+        \item Reading from closed channel returns default value; nonblocking
+    \end{itemize}
+    \item Declaration:
+    \begin{itemize}
+        \item Bi directional 
+        \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+// Unbuffered Channels
+var c chan int
+// Buffered Channels
+datastream := make(chan int, 5)    
+        \end{lstlisting}
+        \item unidirectional
+        \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+var writer chan<- int // write only
+var reader <-chan int // read only
+datastream := make(chan int)
+writer = datastream
+reader = datastream
+        \end{lstlisting}
+    \end{itemize}
+\end{itemize}
+
+\textbf{Synchronising using channels} \\
+\begin{itemize}
+    \item Ranging over channel, channel closes when loop ends
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+for i := range intStream {
+    // do something
+}
+    \end{lstlisting}
+    \item Close unbuffered channel 
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+begin := make(chan interface{})
+var wg sync.WaitGroup 
+for i := 0; i < 5; i++ {
+    wg.Add(1)
+    go func(i int) {
+        defer wg.Done()
+        <-begin
+        fmt.Printf("%v has begun\n", i)
+    }(i)
+}
+fmt.println("Unblocking goroutines...")
+// This allows default values to be printed
+close(begin)
+wg.Wait()
+    \end{lstlisting}
+\end{itemize}
+
+\textbf{Channel behaviour} \\
+\includegraphics*[width=7cm, height =5cm]{gobehaviour.png}
+
+
+\textbf{Buffered channels} \\
+\begin{itemize}
+    \item Delays the problem of a blocking (full/empty) channel 
+\end{itemize}
+
+\textbf{Guidelines: Ownership of a channel (NOT checked by compiler)} \\
+\begin{itemize}
+    \item Owner is the goroutine that instantiates, writes and closes 
+    \item (unidirectional) Owner writes, utilisers read
+    \includegraphics*[width=7cm, height =2cm]{channelownership.png}
+    \item \textbf{Increases safety}
+    \begin{enumerate}
+        \item The owner will not deadlock by writing to a nill channel 
+        \item The owner will not panic by closing a closed channel 
+        \item The owner will not panic by writing to a closed channel since the owner closes the channel 
+        \item The owner will not close the channel more than once because it closes the channel 
+        \item Since only owner writes, the type checker can prevent improper writes at compile time 
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Select} \\
+\begin{itemize}
+    \item Blocks until a branch becomes available, all branches are considered simultaneously
+    \item Use cases:
+    \begin{enumerate}
+        \item Multiple channels have something to read
+        \begin{itemize}
+            \item Peudo-randomly selects a channel to read from. Supposedly uniform
+            \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+c1 := make(chan interface{}); close(c1) // nonblocking
+c2 := make(chan interface{}); close(c2) // nonblocking
+var c1Count, c2Count int
+select {
+    case <-ch1:
+        c1Count ++
+    case <-ch2:
+        c2Count ++
+}
+            \end{lstlisting}
+        \end{itemize}
+        \item Channels are not ready
+        \begin{itemize}
+            \item Timeout channels that are never ready
+            \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+var c1 <- chan int 
+select {
+    case <- c:
+    // times out after 1 second
+    case <- time.After(1 * time.Second): 
+        fmt.Println("Timed out")
+}
+            \end{lstlisting}
+        \end{itemize}
+    \end{enumerate}
+    \item For-select loop 
+    \begin{itemize}
+        \item Allows a Go routine to make progress while waiting for other go routines 
+        \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+done := make(chan interface{})
+go func () {
+    for {
+        select {
+            // work is done!
+            case <- done:
+                return
+            default:
+        }
+        // do non-preemptable work
+    }
+}() // this () calls the function immediately after defining
+        \end{lstlisting}
+    \end{itemize}
+\end{itemize}
+
+\textbf{Sync package} \\
+\begin{itemize}
+    \item Do not communicate by sharing memory. Instead, share memory by communicating.
+    \includegraphics*[width=7cm, height =4cm]{syncpackage.png}
+\end{itemize}
+
+\textbf{Memory Model - GO} \\
+\begin{itemize}
+    \item Similar to C++, except theres no atomics
+    \item Synchronised before:
+    \begin{enumerate}
+        \item Send is synced before a corresponding receive from another thread 
+        \item Closing of a channel is synced before reads from the closed channel (value 0)
+        \item Receive from unbuffered channel is synced before the send on that channel completes
+        \item The kth receive on a channel with capacity C is synced before the (k+C)th send on the same channel
+        \item $Go$ statement that starts a gorountine is synced before the go routine's execution 
+        \item The exit of a gopher is \textbf{NOT} guaranteed to be synced before any code after the go statement
+    \end{enumerate}
+\end{itemize}
+
+\subsection*{L7 Concurrency Patterns in GO}
+
+\textbf{Patterns - Confinement} \\
+\begin{itemize}
+    \item Achieve safe operation through synchronisation (mutex / channels)
+    \item Safe concurrency with good performance - immutable data, data protected by confinement 
+    \item \textbf{Ad hoc confinement}
+    \begin{itemize}
+        \item Data is modified only from one gopher, even though the data is accessible by multiple 
+        \item Needs static analysis to ensure safety (Exclusive ownership)
+        \item Easily broken 
+    \end{itemize}
+    \item \textbf{Lexical confinement}
+    \begin{itemize}
+        \item Restric access to shared location
+        \item Achieved by exposing only the reading or writing handle to the producer/consumer 
+        \item Expose only a slice of the DS (e.g. array)
+    \end{itemize}
+\end{itemize}
+
+\textbf{Pattern - For-select loop} \\
+\begin{itemize}
+    \item Context - sending iteration variables out on a channel
+    \item Looping and waiting to be stopped (by context or done channel)
+\end{itemize}
+
+\textbf{Goroutine leakage} \\
+\begin{itemize}
+    \item Goroutines are detached and not garbage collected
+    \item Creator of goroutines should also destroy them 
+    \item Passing 'nil' as a channel will cause the gopher to run indefinitely
+    \item Solutions:
+    \begin{itemize}
+        \item Pass a done channel, close it in the creator to signal the gopher to stop
+    \end{itemize}
+\end{itemize}
+
+\textbf{Pattern - Error handling} \\
+\begin{itemize}
+    \item State goroutine maintains complete state of the program 
+    \item All goroutines send their error to a state goroutine that handles this 
+    \item Couple the potential error with potential result 
+    \item E.g. Http handling 
+\begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+type Result struct {
+    Error error
+    Response *http.Response
+}
+
+for _, url := range urls {
+    result := Result{Error: nil, Response: nil}
+    go func() {
+        resp, err := http.Get(url)
+        result = Result{Error: err, Response: resp}
+        response <- result
+    }()
+    select {
+        case <-done:
+            return
+        /* Owner of results will handle this */
+        case results <- result:
+        default:
+    }
+}    
+\end{lstlisting}
+\end{itemize}
+
+\textbf{Pattern - Pipeline} \\
+\begin{itemize}
+    \item A series of stages connected by channels, each stage performs the stage function
+    \item Inbound and outbound channels passes data from one channel to the next
+    \item The first stage only has an outbound channel
+    \item The last stage only has an inbound channel 
+    \item Intermediate stages have multiple inbound and outbound channels
+    \item Aims to achieve separation of concerns
+\end{itemize}
+
+\textbf{Pipleine - Efficiency} \\
+\begin{itemize}
+    \item Work and resources should be divided among stages s.t they all take the same time to complete their tasks 
+    \item Fan-out to decrease the processing time for a stage
+    \item Use I/O and multiple CPUs to process different streams of data 
+    \item Not obviously faster than task pool unless optimised 
+    \item Pipeline is better if there is a cap on a specific resource that is needed by all task pool (at different times)
+    \item E.g 
+    \includegraphics*[width=6.5cm, height = 2cm]{pipeline.png}
+    \begin{itemize}
+        \item generator, multiply etc are functions written using the for-select paradigm
+    \end{itemize}
+\end{itemize}
+
+\textbf{Pattern - Fan-out, Fan-in} \\
+\begin{itemize}
+    \item Problem: Stages in pipeline might be slower than the other and they might benefit from parallelism 
+    \item Fan-out: Start multiple gophers to handle inputs
+    \begin{itemize}
+        \item The stage should not rely on values that has been calculated before in preceding stages 
+        \item The order of the concurent copies does not matter (is not maintained)
+        \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+numFinders = runtime.NumCPU() // Max level of concurrency
+// Channel of writer channels
+finders := make([] <- chan int, numFinders)
+for i := 0; i < numFinders; i++ {
+    go func() {
+        for i := range numFinders {
+            // Fan-out
+            finders[i] = primeFinder(done, inputStream)
+        }
+    }
+}
+        \end{lstlisting}
+    \end{itemize}
+    \item Fan-in: Combine multiple results into one output channel
+    \begin{itemize}
+        \item Multiplexing/joining multiple streams of data into a single data
+        \item Order will not be maintained 
+    \end{itemize}
+\end{itemize}
+
+\textbf{Load balancer} \\ 
+\includegraphics*[width=4cm, height=2cm]{lb1.png}\\
+\begin{itemize}
+    \item Balance load among all workers based on the amount of request in the queue of each worker 
+    \item The sending back of results is not done through the load balancer; a separate channel
+    \item Requst 
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+type Request struct {
+    fn funct() int // The operation to perform 
+    result chan int // The channel to return the result
+}
+    \end{lstlisting}
+    \item Requester 
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+func requester(work chan<- Request) {
+    c := make(chan int) // read result from c
+    for { // while loop 
+    /* For the balancer to proess */
+        case work <- Request{workFn, c}:
+        result := <-c // wait for worker
+        furtherProcess(result)
+    }
+}
+    \end{lstlisting}
+    \item Worker 
+    \begin{itemize}
+        \item 
+    \end{itemize}
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+/* Receiver of the method, basically this is a fn of the worker struct */
+func (w *worker) work(done chan *Worker) {
+    for {
+        req := <-w.requests
+        req.c <- req.fn() // call fn and send result
+        done <- w // we've finished this request
+    }
+}
+    \end{lstlisting}
+    \item Balancer - DS
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+type Pool []*worker // track the workers
+
+type Balancer struct {
+    pool Pool
+    done chan *worker // shared among all workers
+}
+    \end{lstlisting}
+    \item Dispatch - a min heap of channels 
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+func (p Pool) Less(i, j int) bool {
+    return len(p[i].requests) < len(p[j].requests)
+}
+
+// Send request to worker 
+func (b *Balancer) dispatch(req Request) {
+    // Grab the least loaded worker
+    w := heap.Pop(&b.pool).(*worker)
+    // Send request to worker
+    w.requests <- req
+    // Put worker back into the pool
+    heap.Push(&b.pool, w)
+}
+    \end{lstlisting}
+    \item Completes
+    \begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+func (b *Balancer) completed(w *worker) {
+    w.pending -- 
+    // Remove worker from pool
+    heap.Remove(&b.pool, w.index)
+    // Put it into heap 
+    heap.Push(&b.pool, w)
+}
+    \end{lstlisting}
+\item Balance (can be pipelined, see T6 3.2)
+\begin{lstlisting}[language=Go, breaklines=true, breakatwhitespace=true]
+func (b *Balancer) balance(work chan Request) {
+    for {
+        select {
+            case req := <-work:
+                b.dispatch(req)
+            case w := <-b.done:
+                b.completed(w)
+        }
+    }
+}
+\end{lstlisting}
+\end{itemize}
+
+\textbf{Concurrent Balancer} \\ 
+\begin{itemize}
+    \item Use pipelining to make the balancer more concurrent 
+    \item Some requests can be starting at the dispatch stage 
+    \item Othe requests can be waiting at the completed stage 
+    \item Use a for-select pattern for this
+\end{itemize}
+
+\textbf{Work Stealing} \\
+\begin{itemize}
+    \item Steal work from the queue of the slowest (longest queue) worker 
+    \item We steal from the back of the queue (in case there is dependence on the requests)
     \item 
 \end{itemize}
+
+\textbf{GO Runtime - work stealing } \\ 
+\begin{itemize}
+    \item (Fork Point) Add tasks to the tail of a deque of a thread 
+    \item If the thread is idle, steal the last job added to the deque associated with some other random thread 
+    \item (Join Point) At a join point that cannot be realised yet (waiting for some forked thread to complete), pop work off the tail of the thread's own deque (and process that)
+    \item If the deque is empty, steal work from head of a random thread's deque
+    \item Work stealing does stall the join, sometimes GO does continuation stealing instead
+\end{itemize}
+
+\subsection*{L8: Classical Synchronisation Problem in C++ and GO}
+\includegraphics*[keyvals]{imagefile}
 
 \pagebreak
 % TUTORIALS
@@ -1142,6 +1591,13 @@ auto bar = std::unique_ptr<FILE, decltype(deleter)>(fopen("file.txt", "w"), dele
 \subsection*{T4 - lock free programming} 
 This tutorial implements the threadsafe queue in L5 using atomics.\\
 
+\textbf{Lock free} \\
+\begin{verbatim}
+    If multiple threads are operating on a DS, 
+    then after a bounded number of steps one 
+    of them must complete its operation
+\end{verbatim}
+
 \textbf{Problems faced by producers} \\
 \begin{itemize}
     \item  Producers may data race by overwritting each other's job
@@ -1263,9 +1719,92 @@ alignas(64) std::atomic<GenNodePtr> m_queue_front; // consumer end
     \end{enumerate}
     \item Use barier to ensure that all producers and consumer threads arrive at the the start of the benchmark before starting the timer and commencing the execution
 \end{itemize}
+
+\subsection*{T5: Goroutines and channels}
+
+\textbf{Silly mistakes} \\
+\begin{itemize}
+    \item Not using wait group or waiting for channels to finish and "join"
+    \item Allowing data race by not granting exclusive access by passing objects using channels s.t only 1 owner exists at any point in time
+    \item Creating a deadlock using cyclic dependencies between channels
+    \item Using buffered channel to resolve deadlock - bad idea since there are now multiple owners to values and a buffered channel becomes effectively unbuffered when it is full + more interleavings possible
+    \item Closing the channel too early and resulting in a panic
+    \item Not closing the channel and never stops reading 
+\end{itemize}
+
+\textbf{MPSC Queue using Channels} \\
+\begin{itemize}
+    \item For associative and identity operations, we can simply have the producers update a local copy from 0 and send it back to the consumer once done 
+    \item This can be done either by having a channel of channels with one channel for each producer (1.2), or by having a single channel and using a for loop to read exactly N times from the channel (1.1).
+\end{itemize}
+
+\textbf{MPMC Queue using Channels} \\
+
+\begin{itemize}
+    \item The default MPMC GO provides contains mutex so it is not lock free
+    \item We can implement a non-blocking, lock-free MPMC queue using the select-default idiom (See 2.2) (Note: default is a nexist for when all cases are blocked) 
+\end{itemize}
+
+\textbf{context.Context} \\
+\begin{itemize}
+    \item To canccel an Asynchronous task, we can use context.Context
+
+    \begin{lstlisting}[language=Go,  breaklines=true, breakatwhitespace=true] 
+func producer(ctx context.Context, q queue) {
+    for {
+        select {
+        case q <- 1: // normal enqueue to q with type alias to chan int
+        case <-ctx.Done():
+            return
+        }
+    }
+}
+    \end{lstlisting}
+    \item Context can be set up with a timeout ctx := context.WithTimeout(context.Background(), 1*time.Second)
+\end{itemize}
+
+\subsection*{T6 Advanced GO Concurrency Patterns}
+\textbf{Exit Conditions} \\
+\begin{itemize}
+    \item Manage different exit conditions for different goroutines and share data across different goroutines
+    \item Use a context tree to combine multiple exit conditions into One
+    \includegraphics*[width = 7cm, height = 2cm]{contextTree.png}
+    \item Sample: 
+\begin{lstlisting}[language=Go,  breaklines=true, breakatwhitespace=true]
+func main() {
+    ctx, cancel := context.WithCancel(context.Background())
+    ctx3, cancel := context.WithCancel(ctx)
+    defer cancel()
+
+    go func() {
+        <-ctx3.Done()
+        fmt.Println("Context cancelled")
+    }()
+...
+}
+\end{lstlisting}
+    \item It is possible for ctx 3 to not be seen as cancelled if ctx (main) is cancelled first. So GO can kill the thread ctx3 is on without printing 
+    \item We can use waitgroup or done channel to ensure that main only terminates when all its threads (including ctx3) are done
+\end{itemize}
+
+\textbf{Fan-Out, Fan-In} 
+\begin{itemize}
+    \item Fan-out distributes intense workloads across multiple workers
+    \item Fan-in centralises results but this is not necesarily serialised 
+    \item We can serialise it using higher-order channels that uses an unbuffered channel, but this also greatly limits concurrency
+\end{itemize}
+
+\textbf{Pipelining} \\ 
+\begin{itemize}
+    \item Useful for resource constrained parallelism while maintaining a separation of constraints
+    \item E.g for a 3 stage program that is CPU intensive at stage 2 (bottleneck) and can only run 10 threads concurrently at stage 3 (due to memory constraints), we can pipeline multiple threads at stage 2 and only 10 threads at stage 3 to maximise throughput
+\end{itemize}
+
 \pagebreak
 % USEFULE FACTS
 \subsection*{Classical Synchronisation Problems}
+
+\includegraphics*[width=7cm, height=3cm]{classicalSummary.png}
 
 \subsection*{Comparison between Rust, Go, C++}
 \textbf{Ownership} \\ 
@@ -1278,6 +1817,17 @@ alignas(64) std::atomic<GenNodePtr> m_queue_front; // consumer end
     \item C++ cannot catch many race conditions and concurrency bugs at compile time, and requires testing at run time 
     \item Tsan and Asan has verbose output (unlike rust compiler)
     \item Catching concurrent bugs at run time runs into heisenbugs
+\end{itemize}
+
+\textbf{Memory Management: GO vs Rust} \\
+\begin{itemize}
+    \item Go has a garbage collector, Rust has a manual memory management system based on ownership and borrowing - need to be more careful with rust 
+    \item Rust's borrow checker does guarante lifetime and exclusive access at compile time
+\end{itemize}
+
+\textbf{Rust Concurrency Model} \\
+\begin{itemize}
+    \item Rust's concurrency is provably correct - the compiler can catch thread safety bugs at compile time. This eliminates basic concurrency bugs
 \end{itemize}
 
 \subsection*{Random Trivia}
