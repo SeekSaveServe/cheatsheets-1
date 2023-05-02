@@ -485,7 +485,7 @@ std::condition_variable.wait(lock, []{return predicate});
     \end{lstlisting}
     \item if condition is satisfied, returns
     \item unlocks the mutex and places the thread in block state if condition is not satisfied
-    \item $std::condition_variable.nofiy_one();$ to notify one thread waiting on the cond
+    \item $std::condition\_variable.notify\_one();$ to notify one thread waiting on the cond
 \end{itemize}
 
 
@@ -1420,8 +1420,141 @@ func (b *Balancer) balance(work chan Request) {
 \end{itemize}
 
 \subsection*{L8: Classical Synchronisation Problem in C++ and GO}
-\includegraphics*[keyvals]{imagefile}
+\includegraphics*[width = 7cm, height = 2cm]{classicalSummary.png} \\
 
+\textbf{Producer-Consumer Problem} \\
+\begin{itemize}
+    \item Specifications:
+    \begin{itemize}
+        \item Producers put in a shared bounded buffer if not full, consumers read from it if not empty
+    \end{itemize}
+    \item Solution:\\
+    \includegraphics*[width = 7cm, height = 3cm]{producerConsumer.png} \\ 
+    \item Concurrent read, exclusive read. Categorical starvation of writer is possible\\ 
+    \includegraphics*[width = 7cm, height = 3cm]{readerwritter1.png} \\
+    \item Light switch: Abstracts out the shared lock for the reader 
+    \includegraphics*[width = 3cm, height = 3cm]{lightswitch.png} \\
+    \item Starvation free solution: \\
+    \includegraphics*[width = 7cm, height = 3cm]{turnstile.png} \\
+    \item Prioritise Writer: \\
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+readSwitch = lightswitch();
+writeSwitch = lightswitch();
+noReaders = semaphore(1);
+noWriters = semaphore(1);
+
+reader() {
+/* Waiting for writers to be done */ 
+wait(noReaders);
+/* Writers cannot enter */
+    readswitch.lock(noWriters);
+signal(noReaders);
+    # critical section
+readSwitch.unlock(noWriters);
+}
+
+writer() {
+/* Immediately acquires no readers so writers have priority */
+writeSwitch.lock(noReaders);
+    wait(noWriters);
+    # critical section
+    signal(noWriters);
+writeSwitch.unlock(noReaders);
+}
+\end{lstlisting}
+\item This is implemented in C++ as a \textbf{shared\_lock} and \textbf{unique\_lock}
+\item GO has something similar: readLock and writeLock
+\end{itemize}
+
+\textbf{Barrier} \\
+\begin{itemize}
+    \item All threads must stop at a common point before proceeding, can be reusable (barrier) or single use (latch)
+    \item std::barrier, std::latch in C++
+    \item E.g. std::barrier arrivalPoint(size) ... arrivalPoint.arrive$\_$and$\_$wait()
+    \item sync.WaitGroup in GO is a latch, we can use 2 of them to make a barrier
+    \item C++ implementation
+    \begin{itemize}
+        \item The naive version fails because context switch can happen right before counter == N, which causes multiple threads (that were context switched out after counter ++) to signal the switch (another way to fail is to have 1 thread lap everyone else between the first barrier unlocks and second barrier unlocks)
+        \item The solution is to add a second turnstile (initialised as 1) to guard the turnstile1.signal, such that only one thread can signal it
+        \item But using mutex to increment turnstile1 one-by-one is slow 
+        \item So we use a counting semaphore instead so we can raise the barrier by 1 thread!  \\ 
+        \includegraphics*[width = 7cm, height = 3cm]{barrier.png}
+    \end{itemize}
+\end{itemize}
+
+\textbf{Dining Philosophers} \\
+\begin{itemize}
+    \item Specifications: N philosophers, N chopsticks
+    \item Deadlock: All pick up left simultaneously
+    \item Livelock: Put down left if right cannot be acquired
+    \item Slap a mutex: Becomes sequential 
+    \item Scoped Lock(left, right): Acquire multiple mutexes in a deadlock free manner (deadlock avoidance), but as we have seen in CS3223, deadlock avoidance can lead to livelock
+    \item GO's Mutex Free Solution: Use odd-even ring communication, odd numbered philosophers pick up left first, even numbered philosophers pick up right first
+    \item This is the same as the right hander argument 
+    \item Tanenbaum's solution: 
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+#define N 5
+#define LEFT ((i+N-1)% N)
+#define RIGHT ((i+1) % N)
+#define THINKING 0
+#define HUNGRY 1
+#define EATING 2
+int state[N];
+Semaphore mutex = 1;
+Semaphore s[N];
+
+void philosopher( int i ){
+    while (TRUE){
+        Think( );
+        takeChpStcks( i );
+        Eat( );
+        putChpStcks( i );
+    }
+}
+void safeToEat(i)
+{
+    if( (state[i] == HUNGRY) && 
+    (state[LEFT] != EATING) && 
+    (state[RIGHT] != EATING) ) {
+    state[i] = EATING;
+    signal(s[i]); 
+    }
+}
+
+void takeChpSticks( i )
+{
+    wait(mutex);
+    state[i] = HUNGRY;
+    safeToEat(i);
+    signal(mutex);
+    wait(s[i]);
+}
+
+void putChpSticks(i)
+{
+    wait(mutex);
+    state[i] = THINKING;
+    safeToEat(LEFT);
+    safeToEat(RIGHT);
+    signal(mutex);
+}
+    \end{lstlisting}
+    \item Limited seats: Use a semaphore(N-1) to limit the number of philosophers that can eat at the same time \\ 
+    \includegraphics*[width=7cm, height=3cm]{godiningphilo.png}
+\end{itemize}
+
+\textbf{Barber Shop} \\
+\begin{itemize}
+    \item Barbershop consists of a waiting room with n chairs and the barber chair 
+    \item If there are no customers to be served, the barber goes to sleep
+    \item If the barber is busy, but waiting room is available, customer seats on one of the chairs 
+    \item If barber is sleeping, customer wakes him up 
+    \item If all chairs are occupied, customer leaves
+    \includegraphics*[width=7cm, height=3cm]{barber.png}
+    \item line 31-32 are important since we need customer and barber need to agree that the haircut is done
+    \item GO implementation:
+    \includegraphics*[width=7cm, height=3cm]{gobarber.png}
+\end{itemize}
 \pagebreak
 % TUTORIALS
 \section{Tutorials}
@@ -1798,6 +1931,74 @@ func main() {
 \begin{itemize}
     \item Useful for resource constrained parallelism while maintaining a separation of constraints
     \item E.g for a 3 stage program that is CPU intensive at stage 2 (bottleneck) and can only run 10 threads concurrently at stage 3 (due to memory constraints), we can pipeline multiple threads at stage 2 and only 10 threads at stage 3 to maximise throughput
+\end{itemize}
+
+\subsection*{T7 - Classic concurrency problems in C++ and Go}
+
+\textbf{H2O} \\
+\begin{itemize}
+    \item Sepcificaiton: 2H + O $\rightarrow$ H2O, only the atoms involved can execute concurrently 
+\end{itemize}
+
+\textbf{H2O - Solution} \\
+\begin{itemize}
+    \item Naive: Use a barrier(3) - this fails as there's no guarantee that we will have 3 hydrogens
+    \item GO Daemon:
+    \begin{enumerate}
+        \item Create a private communication channel 
+        \item (Precommit) send channel in an arrival request to the Daemon
+        \item (Commit) receive the signal to proceed from the daemon 
+        \item (Postcommit) send the signal that bonding is done to the daemon
+    \end{enumerate}
+    \item The issue with using a daemon is that the daemon is a single point of failure and it leaks memory unless we shut down the daemon with a context 
+    \item GO leader goroutine:
+    \begin{enumerate}
+        \item (follower behaves the same way as the daemon)
+        \item Become leader by locking mutex 
+        \item (Precommit) Recieve arrival request from follower(s)
+        \item (Commit) Tell the hydrogen atoms to proceed and begin bonding 
+        \item Bond 
+        \item (postcommit) wait for the hydrogen atoms to finish bonding 
+        \item Step down as the leader by unlocking the mutex 
+    \end{enumerate}
+    \item The single point of failure issue is resolved since the mutex channel is closed when the leader exits
+\end{itemize}
+
+\textbf{FIFO Semaphore} \\
+Unfortunately, both semaphores in C++ and blocking queues in Go are not guaranteed to be FIFO. This can lead to starvation. \\ 
+
+\textbf{C++: Ticket Queue} \\ 
+\begin{itemize}
+    \item We assign a ticket to arrivals and keep 2 atomics next$\_$ticket (next to give to arrivals) and now$\_$serving (next to serve)
+    \item In acquire, the arrivals will wait (on a spin lock or conditional variable) till now serving $ge$ my ticket. 
+    \item This is guaranteed to release arrivals in FIFO order as long as acquire and release are paired 
+    \item Note: Release should both increment the now$\_$serving with fetch add and \textbf{notify$\_$all} arrivals, this will cause spurious wakes but \textbf{notify$\_$one} may notify the wrong arrival and cause starvation (no progress can be made)
+\end{itemize}
+
+\textbf{C++: Using a queue of semaphores} \\ 
+\begin{itemize}
+    \item Have a counter to track the number of blocked threads 
+    \item Have a queue of semaphores to store the blocked threads
+    \item Counter is initialised to be the value of the semaphore 
+    \item Acquire(): If counter is positive, we decrement it and return without blocking. Else, we add waiter to queue and block on its own semaphore 
+    \item Release(): If the queue is empty, we do nothing and increment the counter. Else, we  pop the first waiter and release its semaphore.
+    \item In both cases, we do not change counter if we are popping or pushing into queue
+    \item \textbf{Problem:} there are roughly 2 allocations needed every time a new waiter is added to the queue, this is quite expensive and possibly slow to do on heap.
+\end{itemize}
+
+\textbf{Go: Using a buffered channel} \\ 
+\begin{itemize}
+    \item Use a buffered channel the size of capacity and load it with (capacity - initial size) number of elements
+    \item Sends to the channel decrements the number of elements and receives increments it 
+    \item When there is no more free space, subsequent sends will block
+    \item This is practically FIFO but not guarateed by Go specification
+\end{itemize}
+
+
+\textbf{Go: Using a daemon goroutine} \\ 
+\begin{itemize}
+    \item We can use a daemon thread to manage the blocked threads, just like the queue in the C++ implementation 
+    \item Technically an acquire can still block on the first send to s.acquire channel if the acquire channel is full (and we go back to the issue of not being FIFO)
 \end{itemize}
 
 \pagebreak
