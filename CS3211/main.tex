@@ -17,7 +17,15 @@
 \usepackage{listings}
 \setlist{nosep}
 \usepackage{subfig}
+\usepackage{listings}
 
+% Define Rust language for listings package
+\lstdefinelanguage{Rust}{
+  morekeywords={let, mut},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
 
 % for including images
 \graphicspath{ {./images/} }
@@ -1555,6 +1563,164 @@ void putChpSticks(i)
     \item GO implementation:
     \includegraphics*[width=7cm, height=3cm]{gobarber.png}
 \end{itemize}
+
+\subsection*{L9: Safety in Concurrent programming with Rust}
+\textbf{Challenges in C++} \\
+\begin{itemize}
+    \item Unsafe memory usage (UAF, double free, danling pointers  etc) - Go addresses this by using communication and not sharing memory
+    \item Race condition (no data race in rust!), deadlocks etc 
+\end{itemize}
+
+\textbf{Fearless Concurrency in Rust} \\
+\begin{itemize}
+    \item Strong safety guarantees (no seg faults, no data races, expressive type system)
+    \item Without compromising on performance (no garbage collector, no runtime)
+    \item No runtime ( In this context, "runtime" refers to a language runtime system, which is a piece of software that helps manage a program as it runs. This can include things like garbage collection, dynamic typing, exception handling, and other features that are typically associated with higher-level languages.)
+    \item Memory safety like in garbage collected langauges (but without garbage collection)
+\end{itemize}
+
+\textbf{Memory Safety in Rust} \\ 
+\begin{itemize}
+    \item Borrow checker statically prevents \textbf{Aliasing + Mutation} (...unsafe exists). Aliasing cannot coexist with mutation!
+    \item Ownership prevents \textbf{Double Free}
+    \item Borrowing prevents \textbf{UAF}
+    \item No segfaults! Since compiler prevent unsafe memory usage. 
+    \item Compiler has really good error messages - unlike Tsan, Asan, and C++ compiler
+    \item \textbf{No data race}: Sharing and mutation cannot happen at the same time! (if no unsafe used)
+    \item \textbf{Race condition}: Still possible since no ordering + sharing $\|$ mutation is still possible
+    \includegraphics*[width=7cm, height=2cm]{rustsafety.png}
+\end{itemize}
+
+\textbf{Ownership - read trivia for a better take} \\
+\begin{itemize}
+    \item Prevents simultaneous mutation and aliasing 
+    \item The object that creates the object is the owner 
+    \item Declared with a mut keyword e.g. let mut book = Vec::new... 
+    \item Ownership can be transferred to other functios
+    \item Does not use copy-constructor like C++
+    \item clone() is a deep copy, while the copy-constructor in C++ is a shallow copy
+\end{itemize}
+
+\textbf{Shared Borrow} \\ 
+\begin{itemize}
+    \item We can share a reference to an object without transferring ownership
+    \item But the object cannot be mutated
+    \item Shared borrowing one element in a vector will make the entire vector non-mutable (cannot push, pop etc)
+\end{itemize} 
+
+\textbf{Mutable Borrow} \\
+\begin{itemize}
+    \item Creates a mutable reference to an object 
+    \item But cannot be shared. We can pass the mutable reference to other functions only after the current one goes out of scope
+    \item Prevents aliasing (two ptrs pointing to the same memory address) as we cannot access. This means that in a new scope, we cannot reference a variable that is already mutable in another scope. 
+    \item E.g.
+    \begin{lstlisting}[language=Rust, breaklines=true, breakatwhitespace=true]
+let mut book = vec::new();
+book.push(...); // success! Book is mutable 
+{
+    let r = &mut book; // mutable borrow of book
+    r.push(...); // success, reference can be mutated 
+    book.len(); // error, book is already borrowed!
+}
+book.push(...) // success, book is no longer borrowed
+    \end{lstlisting}
+\end{itemize}
+
+\textbf{Library based concurrency} \\ 
+\begin{itemize}
+    \item Not built into the language (not even message passing)
+    \item Library based - in std or other libraries
+\end{itemize}
+
+
+\textbf{Thread creation} \\
+\begin{itemize}
+    \item thread::spawn($| |$ {}) - spawns a new thread and returns a \textbf{JoinHandle}
+    \item If the join handle is dropped, the thread is detached
+    \item .join().unwrap() - join waits for the thread to finish and unwrap returns a result
+    \item unwrap returns the panic if there is a panic
+\end{itemize}
+
+\textbf{Transfer ownership through closure} \\ 
+\begin{itemize}
+    \item $move$ converts any variable captured by reference or mutable reference to variables captured by value 
+    \item In Rust, the move keyword is used with closures to force them to take ownership of the variables \textbf{they use} from their environment
+    \item Access to moved variables can trigger a \textbf{Use After Move} error
+    \item Without move, closure would capture the reference to the variable (mutable borrow or shared borrow, compiler will infer), and they can still be useed after defining the closure
+    \item \textbf{Use After Free Compile error}:
+    \begin{lstlisting}[language=Rust, breaklines=true, breakatwhitespace=true]
+let mut dst = vec::new();
+thread::spawn(|| {
+    dst.push(3); // mutable borrow
+})
+dst.push(3) 
+    \end{lstlisting}
+    \item The compiler will regard the push in spawned thread as a potential UAF as the closure might be executed after the main thread has finished executing - dst will be dropped
+    \item In this case we cannot use move either as it will trigger a UAM 
+\end{itemize}
+
+\textbf{Traits} \\ 
+\begin{itemize}
+    \item Reference Counter cannot be sent across threads because it has no \textbf{send} trait 
+    \item \textbf{Send} - transferred across thread boundaries 
+    \item \textbf{Sync} - safe to share references between threads (Type T is sync if and only if \&T is send) 
+    \item \textbf{Copy} - Safe to memcpy 
+    \item \textbf{Clone} - create a deep copy of data 
+    \item For move, we need send and sync 
+\end{itemize}
+
+\textbf{ARC} \\ 
+\begin{itemize}
+    \item Allows only shared references 
+    \item References cannot be mutated
+    \item Arc is destroyed when the reference to it goes to 0
+    \item When an Arc containing an object is moved, the ownership of the object is with Arc, not the thread. Ref count ++
+    \item A new Arc is cloned upon move.
+\end{itemize}
+
+\textbf{Drop} \\
+\begin{itemize}
+    \item When we free, we relinquish ownership to an object 
+    \item drop(shared reference) only relinquishes the reference, not the object
+\end{itemize}
+
+\textbf{MPSC, FIFO queue} \\
+\begin{itemize}
+    \item We can clone the writing head of MPSC multiple times but we cannot clone the reading end  
+\end{itemize}
+
+\textbf{Crossbeam} \\ 
+\begin{itemize}
+    \item \textbf{Scope Thread}: Gives a scope to a thread to give specific things to the thread rather than the whole environment
+    \item Once the scope is ended, there is a guarantee that the ownership/lifetime of objects in the scope ends
+    \item So the we can keep using the objects in the original scope in parts sequenced after the end of the scope 
+\end{itemize}
+
+\textbf{Exponential Backoff} \\ 
+\begin{itemize}
+    \item It is unhelpful to have a continuous poll / loop 
+    \item So we "backoff" for exponential amounts
+    \item backoff.spin()
+    \item backoff.snooze(), similar to yield
+\end{itemize}
+
+\textbf{Rayon} \\
+\begin{itemize}
+    \item Data parallelism library
+    \item Uses work stealing to balance load
+    \item Need to commutative operations 
+    \item var.par\_iter allocates 1 element to a thread in a round robin fashion
+    \includegraphics*[width=7cm,height=3cm]{rayon.png}
+\end{itemize}
+
+\textbf{Lifetime Rules}\\
+\begin{enumerate}
+    \item Each parameter that is a reference gets its own lifetime.
+    \item If there is exactly one input lifetime, that lifetime is assigned to all output lifetimes.
+    \item If there are multiple input lifetimes, but one of them is \&self or \&mut self, the lifetime of self is assigned to all output lifetimes.
+    \item If your code doesn't fit into these rules, you'll need to manually annotate lifetimes.
+\end{enumerate}
+
 \pagebreak
 % TUTORIALS
 \section{Tutorials}
@@ -2001,6 +2167,39 @@ Unfortunately, both semaphores in C++ and blocking queues in Go are not guarante
     \item Technically an acquire can still block on the first send to s.acquire channel if the acquire channel is full (and we go back to the issue of not being FIFO)
 \end{itemize}
 
+\subsection*{T8: Safety and Concurrency in Rust} 
+\textbf{Lifetime} \\ 
+\begin{itemize}
+    \item 'x if a lifetime specifier and the 'static life time is special in the sense that those with a static lifetime lives for as long as the prorgram. And any data captured by the closure must live for at least as long as this. 
+\end{itemize}
+
+\textbf{Shared memory in rust} \\
+\begin{itemize}
+    \item It is possible to do share mutable references using Arc(mutex(...))
+    \item A new Arc is created each time we clone the arc to pass to the new thread 
+    \item To prevent dangling pointers (UAF), we need to join all threads that takes an Arc in its closure 
+    \item The mutex lives on heap, which is potentially slower than a stack access
+\end{itemize}
+
+\textbf{Lock Poisening} \\
+\begin{itemize}
+    \item It is possible for a thread to be aborted while holding a lock. This causes the data protected by the lock to be in an inconsistent state.
+    \item Other threads accessing the same mutex should unwrap before use so that the error propagates 
+\end{itemize}
+
+\textbf{Scoped Thread} \\
+\begin{itemize}
+    \item Scoped thread has an implicit join at the end of it. So we can pass shared references of our mutex to threads in the scoped thread without risking UAF
+    \item Arc is not needed and the mutex can stay on the stack
+\end{itemize}
+
+\textbf{Interior mutability} \\ 
+\begin{itemize}
+    \item Library codes can contain constructs (e.g. mutex) that wraps around a mutable reference to a value to allow the passing of multiple mutable references 
+    \item The authors of such code is responsible to ensure safety 
+    \item For users, data races can only arise from the library or the compiler as long as they do not use unsafe elsewhere in their code
+\end{itemize}
+
 \pagebreak
 % USEFULE FACTS
 \subsection*{Classical Synchronisation Problems}
@@ -2030,6 +2229,17 @@ Unfortunately, both semaphores in C++ and blocking queues in Go are not guarante
 \begin{itemize}
     \item Rust's concurrency is provably correct - the compiler can catch thread safety bugs at compile time. This eliminates basic concurrency bugs
 \end{itemize}
+
+\textbf{Rust Vs C++ Memory model - thanks chatgpt} \\
+In Rust, ownership is a core concept of the language, and moving ownership is the default behavior when you pass a value to a function or assign it to another variable. When ownership is moved, the original variable is no longer valid, and trying to use it will result in a compile-time error. This is a safety feature designed to prevent problems like double-free, use-after-free, and data races.
+
+In C++, the copy constructor is called when an object is initialized from another object of the same type. When you pass an object by value to a function or return an object from a function, the copy constructor is used to create a new copy of the object. This means that, unlike Rust, C++ makes a copy of the object by default, and the original object remains valid.
+
+The difference between Rust's ownership and C++'s copy constructor is that Rust enforces strict ownership rules at compile time, which helps prevent memory-related bugs, while C++ relies on the programmer to manage memory and resources correctly. This can lead to issues like memory leaks, double-free errors, and other memory-related bugs if not handled correctly in C++.
+
+To have similar behavior to Rust's ownership model in C++, you can use move semantics, introduced in C++11, with move constructors and std::move. This allows you to transfer ownership of a resource to another object, leaving the original object in a valid but unspecified state. However, using move semantics in C++ is still a matter of choice and requires a clear understanding of when and how to use them, whereas Rust enforces strict ownership rules by default.
+
+In summary, Rust's ownership system enforces strict rules that help prevent memory-related bugs, while C++ provides flexibility with copy constructors and move semantics. Rust's ownership model is more restrictive and enforced at compile-time, while C++ relies more on the programmer's ability to manage memory and resources correctly.
 
 \subsection*{Random Trivia}
 
