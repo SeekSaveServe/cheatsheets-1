@@ -1751,7 +1751,7 @@ dst.push(3)
 \textbf{Future trait} \\
 \begin{itemize}
     \item Need a poll() function on the future to start it off 
-    \item poll() passes a Context structure. Context conatins wake() that allows the executor to see which process can be polled to make progress
+    \item poll() passes a Context structure to the future. Context conatins wake() that allows the executor to see which process can be polled to make progress
 \end{itemize}
 
 \textbf{Executor} \\
@@ -1762,7 +1762,7 @@ dst.push(3)
     \item There are synchronising primitives provided by mio 
     \item If future sleeps, the executor running the code will also wait and do nothing
     \item So Asynchronous code needs to use non-blocking versions of everything, including mutexes\\
-    \includegraphics*[width=7cm, height=2cm]{executor.png}
+    \includegraphics*[width=7cm, height=2.5cm]{executor.png}
 \end{itemize}
 
 \textbf{Eronomics} \\
@@ -1803,7 +1803,7 @@ dst.push(3)
 \begin{itemize}
     \item Instead of using blocking calls (.accept, read, write), we use non-blocking calls
     \item Instead of spawning threads, we spawn a future 
-    \includegraphics*[width=7cm, height=2.5cm]{simpleserver.png}
+    \includegraphics*[width=7cm, height=2.1cm]{simpleserver.png}
 \end{itemize}
 
 \textbf{When to async} \\
@@ -2290,8 +2290,57 @@ Unfortunately, both semaphores in C++ and blocking queues in Go are not guarante
     \item For users, data races can only arise from the library or the compiler as long as they do not use unsafe elsewhere in their code
 \end{itemize}
 
+\subsection*{T9: Asynchronous Programming in Rust}
+
+\textbf{Performance Conjectures} \\
+\begin{itemize}
+    \item Raw performance of single client:
+    \begin{itemize}
+        \item Threaded will likely be the best
+        \item Since the bookkeeping required for multithreading and non-blocking IO will decrease performance slightly
+    \end{itemize}
+    \item Maximum number of concurrent clients w/fixed memory:
+    \begin{itemize}
+        \item Given a fixed amount of memory, the threaded version will perform poorly since the system will run out of memory due to the high overheads associated with thread's stack space 
+        \item Tokio is multithreaded will Mio uses a single executor thread. They will likely have a similar maximum number of concurrent clients if they are both limited to a single executor thread 
+        \item Without the constraint, Tokio will likely have more than Mio since the maximum number of concurrent thread should scale proportionally with the number of executor threads (up to the limit imposed by the number of CPU cores, open  file descriptors, maxmium throughput of NIC etc)
+    \end{itemize}
+\end{itemize}
+
+\textbf{Threaded Version} \\
+\begin{itemize}
+    \item The client spawns  one thread per client 
+    \item Not really efficient in terms of memory 
+\end{itemize}
+
+\textbf{Tokio Version} \\
+\begin{itemize}
+    \item Possible to do a single-threaded run time 
+    \item Possible to set the number of threads in the run time 
+\end{itemize}
+
+\textbf{Pause and Block} \\ 
+\begin{itemize}
+    \item \textbf{Block} :
+    \begin{itemize}
+        \item Task waiting for external I/O
+        \item Task cannot make progress and will be swapped out 
+        \item No progress made
+        \item Context switch: user space $\rightarrow$ kernel space $rightarrow$ user space
+    \end{itemize}
+    \item \textbf{Pause} :
+    \begin{itemize}
+        \item Task is not scheduled by the runtime 
+        \item A paused task can be resumed by the runtime at any time 
+        \item Context Switching is between the user space and does not involve the stack 
+        \item Switching between futures is cheap because the state of futures are saved with the futures
+        \item There is no need to reload the thread state, thus it is entirely in user space
+        \item Not necessarily no progress
+    \end{itemize}
+\end{itemize}
+
 \pagebreak
-% USEFULE FACTS
+% USEFUL FACTS
 \subsection*{Classical Synchronisation Problems}
 
 \includegraphics*[width=7cm, height=3cm]{classicalSummary.png}
