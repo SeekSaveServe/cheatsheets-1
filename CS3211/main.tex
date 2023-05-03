@@ -1721,6 +1721,96 @@ dst.push(3)
     \item If your code doesn't fit into these rules, you'll need to manually annotate lifetimes.
 \end{enumerate}
 
+\subsection*{Asynchronous programming in Rust}
+\textbf{Overhead in threads} \\
+\begin{itemize}
+    \item Context switch for threads involves changing virtual address, clearing cache, changing stack etc 
+    \item 5000 threads = 5000 stack segments = 40GB at 8MB per stack
+    \item Green threads (go threads) are more lighweight, but we need a runtime to manage and schedule them. But runtime incurs overhead
+    \item Non-blocking I/O that allows the thread to do other computation while the I/O is happening. But this requires the thread to switch context to the new task and switch back to the old when the I/O is done.
+\end{itemize}
+
+\textbf{Non-blocking I/O} \\
+\begin{itemize}
+    \item Non blocking I/O can enable concurrency with just one thread.
+    \item e-poll tells us what FDs are ready for I/O and only returns when something is ready 
+    \item Notify-read-Notify...Event loop
+\end{itemize}
+
+
+\textbf{State Management - Futures} \\
+\begin{itemize}
+    \item Manage the state associated with each thread
+    \item Futures lets us track in progress operation with associated state, in one package. This allows threads to get back to what it was doing when the I/O is ready 
+    \item Futures represent a value that will exist in the future
+    \item An event loop is like an recipe with each future being a step in the recipe. The current step/state of each future is then kept in the event loop.
+    \item The event loop loops (polls) over all futures, running the next step of each one, switching as needed
+    \item Event is like a user-space scheduler for futures
+\end{itemize}
+
+\textbf{Future trait} \\
+\begin{itemize}
+    \item Need a poll() function on the future to start it off 
+    \item poll() passes a Context structure. Context conatins wake() that allows the executor to see which process can be polled to make progress
+\end{itemize}
+
+\textbf{Executor} \\
+\begin{itemize}
+    \item When no futures can make progress, executor sleeps till wake is called.
+    \item Calls poll on future to give them attention
+    \item Can be single or multi threaded - so futures can be truly parallel
+    \item There are synchronising primitives provided by mio 
+    \item If future sleeps, the executor running the code will also wait and do nothing
+    \item So Asynchronous code needs to use non-blocking versions of everything, including mutexes\\
+    \includegraphics*[width=7cm, height=2cm]{executor.png}
+\end{itemize}
+
+\textbf{Eronomics} \\
+\begin{itemize}
+    \item Poor ergonomics:
+    \includegraphics*[width=7cm, height=2.5cm]{poorergonomics.png}
+    \item Good ergonomics:
+    \includegraphics*[width=7cm, height=2.1cm]{goodergonomics.png} 
+\end{itemize}
+
+\textbf{State management} \\
+\begin{itemize}
+    \item 5 places (States) to pause:
+    \begin{enumerate}
+        \item Before anything happens (future created but not polled)
+        \item Awaiting loadMessage 
+        \item Awaiting get\_recepient 
+        \item Awaiting addToInbox 
+        \item Future has completed
+    \item States are stored using an enum
+    \end{enumerate}
+    \item Rust will generate functions to traverse the states 
+    \item Async functions have no stacks, the executor thread still has a stack but it is not used to store states when switching between tasks 
+    \item Futures have a fixed size known at compile time (no recursion! - enum cannot grow dynamically)
+    \item Rust async are nearly optimal 
+\end{itemize}
+
+\textbf{Async/Await} \\
+\begin{itemize}
+    \item Async function returns a Future 
+    \item Futures used in a function are chained together by the compiler
+    \item .await() waits for a future and get its value and triggers the execution. 
+    \item Futures dont do anything unless executed by an executor
+    \item ? is used for error propagation
+\end{itemize}
+
+\textbf{Example: A simple server} \\
+\begin{itemize}
+    \item Instead of using blocking calls (.accept, read, write), we use non-blocking calls
+    \item Instead of spawning threads, we spawn a future 
+    \includegraphics*[width=7cm, height=2.5cm]{simpleserver.png}
+\end{itemize}
+
+\textbf{When to async} \\
+\begin{itemize}
+    \item Async only makes sense when we need a high degree of concurrency 
+    \item Work is primarily IO bound - contex switch is only expensive if you are doing it frequently due to IO interrupts
+\end{itemize}
 \pagebreak
 % TUTORIALS
 \section{Tutorials}
