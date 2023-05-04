@@ -386,7 +386,7 @@ void oops_again(widget_id w) {
 }
     \end{lstlisting}
     \begin{itemize}
-        \item Fix: use reference $std::thread t(update_data_for_widget, w, std::ref(data))$
+        \item Fix: use reference std::thread t(update\_data\_for\_widget, w, std::ref(data))
     \end{itemize} 
 \end{enumerate}
 
@@ -470,8 +470,8 @@ void g() {
 
 \textbf{Mutex in C++} \\
 \begin{itemize}
-    \item $std::lock_guard$ locks the mutex upon initialisation, unlocks upon destruction
-    \item $std::lock_guard<std::mutex>{some_mutex};$ 
+    \item $std::lock\_guard$ locks the mutex upon initialisation, unlocks upon destruction
+    \item $std::lock\_guard<std::mutex>{some\_mutex};$ 
     \item Group mutex and protected data together in a class rather than use global variables
     \item Never pass data or pointers (via returns, sotring in externally visible memory, as input to functions etc) when their usage is not guaranteed to be safe
 \end{itemize}
@@ -481,7 +481,7 @@ void g() {
 \begin{itemize}
     \item \textbf{lock guard} no manual lock, can lock many or one mutex at once without deadlock
     \item \textbf{Scoped lock} accepts and locks a list of mutexes. Can be unintentionally initialized without a mutex
-    \item \textbf{unique lock} manual unlock, defers locking using $std::defer_lock$, only single mutex. 
+    \item \textbf{unique lock} manual unlock, defers locking using $std::defer\_lock$, only single mutex. 
 \end{itemize}
 
 \textbf{Condition Variable} \\
@@ -2114,7 +2114,7 @@ alignas(64) std::atomic<GenNodePtr> m_queue_front; // consumer end
 \textbf{Silly mistakes} \\
 \begin{itemize}
     \item Not using wait group or waiting for channels to finish and "join"
-    \item Allowing data race by not granting exclusive access by passing objects using channels s.t only 1 owner exists at any point in time
+    \item Allowing data race by not granting exclusive access by passing objects using channels s.t only 1 owner exists at any point in time    
     \item Creating a deadlock using cyclic dependencies between channels
     \item Using buffered channel to resolve deadlock - bad idea since there are now multiple owners to values and a buffered channel becomes effectively unbuffered when it is full + more interleavings possible
     \item Closing the channel too early and resulting in a panic
@@ -2342,6 +2342,49 @@ Unfortunately, both semaphores in C++ and blocking queues in Go are not guarante
 \pagebreak
 % USEFUL FACTS
 \subsection*{Classical Synchronisation Problems}
+
+\textbf{Single lane bridge} \\
+\begin{lstlisting}[language=c++,breaklines=true, breakatwhitespace=true]
+void enter_bridge_direction1()
+{   
+    bool pass=false;   
+    while(!pass){      
+        mutex.wait();   		
+        if(crossing>=0){
+        crossing++;     			    
+        pass=true;      
+        }       
+        mutex.signal();   
+    }
+} 
+
+void enter_bridge_direction2()
+{   
+	bool pass=false;   
+	while(!pass){      
+		mutex.wait();   		
+        if(crossing<=0){
+        crossing--; 
+        pass=true;      
+		}       
+		mutex.signal();   
+	}
+} 
+
+void exit_bridge_direction1(){    	
+    mutex.wait();    
+	    crossing--;    	
+    mutex.signal(); 
+} 
+
+void exit_bridge_direction2(){    	
+    mutex.wait();    
+	    crossing++;    	
+    mutex.signal(); 
+} 
+
+    
+\end{lstlisting}
 
 \includegraphics*[width=7cm, height=3cm]{classicalSummary.png}
 
