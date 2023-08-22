@@ -1,0 +1,270 @@
+\documentclass[10pt, landscape]{article}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{calc}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{ifthen}
+\usepackage[a4paper,margin=3mm,landscape]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{color,graphicx,overpic}
+\usepackage{hyperref}
+\usepackage{newtxtext} 
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{mathtools}
+\usepackage[document]{ragged2e}
+\usepackage{listings}
+\setlist{nosep}
+\usepackage{subfig}
+\usepackage{listings}
+
+% Define Rust language for listings package
+\lstdefinelanguage{Rust}{
+  morekeywords={let, mut},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+
+% for including images
+\graphicspath{ {./images/} }
+
+
+\pdfinfo{
+  /Title (CS3219.pdf)
+  /Creator (TeX)
+  /Producer (pdfTeX 1.40.0)
+  /Author (Pei Cheng Yi)
+  /Subject (CS3219)
+  /Keywords (CS3219, nus,cheatsheet,pdf)}
+
+% Turn off header and footer
+\pagestyle{empty}
+
+\newenvironment{tightcenter}{%
+  \setlength\topsep{0pt}
+  \setlength\parskip{0pt}
+  \begin{center}
+}{%
+  \end{center}
+}
+
+% redefine section commands to use less space
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%x
+                                {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-1explus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%
+                                {\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {1ex plus .2ex}%
+                                {\normalfont\small\bfseries}}%
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand\rmdefault{\sfdefault}
+%  makes nested numbering (e.g. 1.1.1, 1.1.2, etc)
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+\renewcommand\labelitemii{•}
+\renewcommand\labelitemiii{•}
+%  convenient absolute value symbol
+\newcommand{\abs}[1]{\vert #1 \vert}
+%  convenient floor and ceiling
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+%  convenient modulo
+\newcommand{\Mod}[1]{\ \mathrm{mod}\ #1}
+%  for logical not operator, iff symbol, convenient "if/then"
+\renewcommand{\lnot}{\mathord{\sim}}
+\let\then\Rightarrow
+\let\Then\Rightarrow
+%  vectors
+\newcommand{\vv}[1]{\boldsymbol{#1}}
+\newcommand{\VV}[1]{\overrightarrow{#1}}
+%  column vector
+\newcommand{\cvv}[1]{\left(\begin{smallmatrix}#1\end{smallmatrix}\right)}
+\newcommand{\code}[1]{\textcolor{myblue}{\texttt{#1}}}
+\newcommand\bggreen{\cellcolor{green!10}}
+
+\makeatother
+\definecolor{myblue}{cmyk}{1,.72,0,.38}
+\everymath\expandafter{\the\everymath \color{myblue}}
+% Define BibTeX command
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+%% this changes all items (enumerate and itemize)
+\setlength{\leftmargini}{0.5cm}
+\setlength{\leftmarginii}{0.4cm}
+\setlength{\leftmarginiii}{0.5cm}
+\setlist[enumerate,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,2]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,3]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+
+%My Environments
+\newtheorem{example}[section]{Example}
+% -----------------------------------------------------------------------
+
+\begin{document}
+\raggedright
+\footnotesize
+\begin{multicols}{4}
+
+
+% multicol parameters
+% These lengths are set only within the two main columns
+\setlength{\columnseprule}{0.25pt}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+    \fbox{%
+        \parbox{0.8\linewidth}{\centering \textcolor{black}{
+            {\Large\textbf{CS3219}}
+            \\ \normalsize{AY23/24 Sem 1}}
+            \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
+        }%
+    }
+\end{center}
+
+% LECTURES
+
+\section{Lectures}
+
+\subsection*{L0 and L1}
+\textbf{Software engineering is} systematic, disciplined, quantifiable approach to the development, 
+operation, and maintenance of software \\
+
+
+\textbf{Software Crisis 1.0 and 2.0}
+\begin{itemize}
+    \item (1.0) development of more powerful machinary
+    \item (2.0) growing demand for more complex software due to hardware advances, cost reduction, data reduction, data availability, device proliferation and the rise in consumer technology
+\end{itemize}
+
+\textbf{Software at the Edge}
+\begin{itemize}
+  \item Balance between the demands of centralized computing and localised decision making 
+  \item Cloud-based: latency that makes it unsuitable for real-time applications
+  \item Edge: Limited computation power and power source 
+\end{itemize}
+
+\textbf{Cloud Computing}
+\begin{itemize}
+  \item Software infrastructure hosted on an external data centre 
+  \item Cloud-enabled: Legacy enterprise applications designed for local datacentres but modified to run on the cloud 
+  \item E.g IAAS, PAAS, SAAS
+\end{itemize}
+\includegraphics*[width=7cm]{iaas.png}
+
+\textbf{Cloud-native applications}
+\begin{itemize}
+  \item The approach to build, deploy and manage modern applications in cloud computing environments 
+  \item Characteristic features:
+   \begin{enumerate}
+    \item Immutable infrastructure
+    \item Microservices-based applications 
+    \item API driven 
+    \item Service mesh 
+    \item Containers 
+    \item Dynamically managed 
+  \end{enumerate}
+\item Monolith: There will be API end points to gain certain functionalities 
+\item Microservice model (cloud-native) is similar to monolith except that functionalities are provided for you
+\end{itemize}
+
+\textbf{Deployment Considerations} \\
+\textbf{Quality Attributes}
+\begin{itemize}
+  \item Availability, performance, security, usability, interoperateability, scalability, maintainability, portability, reusability
+\end{itemize}
+
+\textbf{Issues}
+\begin{itemize}
+  \item Exploit hardware advances 
+  \item Cater to devices
+  \item Network devices, users, applications
+  \item Manage Data
+  \item Large-scale content delivery, quality of service, number of end points 
+  \item Shift towards could-nativity 
+  \item Heterogeneity platforms, interoperatbility of different OS/Browser/Platform combinations
+\end{itemize}
+
+\includegraphics*[width=7cm]{deployment_mechanism}
+\textbf{Code to exectuable - Bare metal}
+\begin{itemize}
+    \item catering to specific platforms
+    \item customized build and linking 
+    \item Factors: availability of libraries and dependencies 
+    \item Cons: Potentially wasted hardware resources, cost, developer productivity, scalability (hardware, software)
+    \item Pros: Complete control, physical isolation
+\end{itemize}
+
+\includegraphics*[width=7cm]{deployment_models}
+
+\textbf{Virtual Machines}
+\begin{itemize}
+    \item Improve resource utilization and cost
+    \item Flexible (not limited to hardware like baremetal) and scalable, runs on different hardware
+    \item Still runs a full OS 
+    \item Side-channel attacks: VMs share the same physical hardware, so they can be attacked by exploiting the shared resources
+    \item Noisy neighbor: VMs compete for resources, so one VM can hog the resources and affect the performance of other VMs
+\end{itemize}
+
+\textbf{Containers}
+\begin{itemize}
+    \item Lighter than VM (only has OS processes and libraries)
+    \item Better utilization of hardware resources
+    \item Allows for rapid deployment, runs everywhere 
+    \item Granular and controllable 
+    \item Abstracts away the hardware (managed by container engine) so it can run on any hardware -- improves performance
+    \item Reproducible, isolation, security
+    \item Cons: not suitable for performance critical software since containers goes through more layers than VMs or bare metal
+\end{itemize}
+
+\textbf{Containerised Deployment} 
+\begin{itemize}
+  \item Easy integration ofthe internet and related advances (build cloud-native apps)
+  \item Include runtime with code (caters to heterogeneous platforms and achieves interoperability and portability)
+  \item Supports dependenct and change management (improves maintainability and portability)
+  \item Environment management (dockerfile provides the environment description)
+  \item Reproducible (guaranteed to be identical on container-capable systems)
+  \item Isolation and security (avoid conflicting dependencies and provides sand-box for execution) 
+  \item Quick to launch 
+  \item Support DevOps best practices 
+  \item Can be used with orchestrators (e.g Kubernetes)
+\end{itemize}
+
+\textbf{Container Vs orchestrator}
+\begin{itemize}
+  \item Containers: Provide platform for building and distributing services. Not good for runing complex applications, often requiring multiple containers that each do specific tasks 
+  \item Orchestrators: Integrate and coordinate containers, providing scaling of deploymend based on demand, fault tolerance, and communication among containers
+\end{itemize}
+
+\textbf{Serverless}
+\begin{itemize}
+  \item Cloud-native deployment model, servers and underlying infrastructure still exist but are abstracted away
+  \item Developers package containers, apps respond to demand and there are no cost when idle
+  \item Serverless allocate resource dynamically for the developer
+  \item Good for stateless applications (the state does not matter outside of the current execution)
+\end{itemize}
+
+% Tutorials
+
+
+% Misc
+
+\end{multicols}
+\end{document}

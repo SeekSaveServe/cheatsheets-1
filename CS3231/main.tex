@@ -1,0 +1,208 @@
+\documentclass[10pt, landscape]{article}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{calc}
+\usepackage{multicol}
+\usepackage[a4paper,margin=3mm,landscape]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{color,graphicx,overpic}
+\usepackage{hyperref}
+\usepackage{newtxtext} 
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{mathtools}
+\setlist{nosep}
+\usepackage{subfig}
+\usepackage{listings}
+
+% Define Rust language for listings package
+\lstdefinelanguage{Rust}{
+  morekeywords={let, mut},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+
+% for including images
+\graphicspath{ {./images/} }
+
+
+\pdfinfo{
+  /Title (CS3231.pdf)
+  /Creator (TeX)
+  /Producer (pdfTeX 1.40.0)
+  /Author (Pei Cheng Yi)
+  /Subject (CS3231)
+  /Keywords (CS3231, nus,cheatsheet,pdf)}
+
+% Turn off header and footer
+\pagestyle{empty}
+
+\newenvironment{tightcenter}{%
+  \setlength\topsep{0pt}
+  \setlength\parskip{0pt}
+  \begin{center}
+}{%
+  \end{center}
+}
+
+% redefine section commands to use less space
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%x
+                                {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-1explus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%
+                                {\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {1ex plus .2ex}%
+                                {\normalfont\small\bfseries}}%
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand\rmdefault{\sfdefault}
+%  makes nested numbering (e.g. 1.1.1, 1.1.2, etc)
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+\renewcommand\labelitemii{•}
+\renewcommand\labelitemiii{•}
+%  convenient absolute value symbol
+\newcommand{\abs}[1]{\vert #1 \vert}
+%  convenient floor and ceiling
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+%  convenient modulo
+\newcommand{\Mod}[1]{\ \mathrm{mod}\ #1}
+%  for logical not operator, iff symbol, convenient "if/then"
+\renewcommand{\lnot}{\mathord{\sim}}
+\let\then\Rightarrow
+\let\Then\Rightarrow
+%  vectors
+\newcommand{\vv}[1]{\boldsymbol{#1}}
+\newcommand{\VV}[1]{\overrightarrow{#1}}
+%  column vector
+\newcommand{\cvv}[1]{\left(\begin{smallmatrix}#1\end{smallmatrix}\right)}
+\newcommand{\code}[1]{\textcolor{myblue}{\texttt{#1}}}
+\newcommand\bggreen{\cellcolor{green!10}}
+
+\makeatother
+\definecolor{myblue}{cmyk}{1,.72,0,.38}
+\everymath\expandafter{\the\everymath \color{myblue}}
+% Define BibTeX command
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+%% this changes all items (enumerate and itemize)
+\setlength{\leftmargini}{0.5cm}
+\setlength{\leftmarginii}{0.4cm}
+\setlength{\leftmarginiii}{0.5cm}
+\setlist[enumerate,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,2]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,3]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+
+%My Environments
+\newtheorem{example}[section]{Example}
+% -----------------------------------------------------------------------
+
+\begin{document}
+\raggedright
+\footnotesize
+\begin{multicols}{4}
+
+
+% multicol parameters
+% These lengths are set only within the two main columns
+\setlength{\columnseprule}{0.25pt}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+    \fbox{%
+        \parbox{0.8\linewidth}{\centering \textcolor{black}{
+            {\Large\textbf{CS3231}}
+            \\ \normalsize{AY23/24 S1}}
+            \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
+        }%
+    }
+\end{center}
+
+% LECTURES
+
+\section{Lectures}
+
+\subsection{L1: Preliminaries, DFA}
+\textbf{Types of Proof}
+\begin{itemize}
+  \item Deductive Proofs
+  \item Modus Ponens, $A \rightarrow B$
+  \item Proof by contradiction
+  \item Counter-example
+  \item Equivalence (iff)
+  \item Converse, $A \rightarrow B$ and $B \rightarrow A$ shows iff and equivalence 
+  \item Inductive Proofs
+  \item \begin{proof}
+    Prove base case \\
+    Assume true for $n=k$\\
+    Prove true for $n=k+1$ 
+  \end{proof}
+  \item Structural Induction: if a claim holds true for a tree of height $k$, then it holds true for a tree of height $k+1$
+  \item Mutual Induction: Showing several claims to be true simultaneously
+  \item Diagonalisation: Showing that a set is uncountable by demonstrating a contradiction to the assumption that it is possible to enumerate all elements of the set (countable). This can be done by changing the $i^{th}$ digit of the $i^{th}$ element of the enumeration, ensuring that the new element differs from existing elements in the enumeration by at least 1 digit.
+\end{itemize}
+
+\textbf{Central Concepts of Automata Theory}
+\begin{itemize}
+  \item \textbf{Alphabet $\Sigma$}: finite non-empty set of symbols (e.g. $\{0,1\}$)
+  \item \textbf{String}: finite sequence of symbols from $\Sigma$ (e.g. $0101$)
+  \item \textbf{Empty String $\epsilon$}: string with no symbols
+  \item \textbf{Length of String $|w|$}: number of symbols in string $w$
+  \item \textbf{Powers of n Alphabet $\Sigma^n$}: set of all strings of length $n$ over $\Sigma$ (e.g. $\{0,1\}^2 = \{00,01,10,11\}$)
+  \item \textbf{Concatenation of Strings} $w_1 = 0101, w_2 = 1010, w_1w_2 = w_1 . w_2 = 01011010$
+  \item \textbf{Substring} $ab$ is a substring of $babaa$ but $bb$ is not 
+  \item \textbf{Subsequence} $bba$ is a subsequence of $babaa$ but $abb$ is not. Relative order matters, can skip.
+  \item \textbf{Language $L$} A set of strings over $\Sigma$ 
+\end{itemize}
+
+\textbf{Strict Definitiion of a Language}
+\begin{itemize}
+  \item A language is strictly defined. When a turing machine accepts a language, it accepts exactly that language, not a superset or subset
+  \item $L=\{x : x$ is a binary representation of a prime number$\}$ is not clearly defined since $011$ and $11$ are both binary representations of $3$
+  \item $L_1 . L_2 = \{ xy : x \in L_1,, y \in L_2\}$
+  \item $L^* = \{ x_1x_2...x_n : x_1, x_2..., x_n \in L, n \in \mathbb{N} \}$ since n can be 0, $\epsilon \in L^*$
+  \item $L^* = \{ \epsilon \} \cup L \cup L^2 \cup L^3 \cup ...$
+  \item $L^+ \{ x_1x_2...x_n : x_1, x_2..., x_n \in L, n \ge 1 \}$
+  \item $L^+ = L \cup L^2 \cup L^3 \cup ...$, note that it may or may not include $\epsilon$ since $\epsilon$ can be included in $L$
+  \item Number of srings over any fixed fininte alphabet is countable 
+  \item Number of languages over any non-empty alphabet is uncountable
+\end{itemize}
+
+\textbf{Finite Automata}
+\begin{itemize}
+  \item Regular language is accepted by a finite automata 
+  \item E.g. On-Off Switch. Inputs toggles the state
+\end{itemize}
+
+\textbf{Deterministic Finite Automata (DFA)}
+\begin{itemize}
+  \item A DFA is a 5-tuple $A = (Q, \Sigma, \delta, q_0, F)$ where
+  \item $Q$ is a finite set of states
+  \item $\Sigma$ is a finite alphabet
+  \item $\delta(q_i, x | q_i \in Q, x \in \Sigma): Q \times \Sigma \rightarrow Q$ is the transition function
+  \item $q_0 \in Q$ is the start state
+  \item $F \subseteq Q$ is the set of accept states
+\end{itemize}
+% Tutorials
+
+
+% Misc
+
+\end{multicols}
+\end{document}

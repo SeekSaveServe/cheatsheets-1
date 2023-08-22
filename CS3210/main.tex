@@ -1,0 +1,286 @@
+\documentclass[10pt, landscape]{article}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{calc}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{ifthen}
+\usepackage[a4paper,margin=3mm,landscape]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{color,graphicx,overpic}
+\usepackage{hyperref}
+\usepackage{newtxtext} 
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{mathtools}
+\usepackage[document]{ragged2e}
+\usepackage{listings}
+\setlist{nosep}
+\usepackage{subfig}
+\usepackage{listings}
+
+% Define Rust language for listings package
+\lstdefinelanguage{Rust}{
+  morekeywords={let, mut},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+
+% for including images
+\graphicspath{ {./images/} }
+
+
+\pdfinfo{
+  /Title (CS3211.pdf)
+  /Creator (TeX)
+  /Producer (pdfTeX 1.40.0)
+  /Author (Pei Cheng Yi)
+  /Subject (CS3211)
+  /Keywords (CS3211, nus,cheatsheet,pdf)}
+
+% Turn off header and footer
+\pagestyle{empty}
+
+\newenvironment{tightcenter}{%
+  \setlength\topsep{0pt}
+  \setlength\parskip{0pt}
+  \begin{center}
+}{%
+  \end{center}
+}
+
+% redefine section commands to use less space
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%x
+                                {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-1explus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%
+                                {\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {1ex plus .2ex}%
+                                {\normalfont\small\bfseries}}%
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand\rmdefault{\sfdefault}
+%  makes nested numbering (e.g. 1.1.1, 1.1.2, etc)
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+\renewcommand\labelitemii{•}
+\renewcommand\labelitemiii{•}
+%  convenient absolute value symbol
+\newcommand{\abs}[1]{\vert #1 \vert}
+%  convenient floor and ceiling
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+%  convenient modulo
+\newcommand{\Mod}[1]{\ \mathrm{mod}\ #1}
+%  for logical not operator, iff symbol, convenient "if/then"
+\renewcommand{\lnot}{\mathord{\sim}}
+\let\then\Rightarrow
+\let\Then\Rightarrow
+%  vectors
+\newcommand{\vv}[1]{\boldsymbol{#1}}
+\newcommand{\VV}[1]{\overrightarrow{#1}}
+%  column vector
+\newcommand{\cvv}[1]{\left(\begin{smallmatrix}#1\end{smallmatrix}\right)}
+\newcommand{\code}[1]{\textcolor{myblue}{\texttt{#1}}}
+\newcommand\bggreen{\cellcolor{green!10}}
+
+\makeatother
+\definecolor{myblue}{cmyk}{1,.72,0,.38}
+\everymath\expandafter{\the\everymath \color{myblue}}
+% Define BibTeX command
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+%% this changes all items (enumerate and itemize)
+\setlength{\leftmargini}{0.5cm}
+\setlength{\leftmarginii}{0.4cm}
+\setlength{\leftmarginiii}{0.5cm}
+\setlist[enumerate,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,1]{leftmargin=2mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,2]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+\setlist[itemize,3]{leftmargin=3mm,labelindent=1mm,labelsep=1mm}
+
+%My Environments
+\newtheorem{example}[section]{Example}
+% -----------------------------------------------------------------------
+
+\begin{document}
+\raggedright
+\footnotesize
+\begin{multicols}{4}
+
+
+% multicol parameters
+% These lengths are set only within the two main columns
+\setlength{\columnseprule}{0.25pt}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+    \fbox{%
+        \parbox{0.8\linewidth}{\centering \textcolor{black}{
+            {\Large\textbf{CS3211}}
+            \\ \normalsize{AY22/23 Sem 2}}
+            \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
+        }%
+    }
+\end{center}
+
+% LECTURES
+
+\section{Lectures}
+\section{Introduction}
+\subsection{L0 and L1}
+\textbf{Program Parallelization} \\
+\textcolor{blue}{\textbf{Decomposition}}: Decompose a sequential algorithm into tasks (programmer)\\
+\begin{itemize}
+    \item Granularity of tasks are important
+    \item Tasks have dependencies (data or control) between each other which defines the execution order
+\end{itemize}
+\textcolor{red}{\textbf{Scheduling}}: Assign tasks to processes (programmer / compiler)\\
+\textcolor{green}{\textbf{Mapping}} - Map processes to cores (OS)\\
+
+\textbf{Von Neumann Computation Model} instruction and data are stored in memory, and processors computes. \\
+\textbf{Memory Wall} disparity between memory speed and processor speed ($\le$ 1 ns VS $\ge$ 100 ns)\\   
+\textbf{Processing unit} refers to a core that can execute a kernel thread \\
+\textbf{Interconnect} busses betwen different components in the machine \\
+\textbf{Node} Machine in a distributed system\\
+
+\textbf{Why Parallel} \\
+\textbf{Primary Reasons}
+\begin{itemize}
+    \item [1] OVercome limits of serial computing
+    \item [2] Solve larger problems
+    \item [3] Save (wall-clock) time
+\end{itemize}
+\textbf{Other Reasons}
+\begin{itemize}
+    \item Take advantage of non-local resources 
+    \item Cost/energy saving - use multiple cheaper computing resourcees 
+    \item Overcome memory constraints
+\end{itemize}
+
+\textbf{Computational Model Attributes} \\
+\begin{itemize}
+    \item \textbf{Operation mechanism} Primitive units of computation or basic actions of the computer on a specific Architecture 
+    \item \textbf{Data Mechanism} How we access and store data in address space 
+    \item \textbf{Control Mechanism} How primtive units of computation are scheduled
+    \item \textbf{Communication Mechanism} Modes and patterns of exchanging information between parallel tasks (e.g message passing, shared memory)
+    \item \textbf{Synchronization Mechanism} ensures to ensure needed information arrives at the right time
+\end{itemize}
+
+\textbf{Dependencies and Coordination}
+\begin{itemize}
+    \item Dependencies among tasks impose constraints on scheduling 
+    \item Memory organizations: Shared-memory (threads), distributed-memory (processes) 
+    \item Coordination (synchronisation) imposes additional overheads
+\end{itemize}
+
+\textbf{Two algorithms}
+\includegraphics*[width=7cm]{l1_1.png}
+\begin{itemize}
+    \item Core 0 is active throughout the execution
+    \item Some cores are idle
+    \item This is a lot better than having all cores idle while the master core is executing
+\end{itemize}
+
+
+\textbf{Parallel Performance} 
+\begin{itemize}
+    \item Execution time Vs Throughput
+    \item Parallel execution time = computation time + parallelization overheads 
+    \item Overheads: Distribution of work(tasks) to porocesses, information exchange, synchronisation, idle time, etc
+\end{itemize}
+
+\section{Background on Parallelism}
+\subsection*{L2: Processes and Threads}
+\textbf{Process}
+\begin{itemize}
+    \item Identified by PID 
+    \item Program counter, global data (open files, network connections), stack or heap, current values of the registers (GPRs and Special)
+    \item These information are abstracted in the PCB, and each proecss can be viewed as having exclusive access to tis address space 
+    \item Explicit communication is needed
+    \item \textbf{Disadvantage}
+    \begin{enumerate}
+        \item High overhead of system calls
+        \item Potential re-allocation of data-structures
+        \item Communication goes through OS (system calls) and context switch is costly
+    \end{enumerate}
+\end{itemize}
+
+\includegraphics*[width=7cm]{memory_space.png}
+
+\textbf{Multi tasking}
+\begin{itemize}
+    \item Overhead: Context switching (PCB change) is needed and states of suspended process must be saved 
+    \item Time slicing: Pseudo-parallelism
+    \item Child processes can use parent's data
+\end{itemize}
+
+\textbf{Inter-process communication (IPC)}
+\begin{itemize}
+    \item Shared memory: need to protect access with locks 
+    \item Message passing: Blocking, unblocking, Synchronous, unsynchronous
+\end{itemize}
+
+\includegraphics*[width=7cm, height=3.8cm]{except_interrupt}
+
+\textbf{Threads}
+\begin{itemize}
+    \item A process may have multiple indepedent control flows called threads 
+    \item Each thread has its own stack and registers (PC, SP, registers), but share the same address space 
+    \item Shared memory model and Shared memory architecture
+\end{itemize}
+
+
+
+\section*{Architecture}
+\subsection*{L3: Processor and memory organization}
+
+
+\subsection*{L7: Cache coherence and memory consistency}
+
+
+\subsection*{L11: Interconnection networks}
+
+
+\section*{Parallel Computation Models}
+\subsection*{L4: Shared-memory programming models}
+
+
+\subsection*{L6: Data parallel models (GPGPU)}
+
+
+\subsection*{L9,10: Distributed-programming models}
+
+
+\section*{Performance and Scalability of Parallel Programs}
+\subsection*{L5: Performance of parallel systems}
+
+\subsection*{L8: performance instrumentation}
+
+
+\section*{New Trends}
+\subsection*{L12: Energy efficient computing}
+
+
+% Tutorials
+
+
+% Misc
+
+\end{multicols}
+\end{document}
