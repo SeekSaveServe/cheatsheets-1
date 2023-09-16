@@ -261,9 +261,97 @@ operation, and maintenance of software \\
   \item Good for stateless applications (the state does not matter outside of the current execution)
 \end{itemize}
 
+\subsection*{L2: Software Development}
+\textbf{Waterfall}
+\includegraphics*[width=7cm]{waterfall}
+\begin{itemize}
+  \item Good for stable well-understood specifications, familiar domain and solution 
+  \item Variation: have feedback loops
+\end{itemize}
+
+\textbf{Scrum}
+
+\textbf{CI CD Delivery}
+\includegraphics*[width=7cm]{ci_cd}
+\begin{itemize}
+  \item CI is a dev practice that requries  devs to integrate code into a shared repository several times a day
+  \item Each check in is autmatically verified, allowing for early error detection
+  \item Continuous Delivery Vs Deployment: Software can be Vs automatically released into production at any time
+  \item \textbf{benefits}
+  \begin{enumerate}
+    \item low-risk releases
+    \item faster time to market and early feedback 
+    \item higher quality and lower cost
+  \end{enumerate}
+  \item \textbf{Blue-green deployment}: Maintain two copies of production environment, one active and one inactive. When a new version is released, it is deployed to the inactive environment and tested. Once it is verified, the inactive environment is switched to active
+\end{itemize}
+
+
+\textbf{DevOps}
+\begin{itemize}
+  \item Communication and collaboration 
+  \item Infrastructure as code 
+  \item monitoring and logging and integration
+  \item Software Reliability Engineer: Create software that improve the reliability of sys in prod, fix issues, respond to bugs, and on-call
+\end{itemize}
+
+\textbf{Recent trends}
+\begin{itemize}
+  \item AI to automate CICD
+  \item Pattern detection in code base to detect vulnerabilities
+  \item Collaborating with AI to do code sequence prediction and generation, brainstorm solutions, rapid prototyping
+  \item \textbf{Risks}
+  \begin{enumerate}
+    \item Garbage in garbage out 
+    \item Traceability of the source 
+    \item Data safety 
+    \item Susceptible to vulnerabilities 
+    \item Increasing technical debt
+  \end{enumerate}
+\end{itemize}
+
+\subsection*{L2: Software Requirements}
+\textbf{Definition}
+\begin{itemize}
+  \item Capabilities needed by a user to solve a problem or achieve an objective
+  \item Capabilities must be met or possessed by a system component
+  \item documented representation of the above 
+  \item \textbf{Usage centric:} As a user, I can ....
+  \item \textbf{Product centric:} [Refinement] the system will support the following ...
+\end{itemize}
+
+\textbf{Four phases of requirements dev}
+\includegraphics*[width=7cm]{req_phase}
+\begin{itemize}
+  \item Elicitation: discover requirements (docs, interviews, surveys, event-response tables, prorotyping, observations)
+  \item Analysis: negotiate requiements, identify gaps 
+  \item Specifications: written and illustrated requirements for comprehenon 
+  \item Validation: Confirm correct set of requirements that will enable developers to build a soln 
+\end{itemize}
+
+\textbf{SRS}
+
+
+\textbf{SRS Vs Product backlog}
+\begin{itemize}
+  \item Both informs whats to be done 
+  \item Product backlog faciliates with planning while STS is an in-depth
+\end{itemize}
 % Tutorials
 
 
+\textbf{Qualities of strong SRS}
+
+\textbf{FR Vs NFR}
+\begin{itemize}
+  \item FR speciefies what the system should do
+  \item E.g. The passenger shall be able to print boarding passes 
+  \item NFR describes something not directly related to the functionality of the system
+  \item E.g. Mean time between failure $\ge$ 900ms
+  \item NFR affects system choice and design
+\end{itemize}
+
+\textbf{Software Quality Attributes}
 % Misc
 
 \end{multicols}

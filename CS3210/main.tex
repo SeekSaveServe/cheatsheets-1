@@ -133,7 +133,7 @@
     \fbox{%
         \parbox{0.8\linewidth}{\centering \textcolor{black}{
             {\Large\textbf{CS3211}}
-            \\ \normalsize{AY22/23 Sem 2}}
+            \\ \normalsize{AY23/24 Sem 1}}
             \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
         }%
     }
@@ -243,6 +243,221 @@
     \item A process may have multiple indepedent control flows called threads 
     \item Each thread has its own stack and registers (PC, SP, registers), but share the same address space 
     \item Shared memory model and Shared memory architecture
+    \item Faster thread generation- no copy of  address space
+    \item Different process can be assigned to run on different cores of a multicore processor
+    \item \textbf{User threads}
+    \begin{itemize}
+        \item Managed by library 
+        \item Context siwtch is fast, OS not involved
+        \item \textbf{Disadvantage}
+        \begin{enumerate}
+            \item OS cannot map different threads of the same process to different resources $\Rightarrow$ No parallelism
+            \item OS cannot switch to another thread if one thread blocks
+        \end{enumerate} 
+    \end{itemize}
+    \item \textbf{Kernel threads}
+    \item OS is aware of the threads and can manage accordingly
+    \item Efficient in a multicore system
+    \item Potential synchornisation issues
+\end{itemize}
+
+\textbf{Many to one mapping}
+\begin{itemize}
+    \item All user-level threads mapped to one process. 
+    \item Efficiency depends on threading library
+\end{itemize}
+
+\textbf{One to one mapping}
+\begin{itemize}
+    \item Each user-level thread is mapped to one kernel thread
+    \item OS schedules 
+\end{itemize}
+
+\textbf{Many to many mapping}
+\begin{itemize}
+    \item Many user-level threads mapped to many kernel threads
+    \item Library threads has overheads, and kernel threads has overheads
+    \item At different points in time, different user threads are mapped to different kernel threads
+    \item Number of threads must be suitable to the degree of parallism and the resources available
+\end{itemize}
+
+\textbf{Locks}
+\begin{itemize}
+    \item Spinlock: busy wait 
+    \item Blocking: mutex 
+    \item Using more locks increasese the number of context switches 
+    \item DO NOT wait in the critical section
+\end{itemize}
+
+\textbf{Semaphores}
+\begin{itemize}
+    \item Essentially shared global variables 
+    \item Can be potentially accessed anywhere in program 
+    \item No connection between semaphone and the data being protected 
+\end{itemize}
+
+\textbf{Barrier}
+\begin{itemize}
+    \item All threads must reach the barrier before any thread can proceed
+\end{itemize}
+
+\textbf{Deadlock}
+\begin{itemize}
+    \item Deadlock exists among a set of processes if every process is waiting for an event that can be caused only by another process in the set
+    \item \textbf{iff these conds are met}
+    \begin{enumerate}
+        \item Mutual exclusion-at least one resource is not shareable 
+        \item Hold and wait - at least one process holding a resource and waiting for another 
+        \item No preemption - crticial section cannot be aborted externally 
+        \item Circular wait
+    \end{enumerate}
+    \item \textbf{Dealing with deadlock}
+    \item Ignore it, prevent it, avoid it by controlling resource allocation, detection and recovery by breaking cycles
+\end{itemize}
+
+\textbf{Starvation}
+\begin{itemize}
+    \item Side effect of the scheduling algorithm. Lower priority processes might starve
+\end{itemize}
+
+\textbf{Livelock}
+\begin{itemize}
+    \item Active acquire release but no useful work done 
+\end{itemize}
+
+% Taken from my CS3211 notes
+\textbf{Producer-Consumer Problem} \\
+\begin{itemize}
+    \item Specifications:
+    \begin{itemize}
+        \item Producers put in a shared bounded buffer if not full, consumers read from it if not empty
+    \end{itemize}
+    \item Solution:\\
+    \includegraphics*[width = 7cm, height = 3cm]{producerConsumer.png} \\ 
+    \item Concurrent read, exclusive write. Categorical starvation of writer is possible\\ 
+    \includegraphics*[width = 7cm, height = 3cm]{readerwritter1.png} \\
+    \item Light switch: Abstracts out the shared lock for the reader 
+    \includegraphics*[width = 3cm, height = 3cm]{lightswitch.png} \\
+    \item Starvation free solution (block out readers): \\
+    \includegraphics*[width = 7cm, height = 3cm]{turnstile.png} \\
+    \item Prioritise Writer: \\
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+readSwitch = lightswitch();
+writeSwitch = lightswitch();
+noReaders = semaphore(1);
+noWriters = semaphore(1);
+
+reader() {
+/* Waiting for writers to be done */ 
+wait(noReaders);
+/* Writers cannot enter */
+    readswitch.lock(noWriters);
+signal(noReaders);
+    # critical section
+readSwitch.unlock(noWriters);
+}
+
+writer() {
+/* Immediately acquires no readers so writers have priority */
+writeSwitch.lock(noReaders);
+    wait(noWriters);
+    # critical section
+    signal(noWriters);
+writeSwitch.unlock(noReaders);
+}
+\end{lstlisting}
+\item This is implemented in C++ as a \textbf{shared\_lock} and \textbf{unique\_lock}
+\item GO has something similar: readLock and writeLock
+\end{itemize}
+
+\textbf{Barrier} \\
+\begin{itemize}
+    \item All threads must stop at a common point before proceeding, can be reusable (barrier) or single use (latch)
+    \item std::barrier, std::latch in C++
+    \item E.g. std::barrier arrivalPoint(size) ... arrivalPoint.arrive$\_$and$\_$wait()
+    \item sync.WaitGroup in GO is a latch, we can use 2 of them to make a barrier
+    \item C++ implementation
+    \begin{itemize}
+        \item The naive version fails because context switch can happen right before counter == N, which causes multiple threads (that were context switched out after counter ++) to signal the switch (another way to fail is to have 1 thread lap everyone else between the first barrier unlocks and second barrier unlocks)
+        \item The solution is to add a second turnstile (initialised as 1) to guard the turnstile1.signal, such that only one thread can signal it
+        \item But using mutex to increment turnstile1 one-by-one is slow 
+        \item So we use a counting semaphore instead so we can raise the barrier by 1 thread!  \\ 
+        \includegraphics*[width = 7cm, height = 3cm]{barrier.png}
+    \end{itemize}
+\end{itemize}
+
+\textbf{Dining Philosophers} \\
+\begin{itemize}
+    \item Specifications: N philosophers, N chopsticks
+    \item Deadlock: All pick up left simultaneously
+    \item Livelock: Put down left if right cannot be acquired
+    \item Slap a mutex: Becomes sequential 
+    \item Scoped Lock(left, right): Acquire multiple mutexes in a deadlock free manner (deadlock avoidance), but as we have seen in CS3223, deadlock avoidance can lead to livelock
+    \item GO's Mutex Free Solution: Use odd-even ring communication, odd numbered philosophers pick up left first, even numbered philosophers pick up right first
+    \item This is the same as the right hander argument 
+    \item Tanenbaum's solution: 
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+#define N 5
+#define LEFT ((i+N-1)% N)
+#define RIGHT ((i+1) % N)
+#define THINKING 0
+#define HUNGRY 1
+#define EATING 2
+int state[N];
+Semaphore mutex = 1;
+Semaphore s[N];
+
+void philosopher( int i ){
+    while (TRUE){
+        Think( );
+        takeChpStcks( i );
+        Eat( );
+        putChpStcks( i );
+    }
+}
+void safeToEat(i)
+{
+    if( (state[i] == HUNGRY) && 
+    (state[LEFT] != EATING) && 
+    (state[RIGHT] != EATING) ) {
+    state[i] = EATING;
+    signal(s[i]); 
+    }
+}
+
+void takeChpSticks( i )
+{
+    wait(mutex);
+    state[i] = HUNGRY;
+    safeToEat(i);
+    signal(mutex);
+    wait(s[i]);
+}
+
+void putChpSticks(i)
+{
+    wait(mutex);
+    state[i] = THINKING;
+    safeToEat(LEFT);
+    safeToEat(RIGHT);
+    signal(mutex);
+}
+    \end{lstlisting}
+    \item Limited seats: Use a semaphore(N-1) to limit the number of philosophers that can eat at the same time \\ 
+    \includegraphics*[width=7cm, height=3cm]{godiningphilo.png}
+\end{itemize}
+
+\textbf{Barber Shop} \\
+\begin{itemize}
+    \item Barbershop consists of a waiting room with n chairs and the barber chair 
+    \item If there are no customers to be served, the barber goes to sleep
+    \item If the barber is busy, but waiting room is available, customer seats on one of the chairs 
+    \item If barber is sleeping, customer wakes him up 
+    \item If all chairs are occupied, customer leaves
+    \includegraphics*[width=7cm, height=3cm]{barber.png}
+    \item line 31-32 are important since we need customer and barber need to agree that the haircut is done
+    \item GO implementation:
+    \includegraphics*[width=7cm, height=3cm]{gobarber.png}
 \end{itemize}
 
 
@@ -250,16 +465,435 @@
 \section*{Architecture}
 \subsection*{L3: Processor and memory organization}
 
+\textbf{Single Processor Parallelism}
+\begin{itemize}
+    \item Bit level - we work with word (multiple bits), data parallelism
+    \item Instruction level (from same thread)
+    \begin{enumerate}
+        \item Pipelining - parallelism across time
+        \begin{itemize}
+            \item Multiple instructions to occupy different stages in the same clock cycle - assuming no control or data dependencis
+            \item \textbf{Disadvanatges}
+            \begin{enumerate}
+                \item Independence 
+                \item Bubbles - idle stages
+                \item Data and control flow hazard
+            \end{enumerate}
+            \item Wrong speculation of if-else branches can lead to wasted cycles
+            \item Synchronisation - need to preserve read-after-write 
+            \item no more benefit to improving ILP now
+
+        \end{itemize}
+        \item Superscalar - parallelism across space
+        \includegraphics*[width=7cm]{superscalar}
+        \begin{itemize}
+            \item Duplicate pipelines and allow multiple instructions to pass through the same stage
+            \item Scheduling tough - which ones to execute together?
+            \item E.g Multiple ALUs
+            \begin{enumerate}
+                \item Static - compiler decides
+                \item Dynamic - hardware decides
+            \end{enumerate}
+        \end{itemize}
+    \end{enumerate}
+    \item Thread level
+    \begin{itemize}
+        \item Motivated by the limitation of ILP 
+        \item SMT: Duplicate hardware context (PC, registers etc)
+        \item By convention, SMT is limited to 2 threads to reduce overhead and memory contention 
+        \item Logical cores: hyperthreads
+    \end{itemize}
+\end{itemize}
+
+\textbf{Processor level parallism}
+\begin{itemize}
+    \item Add more cores to processors to enable \textbf{multiple execution flows}
+    \item Each core can be hyperthreaded
+    \item Shared Memory 
+    \item Distributed Memory 
+\end{itemize}
+
+\includegraphics*[width=7cm]{coarse}
+
+\textbf{Flynn's Taxonomy}
+\begin{itemize}
+    \item Describes parallel architecture based on instruction stream (execution flow - PC) and data stream
+\end{itemize}
+
+\textbf{Single Instruction Single Data}
+\begin{itemize}
+    \item Single stream of instructions with each working on a single data 
+\end{itemize}
+
+\textbf{Single Instruction Multiple Data}
+\begin{itemize}
+    \item Single stream of instructions with each working on multiple data 
+    \item Exploit data parallelism (vector processor)
+    \item Same instruction broadcasted to all ALUs
+    \item AVX: intrinsic functions operatie on vectors of 4 64 bit values 
+\end{itemize}
+
+\textbf{Multiple Instruction Single Data}
+\begin{itemize}
+    \item Multiple instructions operating with a single data 
+\end{itemize}
+
+\textbf{Multiple Instructions Multiple Data}
+\begin{itemize}
+    \item Each PU fetches its  own instructions 
+    \item Each PU operates its own data 
+    \item  
+\end{itemize}
+\includegraphics*[width=7cm]{mimd}
+
+\textbf{Hierarchical designs}
+\includegraphics*[width=7cm]{hierarchical_design}
+\begin{itemize}
+    \item Each core can have a separate L1 cache and shares the L2 cache
+    \item All cores share common external memory 
+\end{itemize}
+
+\textbf{Pipelined design}
+\includegraphics*[width=7cm]{pipelined_design}
+\begin{itemize}
+    \item Multiple packets being processed in a pipelined fashion 
+    \item Cores connected linearly, shares the same cache, memory 
+    \item Useful if the same computation has to be applied to a long sequence of data elements
+\end{itemize}
+
+\textbf{Network-based design}
+\includegraphics*[width=7cm]{network_design}
+\begin{itemize}
+    \item Cores and their local memory and memories are connected via an interconnection network
+\end{itemize}
+
+\textbf{Why cache}
+\begin{itemize}
+    \item cache provides high bandwidth data transfer to CPU and reduce latency in data access 
+    \item Memory latency: Amount of time for a memory request from a procesor to be serviced 
+    \item Bandwitdth: Rate at which the memory system can provide data to a processor 
+    \item A stall happens when the next instruction depends on previous instructions
+    \item Bandwidth and latency affects stalls, since instructions (sw, lw) needs to wait for the memory system to become available
+\end{itemize}
+
+\textbf{Performant parallel programs}
+\begin{itemize}
+    \item Try not to overload the memory system with too many requests
+    \item Share data across threads (inter-thread cooperation)
+    \item Reuse data fetched previously (temporal locality)
+    \item \textbf{Favor additional arithmatic over load /\ store}
+\end{itemize}
+
+\includegraphics*[width=7cm]{parallel_memory}
+
+
+\textbf{Cache coherence}
+\begin{itemize}
+    \item Multiple copies of data exist on different caches 
+    \item Local updates should not be seen by other processes 
+    \item Maintained by additional insructions 
+    \item Instructions that mess up cache coherence hence presents severe overheads
+\end{itemize}
+
+\textbf{Memory consistency}
+\begin{itemize}
+    \item Memory consistency depends on the PL and architecture 
+    \item A seq consistent architecture makes a PL with seq const memory model run faster since fewer instructions are needed to ensure memory consistency
+\end{itemize}
+
+
+\textbf{Distributed Memory }
+\includegraphics*[width=7cm]{distributed_memory}
+\begin{itemize}
+    \item Each node is an independent unit with processor and memory 
+    \item Memory in each node is private 
+    \item Nodes communicate through a network 
+\end{itemize}
+
+\textbf{Shared memory}
+\includegraphics*[width=7cm]{i7_shared}
+\begin{itemize}
+    \item Parallel programmes share memory through controller /\ provider
+    \item Cache coherence and memory consistency is ensured 
+\end{itemize}
+
+
+\includegraphics*[width=7cm]{uma}
+\textbf{Uniform  Memory Access}
+\begin{itemize}
+    \item Latency of accessing main memory is the same for processors 
+    \item Suitable for samll number of processors. Contention over memory can be high for large number of processes 
+\end{itemize}
+
+\includegraphics*[width=7cm]{numa}
+\textbf{Non-uniform Memroy Access}
+\begin{itemize}
+    \item Physically distributed memory of all processing elements are combined to form a global shared memory
+    \item Local memory access has lower latency
+    \item Reduce contention since each processor tend to access local memory 
+    \item Adding more processes does not increase contention as much as UMA 
+    \item Data consistency is easier too
+\end{itemize}
+
+\textbf{Cache Coherent NUMA (CCNUMA)}
+\begin{itemize}
+    \item EAch node has cache to reduce contention
+\end{itemize}
+
+\includegraphics*[width=7cm]{coma}
+\textbf{Cache only Memory Architecture (COMA)}
+\begin{itemize}
+    \item Each memory blocks works as cache memory. This means that no fixed space stores data permanently and cache block with data can be moved around dynamically.
+    \item Data migrates dynamically to keep data as close as possible to the processors
+    \item Cache coherence is harder since data may not just be copied, they can also be shifted around.
+\end{itemize}
+
 
 \subsection*{L7: Cache coherence and memory consistency}
-
 
 \subsection*{L11: Interconnection networks}
 
 
 \section*{Parallel Computation Models}
 \subsection*{L4: Shared-memory programming models}
+\textbf{Parallelism}
+\begin{itemize}
+    \item Average number of units of work that can be performed in parallel per unit time. 
+    \item E.g. MIPS, MFLOPS 
+    \item Limitation: Program dependencies - data, control 
+    \item Runtime delays - memory contention, communication overheads, thread overhead, synchronisation
+    \item We cannot reorder them however we like
+    \item Work = Task + dependencies (limitations)
+\end{itemize}
 
+\textbf{Data parallelism}
+\begin{itemize}
+    \item If iterations are \textbf{independent}, they can be executed in arbitrary order on multiple cores
+    \item Patition data among processing units, each doing similar work 
+    \item Commonly expressed as a loop, if the iterations are independent and can be executed in arbitrary order
+    \item E.g. SIMD computers
+    \item \textbf{OpenMP - matrix multiplication} 
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+// parallelize result = a x b
+// each thread works on one itreration of the outer-most loop 
+// vars (a, b ,result) are shared
+#pragma omp parallel for num_thread(8)
+    shared(a, b, result) private(i, j ,k)
+    ...
+        \end{lstlisting}
+    \item \textbf{Same as}
+    \begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+for (i=0; i < size; i ++) 
+    for (j=0; j < size; j ++) 
+        for (k=0; k < size, k ++) 
+            result[element][i][j] += a.element[i][k] * b.element[k][j]
+    \end{lstlisting}
+    \item \textbf{Single Program Multiple Data (SPMD)}
+    \begin{itemize}
+        \item Same programme may behave differently based on the data
+        \item E.g. Scalar product of $x.y$ on p processing units 
+    \end{itemize}
+\includegraphics*[width=7cm]{spmd}
+\end{itemize}
+
+
+\textbf{Task parallelism}
+\begin{itemize}
+    \item Partition the tasks among the processing units
+    \item indepedent program tasks/\ parts can be executed in parallel
+    \item Granularity: statement, loop, function 
+    \item More complexed than data parallelism $\rightarrow$ needs to schedule, map, take care of dependencies ...
+    \item \textbf{Decomposition}
+    \begin{itemize}
+        \item The room for parallelism in a task depends on how the task is decomposed
+    \end{itemize}
+\end{itemize}
+
+\includegraphics*[width=7cm]{decomp_a}
+\includegraphics*[width=7cm]{decomp_b}
+
+\textbf{Task dependence graph}
+\begin{itemize}
+    \item DAG: node=tasks, value=expected execution time, edge=condtrol dependency
+    \item Bad for one process to take disproportionately more data $\rightarrow$ idle time   
+    \item Critical path length: maximum slowest completion time 
+    \item Degree of concurrency=total work/critical path length
+\end{itemize}
+\includegraphics*[width=7cm]{task_dependence}
+
+\includegraphics*[width=7cm]{types_parallelism}
+
+\textbf{Coordination: Shared memory}
+\begin{itemize}
+    \item Protect access to shared address space, mutex.
+    \item Needs hardware support to implement efficiency. NUMA makes it easier but it is still costly to scale due to contention (any processor can load/\ store to any address)
+    \item Can be done without a shared memory system (NUMA, UMA)
+    \item Any type of coordination can be used in any hardware via software
+\end{itemize}
+
+\textbf{Coordination: Data-parallel}
+\begin{itemize}
+    \item SIMD, vector processors 
+    \item Traditional: Map a function onto a large collection of data 
+    \item Side effect free execution
+    \item Modern: Data-parallel languages do not enforce this structure 
+    \item SPMD model used in CUDA, OpenCL, ISPC instead
+\end{itemize}
+
+\textbf{Coordination: Message passing}
+\begin{itemize}
+    \item Tasks operate within their own private address space and communicate by explicitly sending /\ receiving messages 
+    \item E.g. MPI, GO 
+    \item Hardware does not implement system wide loads and stores, can connect commodity systems toegther to form large parallel machines 
+    \item Many many computers, not a very big one
+    \item Compatible with distributed memory systems 
+\end{itemize}
+
+\textbf{Coordination and hardware}
+\begin{itemize}
+    \item Shared memory: UMA, NUMA. Copies of messages and sent /\ received from library buffers
+    \item Message passing: distributed systems, clusters, supercomputers
+    \item Any abstraction can be implemented with any hardware but it will be more costly
+    \item Shared address space on incompatible hardware
+    \begin{itemize}
+        \item Write: Send message to all cores to invalidate value 
+        \item Read: page fault handler issues appropriate network requests
+    \end{itemize}
+\end{itemize}
+
+\includegraphics*[width=7cm]{coordination_model}
+
+
+
+\includegraphics*[width=7cm]{foster}
+\textbf{Foster's Design methodology}
+\begin{enumerate}
+    \item Partitioning 
+    \begin{itemize}
+        \item Divide computation and data into independent pieces to discover maximum parallelism 
+        \item Two approaches: 
+        \begin{enumerate}
+            \item Domain decomposition: divide data into smaller, equal pieces. Associate computation with data.
+            \item E.g. 24 tasks with 3 grids each $\rightarrow$ 6 tasks with 12 grids each 
+            \item Functional decomposition: Divide computation into piece. Associate data with computation.
+            \item E.g. Climate model $\rightarrow$ Atmospheric model, hydrology model ...
+        \end{enumerate}
+        \item Rule of thumb:
+        \begin{itemize}
+            \item 10x more primitive tasks than cores in target computer 
+            \item Minimize redundant computations and redundant data storage 
+            \item Primitive data should be of roughly the same size 
+            \item Number of tasks an increasing function of problem size
+        \end{itemize}
+    \end{itemize}
+    \item Communication (coordination)
+    \begin{itemize}
+        \item Dependencies between tasks necessitates communication 
+        \item Overlap computation and communication such that when some tasks are communicating, others are computing (improve utilisation)
+        \item \textbf{Local Communication}
+        \begin{itemize}
+            \item Tasks needs data from a small number of other tasks (neighbors)
+            \item Use channel 
+        \end{itemize}
+        \item \textbf{Global Communication}
+        \begin{itemize}
+            \item Significant number of tasks contribute to perform a computation
+            \item Do not create channels early on in the execution
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+
+
+% TODO - update this 
+
+\textbf{Parallel Programming Patterns}
+\begin{itemize}
+    \item Pattens are not mutually exclusive, use the best match 
+\end{itemize}
+
+\textbf{Fork Join}
+\begin{itemize}
+    \item Children run in parallel but are independent 
+    \item Children execute the same or different program 
+    \item Children join the parent at different points 
+    \item \textbf{Implementation: } Processes, threads etc
+\end{itemize}
+
+\includegraphics*[width=7cm]{db_fj}
+
+\textbf{Parbegin - Parend}
+\begin{itemize}
+    \item most relaxed, code is structured into sequential segments and parallel segments
+    \item Programmer specifies a sequence of statements to be executed in parallel 
+    \item A set of threads is created and the statement of the construct are assigned to these threads 
+    \item All the forks are done at the same time and all the joins are done at the same time 
+    \item Statements after parbegin and parend are only executed after all threads joins (barrier)
+    \item \textbf{Implementation: } OpenMP or compiler directives 
+    \item E.g Matrix multiplication using openMD
+\end{itemize}
+
+\textbf{SIMD (not the Architecture)}
+\begin{itemize}
+    \item Single instructions are executed synchronously by diferent threads on different data 
+    \item Similar to parbegin-parend but al threads execute the same instruction at the same time (synchronous)
+    \item Parallel but synchronous
+    \item \textbf{Implementation: } AVX /\ SSE instruction on intel processor
+\end{itemize}
+\includegraphics*[width=7cm]{simd}
+
+\textbf{SPMD}
+\begin{itemize}
+    \item Same program executed on different cores but operate o different data  
+    \item Different threads might execute on different instructions of the same program due to control flow (ifs) and speed of cores
+    \item Similar to parbegin-parend but there is no implicit synchronization (lack of barrier)
+    \item E.g. programs on GPGPU
+\end{itemize}
+
+\textbf{Master-Worker}
+\begin{itemize}
+    \item Single program controls the execution of the program 
+    \item Master executes main function, assigns work to worker threads
+    \item Initialisation, output and Coordination is done by master
+    \item Worker waits for instruction 
+\end{itemize}
+
+% This is faulty
+% \includegraphics*[width=7cm]{main}
+% \includegraphics*[width=7cm]{master}
+% \includegraphics*[width=7cm]{worker}
+
+% TODO Debug
+
+% \textbf{Task Pool}
+% \begin{itemize}
+%     \item Common data structure for threads to retrieve tasks 
+%     \item Number of threads is fixed 
+%     \item Threads are statically created by main 
+%     \item Work is not pre-allocated. Instead  worker retrieves new tasks from pool 
+%     \item Thread can generate new tasks to put in pool and coordination is not done by master (difference from master-worker)
+%     \item May run into producer consumer issues when accessing the pool 
+%     \item Execution is completed when the pool is empty AND each thread has terminated the processing of its last task 
+%     \item \textbf{Benefits:} 
+%     \begin{enumerate}
+%         \item Adaptive can generate tasks dynamically, good for irregular applications
+%         \item Overhead for thread creation is independent from execution 
+%     \end{enumerate}
+%     \item \textbf{Disadvanatges}
+%     \begin{enumerate}
+%         \item For fine grained tasks, the overhead of retrieving and insertion becomes significant
+%     \end{enumerate}
+% \end{itemize}
+% \includegraphics*[width=7cm]{java_pool}
+
+% \textbf{Producer Consumer}
+% % TODO
+
+% \textbf{Pipelining}
+% \begin{itemize}
+%     \item Data is aprtitioned into a stream that flows throuh pipeline stages synchronuously 
+%     \item Each stage (threads) can be processed in parallel (functional parallel stream)
+% \end{itemize} 
+% \includegraphics*[width=7cm]{pipeline_pattern}
 
 \subsection*{L6: Data parallel models (GPGPU)}
 
@@ -269,6 +903,34 @@
 
 \section*{Performance and Scalability of Parallel Programs}
 \subsection*{L5: Performance of parallel systems}
+\textbf{Two Views}
+\begin{itemize}
+    \item Response Time (user): duration of a program is reduced  (start - end time)
+    \item Throughput (computer manager): more work to be done in the same time (jobs per second)
+\end{itemize}
+
+\textbf{Performance Factors}
+\begin{enumerate}
+    \item Programming Model
+    \item Computational Mode: How well the given program runs in the given architecture
+    \item Architectural Model: interconnnection network, memory organization, execution mode,sync or async processing
+\end{enumerate}
+
+\textbf{Response time in sequential programs}
+\begin{itemize}
+    \item Wall-clock time 
+    \item Comprise of 
+    \begin{itemize}
+        \item User CPU time: time CPU spends executing program 
+        \begin{itemize}
+            \item Know that read and write cycles take different time 
+        \end{itemize}
+        \item System CPU time: time CPU spends on system instructions. Depends on OS.
+        \item Waiting time: IO waiting time and execution of ther programs due to time sharing. Depends on the load of the system.
+    \end{itemize}
+\end{itemize}
+% TODO: Add the formulas for user CPU from slide 7 onwards
+
 
 \subsection*{L8: performance instrumentation}
 
