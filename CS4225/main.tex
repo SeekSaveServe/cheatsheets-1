@@ -127,7 +127,7 @@
 \begin{center}
     \fbox{%
         \parbox{0.8\linewidth}{\centering \textcolor{black}{
-            {\Large\textbf{CS3231}}
+            {\Large\textbf{CS4225}}
             \\ \normalsize{AY23/24 S1}}
             \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
         }%
@@ -239,11 +239,12 @@
 
 \textbf{Major NoSQL DB}
 \begin{itemize}
-  \item Key-stores
+  \item Key-value stores
   \begin{itemize}
     \item Stores mapping (associations) bewteen keys and values 
     \item Keys are usually primitives (int,str,raw bytes etc) that can be easily queried 
     \item Values can be primitive or complex; usually cannot be easily queried (lists, JSON, HTML, BLOB)
+    \item Eventually consistent
     \item \textbf{Operations}
     \begin{itemize}
       \item Get - fetch value with key 
@@ -252,9 +253,11 @@
     \end{itemize}
     \item \textbf{Suitable for}
     \begin{itemize}
-      \item Smal continuous read and writes
+      \item Small continuous read and writes
       \item Storing basic information or no clear schema
       \item Complex queries are rarely required
+      \item Improves scalability and efficiency of read and writes 
+      \item Eventually consistent, so the data might be stale 
     \end{itemize}
     \item E.g. Storing user sesions, caches, user data that is often processed individually
     \item \textbf{Implementation}
@@ -278,7 +281,8 @@
     \item A data base can have multiple collections 
     \item A collection (tables) can have multiple documents (rows)
     \item A document is a JSON-like object with field (columns) and values 
-    \item Different documents can have different field and can be nested   
+    \item Different documents can have different field and can be nested 
+    \item Flexible Schema: accommodates data with different characteristics  
     \item \textbf{Querying}
     \begin{itemize}
       \item Unlike key val stores, doc stores allow querying based on the content 
@@ -288,14 +292,18 @@
   \item Graph databases
   \begin{itemize}
     \item Need to store information about the nodes and edges
+    \item Edges: relationship between data (nodes)
+    \item Good at modelling and querying complexed relationships between entities
+    \item Good for modelling data as graphh problems (traversing relationships, shortest path, social networks etc) 
   \end{itemize}
   \item Vector Databases
   \begin{itemize}
     \item Store vectors (each row is a point in d dimensions)
-    \item Usually dense, numerical, and high-dimensional 
+    \item Usually dense, numerical, and high-dimensional (data with many features)
     \item Allow fast similarity search via locality sensitive hashing (LSH), similar to min-hashing
     \item Scalable, real-time updates, replication
     \item Good for LLM and vision models as they need to be converted to vectors, and search, recommendation, clustering can be easily added 
+    \item Good for contetn based similarity matching
     \item E.g. Milvus, Radis, MongoDB, Atlas, Weaviate
   \end{itemize}
 \end{itemize}
@@ -317,7 +325,7 @@
   \item Suitable for statistical queries and social media feed but not suited for financial transactions 
 \end{itemize}
 
-\textbf{Duplication}
+\textbf{Duplication /\ Denormalization}
 \begin{itemize}
   \item Motivation: Support join statments $\rightarrow$ how do we join 2 tables to form 1 new table 
   \item Some optimizations in SQL may not be possible in NoSQL
@@ -340,9 +348,340 @@
   \end{enumerate}
 \end{itemize}
 
-% Tutorials
+% L5 : TODO
+
+% L6
+\section{L6: Sparks Basics I}
+
+\textbf{Hadoop Vs Spark}
+\begin{itemize}
+  \item Spark stores most of intermediate results in memory, making it faster for iterative processing (spillover to disk still happens if memory runs out)
+  \item Hadoop writes intermediate results to local machine / disk. This is not efficient for iterative processing and ML 
+  \item Sparks has ease of computability
+  \item Spark combines batch processing, streaming, ML, graph processing 
+\end{itemize}
+
+\textbf{Spark Architecture}
+\begin{itemize}
+  \item Driver process: respond to user input and distributes work to executors
+  \item Executors: executes code and send result back to the driver
+\end{itemize}
+
+\includegraphics*[width=7cm]{spark_arch}
+
+\textbf{Evolution of Spark APIs}
+
+\includegraphics*[width=7cm, height=4cm]{spark_evo}
 
 
+\textbf{Lineage Approach}
+\begin{itemize}
+  \item Using replication is expensive since Spark uses memory
+  \item A faulty node is replaced and recomputed using the DAG from the lost partition (E.g narrow transformations)
+\end{itemize}
+
+\textbf{Resilient Distributed Datasets (RDD)}
+\begin{itemize}
+  \item Resilient: Fault tolerence through lineage 
+  \item Each node executes over 1 partition of data (data parellelism), a RDD is a collection of nodes and the driver
+  \item DDs: colleciton of objects distributed over machines
+  \item Immutable
+  \includegraphics*[width=6cm]{rdd1}
+  \item \textbf{Transformations}
+  \begin{itemize}
+    \item Transform RDDs into RDDs
+    \item Lazily evaluated, which allows optimisations to be applied over a series of transformations
+    \item E.g.: map, order, groupby, filter, join, select 
+  \end{itemize}
+  \item \textbf{Actions}
+  \begin{itemize}
+    \item Triggers spark to compute result from a series of transformations 
+    \item \includegraphics*[width=6cm]{rdd2}
+    \item Retrieve all RDD to the driver node 
+    \item E.g.: count, collect, show, save
+  \end{itemize}
+  \item Spark actions and transformations are calculated in parallel across distributed workers
+  \item RDDs are objects. Completed RDDs are stored in memory and can be flushed out 
+  \item Note: transformation work on files in the worker node, not the driver
+\end{itemize}
+
+\textbf{Caching}
+\begin{itemize}
+  \item \textbf{Caching}: sometimes we want to reuse RDDs to avoid recomputation
+  \includegraphics*[width=7cm, height=4cm]{rdd4}
+  \item cache is also a transformation!
+  \item It is lazily done. So it only takes effect after an action
+  \item Cache store an RDD to memory of each worker node 
+  \item persist()" store RDD to memory or disk or off-heap memory 
+  \item RDDs are evicted on a LRU basis so cached RDDs can be evicted
+  \includegraphics*[width=7cm]{caching.png}
+\end{itemize}
+
+
+\textbf{DAG}
+\begin{itemize}
+  \item Represents all RDD objects and order of transformation
+  \item RDDs are functional operations
+  \item Operations here happens in parallel
+\end{itemize}
+\includegraphics*[width=7cm]{dag}
+
+\textbf{Narrow and wide dependencies transformation}
+\begin{itemize}
+  \item Narrow can be linked together 
+  \item Wide dependencies are across stage 
+  \item Wide: implict synchronisation effect
+  \item Narrow: each partition of the parent RDD is used by at most 1 partition of child RDD 
+  \item Narrow: map, flatmap, filter, contains 
+  \item Wide: partition of parent RDD is used by multiple partitions of the child RDD (other worker nodes)
+  \item Wide: reduceByKey, groupBy, orderBy
+  \includegraphics*[width=7cm]{dependencies}
+  \item Consecutive narrows are grouped as "stages" in DAG
+  \item Within stages: spark computes consecutive transformations on the same machine (pipelined, parallelized)
+  \item Across stage: data needs to be shuffled and intermediary results needs to be written to disk
+  \item Minimize shuffling (across stage)
+\end{itemize}
+
+\textbf{Lineage and fault tolerance}
+\begin{itemize}
+  \item Does not use replication (unlike hadoop) since memory is limited
+  \item Lineage: if a worker is down, we replace it, and use DAG to recompute the data in the lost partition. Lost partition will be recomputed from the RDDs
+  \item The DAG of each RDD has to be stored 
+  \item When flushed, the node can start where it stopped within the wide stage later on 
+  \item If the job is passed to a new node, the RDD job starts from the start of the stage
+\end{itemize}
+
+\textbf{Dataframe}
+\begin{itemize}
+  \item column based (applied for each attribute)
+  \item Dataframe represents a table of data, similar to tables in sql 
+  \item This is a higher level interface that is easier to use 
+  \item Implemented with RDDs 
+  \item Expression based operation
+  \includegraphics*[width=7cm]{dataframe1}
+  \item Spark can use sql queries for dataframes which is similar to:
+  \includegraphics*[width=7cm]{df2}
+  \item Expression based, does not specify the order of functions, hence leaving room for optimisation 
+\end{itemize}
+
+\textbf{Datasets}
+\begin{itemize}
+  \item Type safe version of data frame
+  \item Datasets are not available in python and R ssince they are dynamically typed 
+  \item Each row is an object of a user defined class
+  \includegraphics*[width=7cm]{ds1}
+\end{itemize}
+
+
+\subsection*{L8: Streams}
+\textbf{Motivation}
+\begin{itemize}
+  \item Data arrives overtime (online) via message queue, file stream etc
+  \item System cannot store the entire stream, so we have to process the data as they arrive
+  \item E.g. search, online activity data, sensor data, financial data
+  \item Cannot wait till all the data is recevied to decide
+\end{itemize}
+
+\textbf{Fault Tolerance}
+\begin{itemize}
+  \item Need to be able to store and access intermediate data
+  \item Non-stateful stream processing is not accurate 
+\end{itemize}
+
+\textbf{Spark stream processing - structued streaming}
+\begin{itemize}
+  \item Micro Batch model: Divides data from input stream into micro batches 
+  \item Each batch is processed in a distributed manner 
+  \item Small, deterministic task generates the output to batches
+  \item \textbf{Advantages}
+  \begin{itemize}
+    \item Quick and efficiently recover from failures (process the failed batch again, rollover)
+    \item Determinisitc nature: end-to-end exactly once processing is guaranteed
+  \end{itemize}
+  \item \textbf{Disadvantages: High throughput, high latency}
+  \begin{itemize}
+    \item Latency of a few seconds - need to wait for all records in the microbatch to be completed 
+    \item Application may experience higher delay in other parts of the pipeline 
+    \item The latency might be too high for some
+  \end{itemize}
+  \includegraphics*[width=7cm]{micro_batch}
+  \item Treat the table as unbounded, with new rows streaming in
+  \item Data flows in incrementally, new "rows" are processed are the result is appended to the output table as new rows as well 
+  \includegraphics*[width=7cm]{incremental_exe.png}
+  \item \textbf{Defining a structured query}
+  \begin{enumerate}
+    \item Define input source(s)
+    \item Transform data 
+    \item Define output sink and output mode 
+    \begin{itemize}
+      \item output writing details (where and how)
+      \item processing details (how to process and recover from failure)
+    \end{itemize}
+    \item Specify processing details 
+    \begin{itemize}
+      \item Triggering details: When to trigger the discovery and processing of newly available steaming data 
+      \item Check point location: store streaming info for recovery 
+    \end{itemize}
+    \item start query
+  \end{enumerate}
+  \includegraphics*[width=7cm]{incremental_exe2.png}
+\end{itemize}
+
+\textbf{Data Transformation}
+\begin{itemize}
+  \item \textbf{Stateless transformation}
+  \begin{itemize}
+    \item Process each row without info from prev rows 
+    \item Projection: select(), explode(), map(), flatmap()
+    \item Selection: filter(), where()
+  \end{itemize}
+  \item \textbf{Stateful transformation}
+  \begin{itemize}
+    \item E.g. df.groupBy().count()
+    \item \^ partial count is stored somewhere and passed to the next batch
+    \item It is important to have exact-once even with potential failure and recovery so that the final count is accurate
+  \end{itemize}
+  \includegraphics*[width=7cm]{spark_stateful.png}
+\end{itemize}
+
+\textbf{Stateful streaming aggregation}
+\begin{itemize}
+  \item \textbf{Aggregation not based on time}
+  \item Global: running count = sensorReadings.groupBy().count()
+  \item Group: baseline values = sensorReadings.groupBy("sensorID").mean("value")
+  \item sum(), mean(), count(), stddev(), countDistinct(), collect\_set(), approx\_count\_distinct()
+  \item \textbf{Aggregation based on time}
+  \item Groups are based on processing-time window  or event-time window
+  \item Processing-time windows may not always contain the same events due to network latency, congestion etc -- result not consistent 
+  \item Event-time window is persistent and ensures exact-once semantics -- preferred!
+  \item Event-time decouples processing speed from results
+  \item sensorReadings.groupBy("sensorId", window("eventTime", "5 minutes")).count()
+\end{itemize}
+
+
+\textbf{Tumbling Window}
+\includegraphics*[width=7cm]{tumbling_window.png}
+\begin{itemize}
+  \item We tag an id to the event based on the event time 
+  \item The id refers to the corresponding tumbling window
+  \item \textbf{Overlapping Window}
+  \includegraphics*[width=7cm]{tumbling_window2.png}
+  \begin{itemize}
+    \item Consecutvie windows share some data with adjacent windows 
+    \item This makes data more continuous and smooth 
+    \item Increases data utilization
+    \item Reduces edge effect, where the values at the edge of a event window weights less than the events in the centre 
+    \item Prevent loss of information, particularly the data at the edge 
+    \item A data that arrives will update \>=1 window
+  \end{itemize}
+\end{itemize}
+
+\textbf{Watermark}
+\includegraphics*[width=7cm]{watermark.png}
+\begin{itemize}
+  \item Water mark: we only track records that are within highest current time - water mark duration: highest current time 
+\end{itemize}
+
+\textbf{Performance Tuning}
+\begin{itemize}
+  \item Cluster resources appropriately to avoid running 24\/7 
+  \item Set partitions for shuffling to be lower than batch queries for streaming data, so that the data in each node is large enough for the batch queries 
+  \item Setting source rate limits for stability -- prevent incoming stream from breaking spark
+  \item Multiple batch,streaming queries, ML can have at once 
+\end{itemize}
+
+
+
+\textbf{Flink}
+\textbf{Overview}
+\includegraphics*[width=7cm]{flink.png}
+\begin{itemize}
+  \item distributed system for stateful parallel data stream
+  \item Treats stream as a stream
+  \item Achieves microsecond latency
+  \item Event driven, message queue and event logs
+  \item Also has logical plan and physical plan, similar to spark
+\end{itemize}
+
+
+\textbf{Dataflow model}
+\includegraphics*[width=7cm]{dataflow.png}
+
+\textbf{Flink architecture}
+\includegraphics*[width=7cm]{flink_overview.png}
+\begin{itemize}
+  \item Resouce manager is responsible for scheduling tasks to resources
+\end{itemize}
+
+\textbf{Task exectution}
+\includegraphics*[width=7cm]{task_execution.png}
+\begin{itemize}
+  \item Task manager manages slots that processes tasks
+  \item Task manager can execute tasks from diferent operators and different applications
+  \item C $\rightarrow$ B, some network shuffling is done 
+\end{itemize}
+
+
+\textbf{Data transfer in flink}
+\includegraphics*[width=7cm]{task_execution.png}
+\begin{itemize}
+  \item Task of an app is continuously exchanging data 
+  \item Task manager takes care ofsending and echanging data 
+  \item Network component of task manager buffers the records before sending
+  \item Send and receive has their own buffer to reduce network traffic, so send and receive are done async (unlike micro batch)
+\end{itemize}
+% Tutorials 
+
+\textbf{Event time processing (Flink)}
+\begin{itemize}
+  \item Every record has an accompanying time stamp
+  \includegraphics*[width=7cm]{watermark_flink.png}
+  \item \textbf{Watermark (flink)}
+  \begin{itemize}
+    \item more like a trigger mark (spark triggers after every micro batch, so latency is the size of the micro batch) -- watermark in flink determines how freqeuntly calculations are triggered!
+    \item Watermark is represented as special records holding a timestamp
+    \item Water mark flows in a stream of regular records
+    \item Heuristic watermark: Results trigger after watermark, late records processed again later
+    \item Perfect watermark: Late records included, trigger happens after 
+  \end{itemize}
+\includegraphics*[width=7cm]{watermark_flink2.png}
+\item $withLateFiring$ determines when to drop late records
+\end{itemize}
+
+\textbf{State Management in Flink}
+\includegraphics*[width=7cm]{flink_state.png}
+\begin{itemize}
+  \item \textbf{Operator State}
+  \begin{itemize}
+    \item Scoped to an operator task, cannot be accessed by other operators
+    \item All records processed by the same parallel task have acess to the same state 
+  \end{itemize}
+  \item \textbf{Consistent Checkpointing}
+  \begin{itemize}
+    \item Similar to micro batch checkpoint 
+    \item Pause the ingestion of all input streams 
+    \item Wait for in-flight data to be completely processed (all tasks processed their inputs)
+    \item Like a barrier? Need to finish the whole "microbatch"
+    \item Copy and store state to a persistent storage
+    \item Need to reset from latest checkpoint -- cannot achieve milisecond delay!
+  \end{itemize}
+  \item \textbf{Chandy-lamport algorithm}
+  \includegraphics*[width=7cm]{checkpoint_flink.png}
+  \begin{itemize}
+    \item Distributed checkpoints
+    \item Decouples checkpoiting from processing, does not pause the entire app, only some tasks pauses 
+    \item Sets up a checkpoint barrier, all tasks to perform this barrier in a distributed way 
+    \item After receiving the checkpoint message, the source will save their state and broadcast checkpoint barrier to the receiving nodes 
+    \item Tasks will buffer the records for barrier alignment (only process once they receive the barrier msg from all sources)
+    \item Only the tasks receiving the barrier will buffer
+    \item After receiving all checkpoint barriers, the task will save their state
+    \item Then the barrier is emitted to the next level (sink nodes)
+    \item The jobManager is notified once all the tasks have completed the checkpoint 
+  \end{itemize}
+\end{itemize}
+
+\textbf{Spark vs Flink}
+\includegraphics*[width=7cm]{spark vs flink.png}
 % Misc
 
 \end{multicols}

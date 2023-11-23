@@ -114,7 +114,7 @@
 %My Environments
 \newtheorem{example}[section]{Example}
 % -----------------------------------------------------------------------
-
+ 
 \begin{document}
 \raggedright
 \footnotesize
@@ -523,6 +523,7 @@ void putChpSticks(i)
 \textbf{Single Instruction Single Data}
 \begin{itemize}
     \item Single stream of instructions with each working on a single data 
+    \item Not to be confused with SIMD from parallel patterns
 \end{itemize}
 
 \textbf{Single Instruction Multiple Data}
@@ -651,6 +652,185 @@ void putChpSticks(i)
 
 \subsection*{L7: Cache coherence and memory consistency}
 
+\textbf{Cache properties}
+\begin{itemize}
+    \item Larger cache reduces cache miss but increases access time 
+    \item Block size (cache line): data is transferred between main memory and cache in blocks of fixed size 
+    \item Larger block size -- greater spatial locality 
+    \item Smaller block size -- shorter replacement 
+\end{itemize}
+
+\textbf{Case Study: Matrix Multiplication}
+\begin{itemize}
+    \item Size of matrix: A 256KB cache can only store a matrix of floats of size (178*178) * 8 Bytes (float size)
+\end{itemize}
+
+\textbf{Write Policy}
+\begin{itemize}
+    \item \textbf{Write through}
+    \begin{itemize}
+        \item Write access is immediately transferred to memory
+        \item Advantage: always get the newest value of a bloc
+        \item Disadvanatge: slow down due to many memory access (use a buffer!)
+    \end{itemize}
+    \item \textbf{Write-back}
+    \includegraphics*[width=5cm]{write_back_cache.png}
+    \begin{itemize}
+        \item Write is only performed in the cache, write to main memory is only performed when the cache is replaced (dirty bit)
+        \item Advantage: fewer write operations 
+        \item Disadvantage: memory may contain invalid entries  
+    \end{itemize}
+\end{itemize}
+
+\textbf{Cache coherence}
+\begin{itemize}
+    \item Problem: Multiple copies of the data exists on different cache lines, stale data may exist
+    \item \textbf{Coherence}
+    \begin{itemize}
+        \item Each processing unit should have a consistent view of the memory through its local cache 
+        \item All processing units should agree on the order of read writes to the same memory space 
+        \item Property 1: Program Order Property 
+        \begin{itemize}
+            \item Programme should observe the effects of writes in the order of the programme
+        \end{itemize}
+        \item Property  2: Write propagation
+        \begin{itemize}
+            \item Writes become visible to other processing units eventually
+        \end{itemize}
+        \item Property 3: Write serialization
+        \begin{itemize}
+            \item Given: 
+            \begin{enumerate}
+                \item write $v_1$ to x 
+                \item write $v_2$ to x 
+            \end{enumerate}
+            \item programme should never read x as $v_2$ and then as $v_1$
+            \item All writes to a location are seen in the same order by all execution units, eventually
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\textbf{Tracking cache line sharing status}
+\begin{itemize}
+    \item \textbf{Snopping based}
+    \begin{itemize}
+        \item No centralised directory 
+        \item Each cache keeps track of the sharing status 
+        \item Cache monitors and snoop on the bus to keep the cache line updated 
+        \item Used in architectures with a bus
+        \item Write Propagation: All the processing units on the bus can observe changes made by every other bus 
+        \item Write serialization: Bus transactions are visible to the processing units in the same order 
+        \item Granularity: cache block
+    \end{itemize}
+    \item \textbf{Directory based}
+    \begin{itemize}
+        \item Sharing status is kept in a central directory 
+        \item Commonly used in a NUMA architecture
+    \end{itemize}
+    \item \textbf{Implications}
+    \begin{itemize}
+        \item Increased in overhead: increased memory latency, reduced cache hit rate 
+        \item Cache ping-pong: the effect where a cache line is transferred between multiple cores as a result of true / false sharing
+        \item False sharing: different threads have data that is not shared in the program, but this data gets mapped to the same cache line  
+        \item False sharing makes cache ping pong difficult to detect, since the code ensures that memory are not shared but they happened to be mapped to the same cache line
+        \includegraphics*[width=6cm]{false_sharing.png}
+    \end{itemize}
+\end{itemize}
+
+\textbf{Memory Consistency Models}
+\begin{itemize}
+    \item Coherence ensures that processing units agree on the order of writes on the SAME memory location, and that all writes to shared memory will eventually propagate 
+    \item Consistency ensures that processing units agree on the order of writes on DIFFERENT memory locations 
+    \item Under the consistency rules, the instructions can be reordered to hide latencies
+    \item \textbf{4 types of memory operations orderings}
+    \begin{itemize}
+        \item must commit -- the results are visible
+        \item W $\rightarrow$ R: write to X must commit before the subeqeuqnt read of Y
+        \item R $\rightarrow$ W: read of X must commit before the subsequent write of Y
+        \item R $\rightarrow$ R: read of X must commit before the subsequent read of Y
+        \item W $\rightarrow$ W: write to X must commit before the subsequent write of Y
+    \end{itemize}
+\end{itemize}
+
+\textbf{Sequential Consistency}
+\begin{itemize}
+    \item Every processing unit isues their memory operations in programme order 
+    \item Global results of all memory operation on every memory address appear in the same sequential order to evry processing unit
+    \item All 4 memory operation orderings are observed
+    \item Poor performance
+    \item Examples: 
+    \includegraphics*[width=7cm]{memory_model_eg.png}
+    \begin{itemize}
+        \item \textbf{Once 1 core sees an interleaving, the same interleaving will be observed by other cores}
+        \item Possible interleavings 
+        \begin{enumerate}
+            \item (1)-(3)-(5)-(2)-(4)-(6) 
+            \item (1)-(2)-(3)-(4)-(5)-(6) 
+        \end{enumerate} 
+        \item Impossible output: 011001
+        \item To produce 0110, we need something like (1)-(3)-(2)-(4). But after this it is not possible to produce another 0 since the last read statements happens after all the write statements
+    \end{itemize}
+\end{itemize}
+
+\textbf{Relaxed memory consistency}
+\begin{itemize}
+    \item Relax if data dependencies allow 
+    \item \textbf{Data dependency: if two ops access the SAME memory location}
+    \begin{itemize}
+        \item R $\rightarrow$ W
+        \item W $\rightarrow$ W
+        \item W $\rightarrow$ R 
+    \end{itemize}
+\end{itemize}
+
+\textbf{Relaxed Consistency: Write-to-read (WR)}
+\begin{itemize}
+    \item Allows a read on processing unit P to be reorderd wrt the previous write operations on different memory locations 
+    \item Data dependencies must be observed, but it is only wrt the same memory location
+    \item Data dependencies cannot be chained
+    \item Different models depends on the timing of return
+    \item \textbf{Total Store Ordering}
+    \begin{itemize}
+        \item Processing units can \textbf{move its own reads} infront of its own writes 
+        \item \textbf{Write Atomicity is observed}: Reads by other processing units cannot return new values of address A untill the write to A is observed by all PUs 
+    \end{itemize}
+    \item \textbf{Processor Consistency}
+    \begin{itemize}
+        \item \textbf{Write atomicity is not observed}: write can be read by some processing units before they are read by other processing units
+        \item \textbf{Write serialization is observed}: writes to the same memory location are seen in the same order by all processing units
+    \end{itemize}
+\end{itemize}
+
+\includegraphics*[width=1.5cm]{mem_order.png}
+
+\textbf{Relaxed Consistency: Write-to-Write (WW)}
+\begin{itemize}
+    \item Writes can bypass earlier writes (to different locations) in write buffer 
+    \item Allows write misses to overwrite to hide latency
+    \item Can only reorder within the same processing unit 
+    \item \textbf{Partial Store Order}
+    \begin{itemize}
+        \item Relax W $\rightarrow$ R similar to TSO 
+        \item Relax W $\rightarrow$ W
+    \end{itemize}
+    \item \textbf{Example 1}
+    \includegraphics*[width=7cm]{mem_model_eg2.png}
+    \begin{itemize}
+        \item Only PSO can observe A=0, B=1 since only it reorders WW
+    \end{itemize}
+
+    \item \textbf{Example 2}
+    \includegraphics*[width=7cm]{mem_model_eg1.png}
+    \begin{itemize}
+        \item TSO and SC cannot observe A=0 due to write atomicity 
+        \item PC can observe A=0, since observing B=1 does not mena that it has observed A=1 (not write wtomicity)
+        \item PSO cannot observe (0,0) since it still observes write atomicity
+    \end{itemize}
+\end{itemize}
+
+\includegraphics*[width=7cm]{mem_model_summary.png}
+
+
 \subsection*{L11: Interconnection networks}
 
 
@@ -691,6 +871,7 @@ for (i=0; i < size; i ++)
     \item \textbf{Single Program Multiple Data (SPMD)}
     \begin{itemize}
         \item Same programme may behave differently based on the data
+        \item Good if 
         \item E.g. Scalar product of $x.y$ on p processing units 
     \end{itemize}
 \includegraphics*[width=7cm]{spmd}
@@ -794,17 +975,97 @@ for (i=0; i < size; i ++)
         \begin{itemize}
             \item Tasks needs data from a small number of other tasks (neighbors)
             \item Use channel 
+            \item E.g. 2-D finite state computation (requires 5 points to compute next state)
         \end{itemize}
         \item \textbf{Global Communication}
         \begin{itemize}
             \item Significant number of tasks contribute to perform a computation
             \item Do not create channels early on in the execution
+            \item E.g. Unoptimised sum N numbers
+            \begin{itemize}
+                \item Does not distribute computation and communication - \textbf{centralised} 
+                \item Does not allow overlap of computation and communication - \textbf{Sequential}
+            \end{itemize}
+        \end{itemize}
+        \includegraphics*[width=7cm]{unoptimised_sum}
+        \item Rule of thumb:
+        \begin{itemize}
+            \item Communication operation balanced among tasks 
+            \item Each task communicates with only a small group of neighbors 
+            \item Tasks can communicate in parallel 
+            \item Overlap computation with communication 
         \end{itemize}
     \end{itemize}
+    \item Agglomeration
+    \begin{itemize}
+        \item Combine tasks into larger tasks s.t \textbf{tasks $\ge$ cores}
+        \item Goals:
+        \begin{itemize}
+            \item Improve performance by reducing cost of task creation and communication 
+            \item Maintain scalability of program 
+            \item Simplify programming 
+        \end{itemize}
+        \item E.g. Granular: One task per grid 
+        \begin{itemize}
+            \item 8*8=64 tasks 
+            \item 64 * 4 (neighbors) * 2(send/\ receive)=512 data transfers 
+        \end{itemize}
+        \item Coarse: 16 grid per task 
+        \begin{itemize}
+            \item 2*2=4 tasks 
+            \item 4*4*2=32 data transfers 
+            \item larger messages
+        \end{itemize}
+        \item Rule of thumb:
+        \begin{itemize}
+            \item Increases locality of parallel programmes (more neighbors read)
+            \item Number of tasks increases with problem size 
+            \item Number of tasks suitable for likely target increases (10xnumCores)
+            \item Trade-off between agglomeration and code modification should be resonable (man hour)
+        \end{itemize}
+    \end{itemize}
+    \includegraphics*[width=7cm]{agglomorate.png}
+    \item Mapping
+    \begin{itemize}
+        \item Assignment of tasks to execution units 
+        \item Goals:
+        \begin{itemize}
+            \item Maximise processor utilisation: place tasks of different cores
+            \item Minimise inter-process communication:Place tasks that communicate often on the same core to increase locality 
+        \end{itemize}
+        \item Can be performed by user (distributed memory systems) or OS (centralised multiprocessor) 
+        \item Rule of thumb:
+        \begin{itemize}
+            \item Finding optimal mapping is NP hard in general (set cover) 
+            \item Consider designs based on one task per core and multiple tasks per core 
+            \item Evaluate static and dynamic task allocation 
+            \begin{itemize}
+                \item Dynamic: allocator should not be performance bottleneck 
+                \item Static: task:core $\ge$ 10:1
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+    \includegraphics*[width=7cm]{mapping} 
+    (same amount of work on each processing unit and high locality)
 \end{enumerate}
 
+\textbf{Automatic Parallelization}
+\begin{itemize}
+    \item Compilers perform decomposition and scheduling 
+    \item Drawbacks:
+    \begin{itemize}
+        \item Dependence analysis is difficult for pointer-based computation or indirect addressing 
+        \item Execution time of function calls or loops with unknown bounds is difficult to predict at compile time
+    \end{itemize}
+\end{itemize}
 
-% TODO - update this 
+\textbf{Functional programming languages}
+\begin{itemize}
+    \item Describe the computations of a program as the evaluation of mathematical functions without side effects 
+    \item Advantage: New language constructs are not necessary to handle a parallel execution 
+    \item Challenge: Extract the parallelism at the right level of recursion
+\end{itemize}
+
 
 \textbf{Parallel Programming Patterns}
 \begin{itemize}
@@ -816,6 +1077,7 @@ for (i=0; i < size; i ++)
     \item Children run in parallel but are independent 
     \item Children execute the same or different program 
     \item Children join the parent at different points 
+    \item Good for loop parallelism (independent for loops)
     \item \textbf{Implementation: } Processes, threads etc
 \end{itemize}
 
@@ -855,48 +1117,253 @@ for (i=0; i < size; i ++)
     \item Master executes main function, assigns work to worker threads
     \item Initialisation, output and Coordination is done by master
     \item Worker waits for instruction 
+    \item \textbf{Benefit:} Good for simple and homogeneous worker threads and a master thread to organize them
 \end{itemize}
 
-% This is faulty
-% \includegraphics*[width=7cm]{main}
-% \includegraphics*[width=7cm]{master}
-% \includegraphics*[width=7cm]{worker}
+\includegraphics*[width=5cm]{main.png}
+\includegraphics*[width=5cm]{master}
+\includegraphics*[width=5cm]{worker}
 
-% TODO Debug
 
-% \textbf{Task Pool}
-% \begin{itemize}
-%     \item Common data structure for threads to retrieve tasks 
-%     \item Number of threads is fixed 
-%     \item Threads are statically created by main 
-%     \item Work is not pre-allocated. Instead  worker retrieves new tasks from pool 
-%     \item Thread can generate new tasks to put in pool and coordination is not done by master (difference from master-worker)
-%     \item May run into producer consumer issues when accessing the pool 
-%     \item Execution is completed when the pool is empty AND each thread has terminated the processing of its last task 
-%     \item \textbf{Benefits:} 
-%     \begin{enumerate}
-%         \item Adaptive can generate tasks dynamically, good for irregular applications
-%         \item Overhead for thread creation is independent from execution 
-%     \end{enumerate}
-%     \item \textbf{Disadvanatges}
-%     \begin{enumerate}
-%         \item For fine grained tasks, the overhead of retrieving and insertion becomes significant
-%     \end{enumerate}
-% \end{itemize}
-% \includegraphics*[width=7cm]{java_pool}
+\textbf{Task Pool}
+\begin{itemize}
+    \item Common data structure for threads to retrieve tasks 
+    \item Number of threads is fixed 
+    \item Threads are statically created by main 
+    \item Work is not pre-allocated. Instead  worker retrieves new tasks from pool 
+    \item Thread can generate new tasks to put in pool and coordination is not done by master (difference from master-worker)
+    \item May run into producer consumer issues when accessing the pool 
+    \item Execution is completed when the pool is empty AND each thread has terminated the processing of its last task 
+    \item \textbf{Benefits:} 
+    \begin{enumerate}
+        \item Adaptive can generate tasks dynamically, good for irregular applications
+        \item Overhead for thread creation is independent from execution 
+    \end{enumerate}
+    \item \textbf{Disadvanatges}
+    \begin{enumerate}
+        \item For fine grained tasks, the overhead of retrieving and insertion becomes significant
+    \end{enumerate}
+\end{itemize}
+\includegraphics*[width=7cm]{java_pool}
 
-% \textbf{Producer Consumer}
-% % TODO
+\textbf{Producer Consumer}
+\includegraphics*[width=7cm]{producer_consumer}
+\begin{itemize}
+    \item Producer produces data which are used as input by consumer threads 
+    \item Synchronisation is needed to ensure correct coodination between producer and consumer threads 
+\end{itemize}
+\includegraphics*[width=7cm]{producer_consumer_code}
 
-% \textbf{Pipelining}
-% \begin{itemize}
-%     \item Data is aprtitioned into a stream that flows throuh pipeline stages synchronuously 
-%     \item Each stage (threads) can be processed in parallel (functional parallel stream)
-% \end{itemize} 
-% \includegraphics*[width=7cm]{pipeline_pattern}
+
+\textbf{Pipelining}
+\begin{itemize}
+    \item Data is aprtitioned into a stream that flows throuh pipeline stages synchronuously 
+    \item Each stage (threads) can be processed in parallel (functional parallel stream)
+\end{itemize} 
+\includegraphics*[width=7cm]{pipeline_pattern}
 
 \subsection*{L6: Data parallel models (GPGPU)}
 
+\textbf{Shader GPU}
+\begin{itemize}
+    \item Hard to transfer data between GPU and CPU
+    \item No scatter: threads cannot write to arbitrary or multiple mem locations
+    \item No communication between fragments 
+    \item Coarse thread synchronisation
+    \item Example of data parallelism: fast processors for performing the same computation on large collection of data
+\end{itemize}
+
+\textbf{FLOPs performance on GPGPU}
+\begin{itemize}
+    \item Best performance with single precision FLOPs
+    \item 2 processors need to work to perform double precision
+\end{itemize}
+
+\textbf{GPU Architecture}
+\includegraphics*[width=7cm]{gpu_archi}
+\begin{itemize}
+    \item Multiple Streaming Multiprocessors (SMs) - Memory, cache, connecting interface (PCI)
+    \item SM consists of multiple compute cores 
+    \begin{itemize}
+        \item Memories(register, L1 cache, shared memory)
+        \item Logic for thread and instruction management
+    \end{itemize}
+\end{itemize}
+
+
+\textbf{CUDA programming model}
+\begin{itemize}
+    \item Compute Unifified Device Architecture
+    \item Simple extension to standard C 
+    \item Mature software stack (high-level to low level)
+    \item User launches batches fo threads on the GPUFully general load /\ store memory model (CRCW)
+    \item Scales with non-NVIDIA GPUs too
+    \item Transparently scales to hundreds of cores and thousands of parallel threads 
+    \item Programmer focus on parallel algorithms
+    \item Enable heterogeneous systems (CPU + GPU)
+\end{itemize}
+
+
+% BUG
+\textbf{CUDA layers}
+\includegraphics*[width=7cm]{cuda-layers}
+
+\textbf{CUDA kernels and threads}
+\begin{itemize}
+    \item Device=GPU
+    \item Host=CPU
+    \item Kernel=function that runs on the device
+    \item Parallel portions execute on decice as kernels, and multiple are allowed in CUDA hardware 
+    \item CUDA threads are extermely light wait with minimal creation overhead and instant context switches 
+    \item The key is to divide work to thousands of threads
+\end{itemize}
+ 
+\textbf{Arrays of parallel threads}
+\begin{itemize}
+    \item A CUDA kernel is executed by an array of threads 
+    \item All threads run the same code (SPMD)
+    \item Each thread has an ID that is used to compute memory addresses and make control decisions 
+\end{itemize}
+
+\textbf{Thread cooperation}
+\begin{itemize}
+    \item Threads in the array need not be completely independent 
+    \item Shares results to save computation 
+    \item Share memory accesses which reduces bandwidth 
+    \item \textbf{Scalable Cooperation}
+    \begin{itemize}
+        \item Divide monolithic thread awray into multiple blocks
+        \item In a block: shared memory, atomic operations and barrier synchronisation 
+        \item Threads in different blocks cannot cooperate 
+    \end{itemize}
+    \item Enables programs to transparently scale to any number of proceses 
+\end{itemize}
+
+
+ \textbf{Thread Execution Mapping to Architecture}
+ \begin{itemize}
+    \item SIMT execution model
+    \item Multiprocessors, creates, manages, schedules and execute threads in SIMT Warps (32)
+    \item Threads in a warp starts at the same program address 
+    \item Threads have individual programme counter and state 
+    \item A block is always split into warps in the same way 
+    \item Having divergent control flow will cause the programme to stall 
+ \end{itemize}
+
+ \textbf{CUDA Memory model}
+ \includegraphics*[width=7cm]{cuda_mem_model.png}
+  \begin{itemize}
+     \item Kernels are launched in grids 
+     \item A block executes on one SM (streaming multiprocessor)
+     \item A block cannot be migrated, but several blocks can reside in one SM 
+     \item Register file and shared memory are partitioned among all resident thread blocks 
+  \end{itemize}
+
+  \textbf{Cuda memory space}
+  \begin{itemize}
+    \item Data must be explicitly transferred from CPU to device
+    \item Shared memory is the cache, and is therefore not cached 
+    \item Global, local memory are cached and needs to be warmed up 
+    \item Constant memory is useful for uniformly-accessed read-only data 
+    \item Spatial data is useful for coherent random-access read-only data (cached too)
+  \end{itemize}
+
+\textbf{Coalesced access}
+\includegraphics*[width=7cm]{cuda_mem_model.png}
+\begin{itemize}
+    \item Simultaneous access to global memory by threads in a warp is coalesced to transactions of 32 bytes 
+    \item Reduce disk I/Os
+\end{itemize}
+
+\textbf{Shared Memory}
+\begin{itemize}
+    \item Higher bandwidth and lowr latency than local or gloobal 
+    \item Divided into equally-sized banks 
+    \item Addresses from different banks can be accessed simultaneously
+    \item Bank conflict: two threads access two different addresses in the same memory bank -- has to be serialised 
+    \item Bank broadcast: (threads accessing the same address in a bank) one reading thread broadcast the result to the conflicting threads so they all get the info
+\end{itemize}
+
+\textbf{Strided access}
+\includegraphics*[width=7cm]{strided access.png}
+\begin{itemize}
+    \item Threads within a warp access memory with a stride size of x 
+    \item This increases the number of bank conflicts by x times! 
+    \item Half of the elements in the transactions are not used and represent wasted bandwidth
+\end{itemize}
+
+\textbf{Optimisation in Cuda - goals}
+\begin{enumerate}
+    \item Maximum memory band width by coalescing memory access
+    \item Maximise parallel execution by maximising data parallelism and increase hardware utilisation (SIMD!)
+    \item Maximum instruction throughput by avoiding different execution paths within the same warp
+\end{enumerate}
+
+\textbf{Memory Optimizations}
+\begin{itemize}
+    \item Minimize data transfer between host and device
+    \item Ensure global memory are coalesced whenever possible
+    \item Minimize global memory accesses by using shared memory 
+    \item Minimize bank conflicts in shared memory accesses (e.g. adding padding words between every 32 wordss)
+\end{itemize}
+
+\textbf{Data transfer between host and device}
+\begin{itemize}
+    \item Peak bandwidth between device and GPU is higher than between host and device 
+    \item Hence data transfer between host and device should be minimized 
+    \item E.g. running kernel on GPU without any performance benefits over CPU 
+    \item Batch small transfers into one larger transfer 
+    \item Use paged-locked or pinned memory transfer (not cached) -- eliminates a step in memory transfer 
+    \item Page pinned: locked in RAM, cannot be moved to Disk. Both CPU and GPU can access them. Overuse can cause performance issues as it cannot be swapped out of RAM.
+\end{itemize}
+
+ 
+\textbf{Concurrent data transfers and executions}
+\includegraphics*[width=7cm]{cuda_async.png}
+\begin{itemize}
+    \item Overlap asynchronous transfers with computation 
+    \item $cudaMemcpyAsync()$ instead of $cudaMemcpy()$, and do CPU computation while data transfers 
+    \item Use different streams to acheive concurrent copy and execute
+\end{itemize}
+
+
+\textbf{Execution Configuration}
+\begin{itemize}
+    \item Improve occupancy
+    \begin{itemize}
+        \item Number of warps should \> number of processors 
+        \item So every processor has 1 warp to execute 
+        \item High occupancy hides memory latency and when a block synchronises 
+    \end{itemize}
+    \item Threads per block should be multiples of warp size 
+    \begin{itemize}
+        \item If one warp blocks, the other can execute. Better coalesced access
+        \item Use smaller thread blocks to reduce chances of bank conflict
+    \end{itemize}
+    \item Limitation on block size 
+    \begin{itemize}
+        \item Limited by registers and shared resource 
+        \item The kernel prevents launch if the block allocates more thread resources than available
+        \item This ensures that at least one block can execute 
+    \end{itemize}
+    \item Multiple contexts 
+    \begin{itemize}
+        \item If multiple CUDA apps access the same GPU concurrently, there are likely multiple contexts
+    \end{itemize}
+\end{itemize}
+
+\textbf{Maximise instruction output}
+\begin{itemize}
+    \item Use single precision floats where possible 
+    \item Replace integer division and modulo operations with bitwise operations 
+    \item Use signed loop counters 
+\end{itemize}
+
+\textbf{Control Flow}
+\begin{itemize}
+    \item Reduce divergent warps caused by control flow instructions 
+    \item Reduce the number of instructions where possible
+\end{itemize}
 
 \subsection*{L9,10: Distributed-programming models}
 
@@ -909,9 +1376,10 @@ for (i=0; i < size; i ++)
     \item Throughput (computer manager): more work to be done in the same time (jobs per second)
 \end{itemize}
 
+
 \textbf{Performance Factors}
 \begin{enumerate}
-    \item Programming Model
+    \item Programming Model: how well the programmer can code (like good language, API etc)
     \item Computational Mode: How well the given program runs in the given architecture
     \item Architectural Model: interconnnection network, memory organization, execution mode,sync or async processing
 \end{enumerate}
@@ -929,8 +1397,104 @@ for (i=0; i < size; i ++)
         \item Waiting time: IO waiting time and execution of ther programs due to time sharing. Depends on the load of the system.
     \end{itemize}
 \end{itemize}
-% TODO: Add the formulas for user CPU from slide 7 onwards
 
+\textbf{User CPU time}
+\begin{itemize}
+    \item \textbf{$Time_{user}(A)=N_{cycle} * Time_{cycle}$}
+    \item $N_{cycle}$
+    \begin{itemize}
+        \item Depends on translation of program statements by the compiler into instructions
+        \item For a program with n instructions:
+        \item $N_{cycle} = \sum_{i=1}^{n} CPI_i * n_i(A)$
+        \item $n_i(A)$: number of times instruction i is executed in program A
+        \item Depends on architecture of the computer system  and compiler
+        \item $CPI_i$: average number of cycles per instruction i
+    \end{itemize}  
+    \item \textbf{Refinement with memory access}
+    \item $Time_{cycle}$: Execution time for each instruction, $\frac{1}{clock rate}$
+    \item  $Time_{user}(A)=(N_{instr}(A) + N_{mm\_cycle}(A)) * Time_{cycle}$
+    \item $N_{mm\_cycle}=N_{read\_cycle} + N_{write\_cycle}$
+    \item $N_{read\_wite\_cycle}=N_{read\_ op}*R_{miss}*N_{miss\_cycles}$
+    \item \textbf{Miss rates}
+    \includegraphics*[width=6cm]{miss_rate}
+\end{itemize}
+
+
+\textbf{Memory access flow}
+\includegraphics*[width=7cm]{read_write}
+
+\textbf{Throughput}
+\begin{itemize}
+    \item \textbf{MIPS} $\frac{N_{instr}}{Time_{user}*10^6}$ OR $\frac{clock_{freq}}{CPI*10^6}$
+    \item Only considers the number of instructions 
+    \item Can be easily manipulated by making the instructions smaller so it takes more to run the same programme 
+    \item \textbf{MFLOPS} $\frac{N_{flops}}{Time_{user}*10^6}$
+    \item Does not differentiate between the different types of floating pt ops 
+\end{itemize}
+
+\textbf{Misc}
+\begin{itemize}
+    \item Higher clock freq != shorter execution time, since we do not capture CPI 
+\end{itemize}
+
+
+\textbf{Speed up}
+\includegraphics*[width=7cm]{t_p}
+\begin{itemize}
+    \item \textbf{Cost}: $C_{p}(n)=p*T_{p}(n)$, where $C_{p}$ measures the total work performed by all processors 
+    \item A parallel programme is cost optimal if it executes the same total numebr of operations as the fastest sequential program 
+    \item \textbf{Speed up}: $S_p(n)=\frac{T_{best\_seq(n)}}{T_p(n)}$
+    \item Theoretically $S_p$ $\le$ p
+    \item Practically, sublinear can occur when the parallel working task fits within the cache but the seq one cannot 
+    \item \textbf{Efficiency}
+    \includegraphics*[width=6cm]{efficiency}
+    \item $T_*(n)$ refers to the best sequential
+    \item In the ideal case $T_p=p$, and $E(p)$ = 1
+\end{itemize}
+
+\textbf{Scalability}
+\begin{itemize}
+    \item How size of problem and size of parallel computer interact 
+    \item Problem size small: Parallelism overheads dominates benefits 
+    \item Problem size large: working set cannot fit on machine, cannot start
+\end{itemize}
+
+\textbf{Amadahl's Law}
+\begin{itemize}
+    \item Speedup of the parallel execution is limited by the sequential fraction $f= \frac{t_{sequential}}{t_{total}}$
+    \item Manufacturers are discouraged from making large parallel computers
+    \item Effort diverted to reducing sequential section
+\end{itemize}
+\includegraphics*[width=7cm]{amdahls.png}
+
+\textbf{Rebuttal to Amdahl's}
+\begin{itemize}
+    \item $f$ is not always constant 
+    \item In a good parallel programme, $\lim_{n\rightarrow \infty}(n)=0$
+    \item Hence $S_{p}=p$
+\end{itemize}
+
+\textbf{Gufstafson's law}
+\includegraphics*[width=7cm]{guslaw.png}
+\begin{itemize}
+    \item In some programmes, $f$ decreases when the problem size increases (the parallel parts increases more)
+    \item Then $S_p=p$ given a large enough problem size
+\end{itemize}
+
+\textbf{Perfromance Measure of Communication}
+\includegraphics*[width=7cm]{communication.png}
+
+
+\textbf{Latency of sending a m sized msg}
+\includegraphics*[width=7cm, height=6cm]{latency.png}
+
+\textbf{Finding Possible Bottlenecks}
+\begin{itemize}
+    \item Instruction-rate limit: Add more non-memory instructions and check if execution time increases linearly with math operations count 
+    \item Memory bottleneck: remove most non-memory operations, did the time change proportionately?
+    \item Locality of data access: change all arrays to access A[0]
+    \item Sync overhead: remove all atomic operations or locks (might change control flow, so may not work)
+\end{itemize}
 
 \subsection*{L8: performance instrumentation}
 
@@ -939,10 +1503,187 @@ for (i=0; i < size; i ++)
 \subsection*{L12: Energy efficient computing}
 
 
+\pagebreak
 % Tutorials
+\section*{Tutorials}
+
+\subsection*{Tutorial 2}
+\textbf{Task Dependence Graph}
+\includegraphics*[width=7cm]{task_dependence_graph.png}
+\begin{itemize}
+    \item parallel: X and Y are executed in parallel 
+    \item parend: all tasks must complete before moving on 
+\end{itemize}
+
+\textbf{Average CPI}
+\begin{itemize}
+    \item Not all instructions are created equal! Having fewer instruction != faster programme if translation of instructions takes more clock cycles
+\end{itemize}
+
+\textbf{Calculaing MIPS}
+\begin{enumerate}
+    \item Calculate time taken for the programme
+    \begin{itemize}
+        \item $\frac{instructions_i * cycles_i}{clock rate}$
+        \item Ghz = $10^9$ Hz
+    \end{itemize}
+    \item Find the total number of million instructions 
+    \begin{itemize}
+        \item $\frac{total inst.}{10^6}$
+    \end{itemize}
+    \item divide 2 by 1
+\end{enumerate}
+
+\textbf{Amdahl's vs Gustafson's}
+\begin{itemize}
+    \item Amdahl's: If problem is fixed sized \textbf{OR} there's a constant sequential fraction with increasing problem size, then the speedup is limited by the sequential fraction
+    \item Gustafson's: If the problem size can bve varied \textbf{AND} the sequential fraction does not scale much with problem size, then we can solve larger problems with more speed up
+\end{itemize}
+
+\textbf{Flynn's Taxonomy}
+\begin{itemize}
+    \item MIMD is a superset to SIMD!
+\end{itemize}
+
+\textbf{Programming Models}
+\begin{itemize}
+    \item \textbf{Master-worker}
+    \begin{itemize}
+        \item Good for relatively simple and homogeneous worker threads and a master thread to organize them
+        \item Similar to the idea of SIMD 
+    \end{itemize}
+    \item \textbf{Task Pool}
+    \begin{itemize}
+        \item Good for heterogeneous tasks or those that finish at different times 
+    \end{itemize}
+    \item \textbf{Fork-join / Parbegin parend}
+    \begin{itemize}
+        \item Fork join can be complicated to write (synchronisation, waiting etc)
+    \end{itemize}
+    \item \textbf{Pipelining}
+    \begin{itemize}
+        \item 
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Tutorial 3}
+
+\textbf{Relaxed Orders}
+\begin{itemize}
+    \item \textbf{Data Dependencies (while loops) DOES NOT COUNT}
+    \item TSO: Relax W $\rightarrow$ R on the same processorf
+    \item PC: Relax W $\rightarrow$ R on the same processor, processes see writes at different times
+    \item PSO: Re;ax WR on the same processor, relax WW on the same processor if no data dependency
+\end{itemize}
 
 
+\textbf{Drawing Dependencies}
+\includegraphics*[width=7cm]{drawing_dependencies.png}
+\begin{itemize}
+    \item To determine the final value in a SC execution, draw a line from the last write to the read
+\end{itemize}
+
+
+\textbf{Number of Warps and Blocks}
+\begin{itemize}
+    \item \#of registers per kernel=\#of registers per thread 
+    \item \#of blocks=\#of threads on device/\#of registers per block 
+    \item \#of warps=\#of threads per block/warp size
+\end{itemize}
+
+\textbf{CUDA mat mul}
+\includegraphics*[width=7cm]{cuda_t3_1.png}
+\includegraphics*[width=7cm]{cuda_t3_2.png}
+\begin{itemize}
+    \item 1 thread process 1 element in the output array 
+    \item Use managed to let CUDA figure out when to copy the matrices
+\end{itemize}
+
+
+% Labs
+\section*{Labs}
+
+\subsection*{Lab 3: CUDA}
+\textbf{Basics}
+\begin{itemize}
+    \item Complex cores like CPU has low latency 
+    \item Many simple cores like GPU has high throughput
+    \item one SM runs one thread block and executes multiple warps of threads in parallel
+\end{itemize}
+
+\textbf{Volta (CC7) Vs Pascal(CC6)}
+\includegraphics*[width=7cm]{volta.png}
+\includegraphics*[width=7cm]{pascal.png}
+
+
+\textbf{CUDA Memory Types}
+\includegraphics*[width=7cm]{cuda_mem_types.png}
+\begin{itemize}
+    \item program scope = both host and device
+    \item Prefers register \> local \> shared \> global
+    \item \textbf{Global memory}
+    \begin{itemize}
+        \item $cudaError\_t cudaMalloc ( void ** devPtr , size\_t size )$
+        \item Visible to all blocks
+    \end{itemize}
+    \includegraphics*[width=7cm]{unified1.png}
+    \item \textbf{Shared memory}
+    \begin{itemize}
+        \item $ \_\_shared\_\_ $
+        \item Only resides in device, hence faster 
+        \item Only visible to those in the same thread block
+    \end{itemize}
+    \item \textbf{Unified memory}
+    \begin{itemize}
+        \item Defines a common memory addressing space, allowing both CPU and GPU to access it as if it is in their memory space 
+        \item $cudaMallocManaged$ and $\_\_managed\_\_$
+        \item Page-locked memory (locked in the RAM)! GPU can access directly without CPU intervention.
+    \end{itemize}
+    \includegraphics*[width=7cm]{unified2.png}
+\end{itemize}
+
+\textbf{Synchronisation in CUDA}
+\begin{itemize}
+    \item CUDA provides synchronising primitives
+    \item $atomicAdd(\&counter, 1);$
+    \item \textbf{Barrier in CUDA}
+    \begin{itemize}
+        \item $\_\_syncthreads()$ synchronises threads in the same block untill all of them have reached this point
+        \item Threads from other blocks are not synchronised
+        \item $volatile$ keyword: hints to the compiler to not optimise load and store operations to prevent stale version of the var from being read
+        \item Volatile varaibles may be modified asynchronously by other threads
+    \end{itemize}
+\end{itemize}
+
+\textbf{Cuda Malloc}
+\begin{itemize}
+    \item $cudaMalloc(void **pointer, size\_t nbytes)$ is called in host. Since host cannot touch the shared memory, the memory is allocated to global
+    \item $cudaMemset(void *pointer, int value, size\_t count);$
+    \item $cudaFree(void* pointer)$
+\end{itemize}
+
+\textbf{CUDA Example Codes}
+\begin{itemize}
+    \item \textbf{Adding two arrays}
+    \includegraphics*[width=7cm]{cuda_basic.png}
+    \includegraphics*[width=7cm]{cuda_basic_allocate.png}
+    \includegraphics*[width=7cm]{cuda_basic_kernel.png}
+    \item \textbf{Matrix multiplication}
+    \includegraphics*[width=7cm]{cuda_matrix_mult_1.png}
+    \includegraphics*[width=7cm]{cuda_matrix_mult_2.png}
+    \includegraphics*[width=7cm]{cuda_matrix_mult_3.png}
+\end{itemize}
+
+
+
+\pagebreak
 % Misc
+\section*{xs-4114 Vs i7-7700}
+% TODO Add a table here
+% xs: 10 cores, 20 threads, designed for multithreading 
+%i7: 4 cores, 8 threads, more geared towards commercial applications
+% should have similar number of instructions compiled
+
 
 \end{multicols}
 \end{document}
