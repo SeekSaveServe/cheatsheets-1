@@ -32,12 +32,12 @@
 
 
 \pdfinfo{
-  /Title (CS3211.pdf)
+  /Title (CS3210.pdf)
   /Creator (TeX)
   /Producer (pdfTeX 1.40.0)
   /Author (Pei Cheng Yi)
-  /Subject (CS3211)
-  /Keywords (CS3211, nus,cheatsheet,pdf)}
+  /Subject (CS3210)
+  /Keywords (CS3210, nus,cheatsheet,pdf)}
 
 % Turn off header and footer
 \pagestyle{empty}
@@ -132,7 +132,7 @@
 \begin{center}
     \fbox{%
         \parbox{0.8\linewidth}{\centering \textcolor{black}{
-            {\Large\textbf{CS3211}}
+            {\Large\textbf{CS3210}}
             \\ \normalsize{AY23/24 Sem 1}}
             \\ {\footnotesize \textcolor{myblue}{github.com/SeekSaveServe}}
         }%
@@ -324,7 +324,7 @@
 \begin{itemize}
     \item Active acquire release but no useful work done 
 \end{itemize}
-
+ 
 % Taken from my CS3211 notes
 \textbf{Producer-Consumer Problem} \\
 \begin{itemize}
@@ -832,6 +832,135 @@ void putChpSticks(i)
 
 
 \subsection*{L11: Interconnection networks}
+
+\textbf{Torus}
+\includegraphics*[width=7cm]{torus.png}
+\begin{itemize}
+    \item Wraps left to right, top to bottom 
+    \item All PEs have four links
+\end{itemize}
+
+
+\textbf{Shear Sorting Algo}
+\includegraphics*[width=7cm]{shear_sort.png}
+\begin{itemize}
+    \item Arrange PEs into a 2D mesh 
+    \item Sort into a "snake"
+    \includegraphics*[width=2cm]{snake.png}
+    \item $\sqrt{N}$ width and length
+    \item Keep doing row sort and column sort till it is sorted in snake order!
+    \item for N numbers, $log_2N + 1$ phases
+\end{itemize}
+
+\textbf{Topology}
+\includegraphics*[width=7cm]{interconnect.png}
+\begin{itemize}
+    \item \textbf{Direct Interconnection}
+    \begin{itemize}
+        \item Static, point-to-point 
+        \item Endpoints are of the same type (core, memory)
+    \end{itemize}
+    \item \textbf{Indirect Interconnection}
+    \begin{itemize}
+        \item Dynamic 
+        \item Interconnect formed by switches
+    \end{itemize}
+\end{itemize}
+
+\textbf{Topology Metric}
+\begin{itemize}
+    \item \textbf{Diameter}: maximum distance between any pair of nodes 
+    \begin{itemize}
+        \item Small diameter ensures small distances for message transmission
+    \end{itemize}
+    \item \textbf{Degree}: number of direct neighbors 
+    \begin{itemize}
+        \item Small node degree reduces the node hardware overhead
+    \end{itemize}
+    \item \textbf{Bisection width}: minimum number of edges that must be removed for the network to have 2 equal parts 
+    \begin{itemize}
+        \item Capacity of a network when transmitting message simultaneously
+    \end{itemize}
+    \item \textbf{Connectivity} 
+    \begin{itemize}
+        \item \textbf{Node connectivity}: minimum number of nodes that fail to disconnect the network
+        \item Determines robustness of network
+        \item \textbf{Edge connectivity}: minimum number of edges that fail to disconnect the network
+        \item Determine the number of independent paths between any pair of nodes
+    \end{itemize}
+\end{itemize}
+
+
+\textbf{Cube Connected Cycles}
+\includegraphics*[width=7cm]{ccc.png}
+\begin{itemize}
+    \item Replace a node with a cycle of k-nodes 
+    \item Total nodes: $2*2^k$ nodes 
+    \item X=node index in hypercube 
+    \item Y=position in the cycle 
+    \item Node (X,Y) is connected to: 
+    \begin{itemize}
+        \item Cycle buddies:
+        \item (X,(Y+1) mod k)
+        \item (X,(Y-1) mod k)
+        \item Link from the corresponding dimension y in the hypercube
+        \item (X xor $2^{y}$, Y)
+    \end{itemize}
+\end{itemize}
+
+\textbf{Indirect Interconnect}
+\begin{itemize}
+  \item To reduce hardware costs by sharing switches and links 
+  \item Switches share links between nodes and can be configured dynamically 
+  \item Cost: number of switches and links 
+  \item Concurrent connection (bandwidth)
+  \textbf{Bus Network}
+  \includegraphics*[width=7cm]{bus_network.png}
+  \begin{itemize}
+    \item Only 1 pair can communicate at a time
+    \item Bus used to coordinate 
+    \item Used for small number of processes
+  \end{itemize}
+\end{itemize}
+    
+\textbf{Crossbar network}
+\includegraphics*[width=7cm]{cross_bar.png}
+\begin{itemize}
+    \item Switche: straight or direction changing 
+    \item Hardware costly since there's n*m switches
+    \item Hard to scale since cost increases exponentially 
+    \item For small number of processes
+\end{itemize}
+
+
+\textbf{Multistage Interconnection Network (MIN)}
+\includegraphics*[width=7cm]{min.png}
+\begin{itemize}
+    \item Several intermediate switches connecting wires between neighbouring switches
+    \item Goal: obtain a small distance for arbitrary small input and output devices
+\end{itemize}
+
+\textbf{Omega Network}
+\includegraphics*[width=7cm]{omega_network.png}
+\begin{itemize}
+    \item One unique path for every input to output 
+    \item n * n network has log n stages
+    \item n / 2 switches per stage 
+    \item Switch position: $(\alpha, i)$ where a is the position of a switch within a stage and i is the stage number 
+\end{itemize}
+
+\textbf{Omega Network Vs Crossbar}
+\begin{itemize}
+    \item 16 processors and 16 memory nodes 
+    \item Cross bar: 16 * 16 = 256
+    \item Omega: n=16, using 2*2 switches, n/2  * logn = 32 switches
+\end{itemize}
+
+\textbf{Butterfly network}
+\includegraphics*[width=7cm]{butterfly.png}
+
+\textbf{Baseline network}
+\includegraphics*[width=7cm]{baseline.png}
 
 
 \section*{Parallel Computation Models}
@@ -1365,8 +1494,213 @@ for (i=0; i < size; i ++)
     \item Reduce the number of instructions where possible
 \end{itemize}
 
-\subsection*{L9,10: Distributed-programming models}
+\subsection*{L9: Parallel Programming Models - II}
+\textbf{Data distribution for 1D array} 
+\includegraphics*[width=7cm]{1d_data_distribution.png}
+\begin{itemize}
+    \item \textbf{Block wise distribution}
+    \begin{itemize}
+        \item Preserves locality of data 
+        \item Difficult to apply if hunk size is unknown
+    \end{itemize}
+    \item \textbf{Cyclic data distribution}
+    \begin{itemize}
+        \item Chunks are of more equal size 
+    \end{itemize}
+\end{itemize}
 
+\textbf{Data distribution for 2D arrays}
+\begin{itemize}
+    \item Combination of blockwise and cyclic distribution in one or both dimensions
+    \item One-dimension distribution: By column dimension
+    \includegraphics*[width=7cm]{col.png}
+    \item One-dimension distribution: Block-cyclic 
+    \includegraphics*[width=7cm]{block_cyc.png}
+    \begin{itemize}
+        \item Form blocks of size b, then perform cyclic round robin allocation
+        \item Closer to even distribution 
+        \item Set block size to task size to improve locality
+        \item Some PUs might have more data 
+    \end{itemize}
+\end{itemize}
+
+\textbf{2D Checkerboard}
+\includegraphics*[width=7cm]{checkerboard.png}
+\begin{itemize}
+    \item Blockwise: elements split among both dimensions 
+    \item Cyclic: based on procesor mesh. The communication delay between p1 to p4 will be longer
+    \item Block-cyclic: elements split into b1 x b2 size blocks then cyclic assignment to processors
+\end{itemize}
+ 
+\textbf{Example: Heat Transfer Simulation}
+\begin{itemize}
+    \item N * N metal plate with p processors 
+    \item P less than N 
+    \item Idea 1: Include border 
+    \includegraphics*[width=7cm]{heat_plate1.png}
+    \begin{itemize}
+        \item Improves locality 
+        \item But more shared memory, more communication
+    \end{itemize}
+    \item Idea 2: Checkerboard, row-wise 
+    \includegraphics*[width=7cm]{heat_plate2.png}
+    \begin{itemize}
+        \item Minimizes communication: only talks to the 4 neighbours
+        \item Connection is only 1 step away 
+    \end{itemize}
+    \item Idea 3: Row-wise Block Cyclic 
+    \includegraphics*[width=7cm]{heat_plate3.png}
+    \begin{itemize}
+        \item Low granularity, poor locality: task size is huge, and each block may not fit into the cache line 
+        \item Checker board is better as task size can be defined to fit into cache line
+    \end{itemize}
+\end{itemize}
+
+\textbf{Information Exchange}
+\begin{itemize}
+    \item \textbf{Shared Address - Shared memory}
+    \begin{itemize}
+        \item Assumes global memory access 
+        \item Need synchronisation 
+    \end{itemize}
+    \item \textbf{Distributed Space - Communication Operation}
+    \begin{itemize}
+        \item Assumes disjoint memory model
+    \end{itemize}
+\end{itemize}
+
+\textbf{Message Exchange Protocol}
+\includegraphics*[width=7cm]{buffered_non_buffered.png}
+\begin{itemize}
+    \item \textbf{Blocking Send}
+    \begin{itemize}
+        \item Send operation blocks till input buffer is safe to be reused 
+    \end{itemize}
+    \item \textbf{Non-buffered Blocking Send}
+    \begin{itemize}
+        \item Operation blocks until the matching receive is performed 
+        \item Considerable idling timing due to mismatch between send and receive 
+        \item Possible to deadlock 
+        \item Can happen with buffered blocking send once the buffer is full
+    \end{itemize}
+    \item \textbf{Buffered Blocking Send}
+    \begin{itemize}
+        \item Reduces idling overhead but increases copying overhead
+        \item Sender returns after data is copied into buffer 
+    \end{itemize}
+    \item Deadlock! 
+    \includegraphics*[width=7cm]{deadlock.png}
+
+    \item \textbf{Non blocking send}
+    \begin{itemize}
+        \item Returns before it is semantically safe 
+        \item Allows programmers to overlap operations and hide communication overhead
+    \end{itemize}
+\end{itemize}
+
+\textbf{Sync and async}
+\includegraphics*[width=7cm]{async_sync.png}
+\begin{itemize}
+    \item \textbf{Sync}
+    \includegraphics*[width=7cm]{sync.png}
+    \begin{itemize}
+        \item Send completes after matching receive and source data sent 
+        \item Receive completes after matching send and data transfer completes 
+    \end{itemize}
+    \item \textbf{Async}
+    \includegraphics*[width=7cm]{async.png}
+    \begin{itemize}
+        \item Send completes after input buffer maybe reused
+    \end{itemize}
+\end{itemize}
+
+
+
+\textbf{Send and Receive MPI}
+\includegraphics*[width=7cm]{mpi_block_nonblock.png}
+\includegraphics*[width=7cm]{mpi_buffer.png}
+
+\textbf{Logical Ring}
+\includegraphics*[width=7cm]{deadlock_free_logical_ring.png}
+\begin{itemize}
+    \item Trace the logic from 0 to 3
+    \item There will be no deadlocks since there are implicit barriers due to the blocking calls
+\end{itemize}
+
+\textbf{Process Group}
+\begin{itemize}
+    \item Process group: ordered set of processes, each with unique rank 
+    \item A process can be in multiple groups
+\end{itemize}
+
+\textbf{Communicators}
+\begin{itemize}
+    \item Communication domain for a group of processes 
+    \item \textbf{Intra communicators}
+    \begin{itemize}
+        \item Support the execution of arbitrary collective communication on a single group
+        \item E.g. MPI\_COMM\_WORLD
+    \end{itemize}
+    \item \textbf{Inter communicators}
+    \begin{itemize}
+        \item Supports point to point communication opeartions between process groups 
+    \end{itemize}
+\end{itemize}
+
+\textbf{Process Group Ops}
+\includegraphics*[width=7cm]{process_grp_op.png}
+
+\textbf{Communicator Ops}
+\includegraphics*[width=7cm]{communication.png}
+
+\textbf{Virtual Top}
+\includegraphics*[width=7cm]{virtual_top_op.png}
+
+\textbf{Virtual Topology Operations}
+\includegraphics*[width=7cm]{virtual_top_op.png}
+
+
+\textbf{Scatter, gather}
+\includegraphics*[width=7cm]{scatter_gather.png}
+
+\textbf{Single Broadcast}
+\includegraphics*[width=7cm]{single_broadcast.png}
+
+\textbf{Multi Broadcast}
+\includegraphics*[width=7cm]{multi_broadcst.png}
+\begin{itemize}
+    \item Each processor sends the same data bloc to every other processor
+    \item Data blocks are collected in rank order
+\end{itemize}
+
+\textbf{Single Accumulate}
+\includegraphics*[width=7cm]{single_acc.png}
+\begin{itemize}
+    \item Reduction operation is applied by element to the data blocks 
+    \item Result is collected at root
+\end{itemize}
+
+\textbf{Multi Accumulate}
+\includegraphics*[width=7cm]{multi_acc.png}
+\begin{itemize}
+    \item Each processor provides for every other processor a potentially different data block 
+    \item Data block for the same receiver are combined with a given reduction operation
+\end{itemize}
+
+\textbf{Total exchange}
+\begin{itemize}
+    \item Each process executes a scatter operation (sends different message to each processor)
+    \item Stepwise to multi-broadcast, that sends the same mmessage to all processors
+\end{itemize}
+
+\textbf{Stepwise and Duality}
+\includegraphics*[width=7cm]{collective_comm.png}
+\begin{itemize}
+    \item Duality: The same spanning tree can be used for both operations 
+    \includegraphics*[width=7cm]{dualit.png}
+    \item Stepwise: Operations that are stepwise specializations 
+    \item E.g.: Total exchange and multi-broadcast
+\end{itemize}
 
 \section*{Performance and Scalability of Parallel Programs}
 \subsection*{L5: Performance of parallel systems}
@@ -1497,7 +1831,74 @@ for (i=0; i < size; i ++)
 \end{itemize}
 
 \subsection*{L8: performance instrumentation}
+\textbf{Terminology}
+\begin{itemize}
+    \item Latency: Time waiting to be serviced 
+    \item Response time: Time for an operation to complete
+    \item Throughput: Rate of operation/data performed 
+    \item Utilization: Proportion of time where the resource is busy
+    \item Saturation: Degree to which a resourc has queued work that it cannot service 
+    \item Bottleneck: Service thta limits system performance 
+\end{itemize}
 
+\textbf{Resource analysis - system administrator}
+\begin{itemize}
+    \item Focus on system resource: CPU, memory, disks, network interface, buses, interconnects 
+\end{itemize}
+
+
+\textbf{Workload analysis - app dev}
+\begin{itemize}
+    \item Examines the worklaod and how the system is responding
+    \item Requests, latencies, completion \& error 
+\end{itemize}
+
+
+\textbf{Anti-methodologies}
+\begin{itemize}
+    \item No deliberate methodology
+    \item \textbf{Street light}
+    \begin{itemize}
+        \item Look for obvious issues that can be found online or by chance 
+    \end{itemize}
+    \item \textbf{Drunk man}
+    \begin{itemize}
+        \item Tune things at random until problem goes away
+        \item Tune the wrong software
+    \end{itemize}
+\end{itemize}
+
+\textbf{Problem statement method}
+\begin{itemize}
+    \item Ask questions abou the problem to better understand it
+\end{itemize}
+
+\textbf{USE Method}
+\begin{itemize}
+    \item Uilization: Busy time 
+    \item Saturation: Queue length or time 
+    \item Errors: easy to interpret
+    \item Start with questions and then find the tools 
+\end{itemize}
+
+\textbf{Monitoring}
+\begin{itemize}
+    \item Records performance statistics overtime to find patterns 
+    \item Good for: capacity planning, quantifying growth, showing peak usage 
+\end{itemize}
+
+
+\textbf{Performance analysis in 60 seconds}
+\includegraphics*[width=7cm]{perf_anal.png}
+
+\textbf{Tools method}
+\begin{itemize}
+    \item List available performance tools 
+    \item List the useful metrices they provide 
+    \item List ways to interpret metrices
+\end{itemize}
+
+% TODO: actually finish L8
 
 \section*{New Trends}
 \subsection*{L12: Energy efficient computing}
@@ -1506,6 +1907,30 @@ for (i=0; i < size; i ++)
 \pagebreak
 % Tutorials
 \section*{Tutorials}
+
+\subsection*{Tutorial 1}
+
+\textbf{Hybrid memory (Shared + Distributed)}
+\begin{itemize}
+    \item Hybrid: Each core has its own memory (cache) that needs to communicate to the shared memory to stay updated 
+    \item Not hybrid: Everyone just sees one shared memory
+\end{itemize}
+
+\textbf{xs-4114 vs i7-7700}
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Processor Type} & \textbf{Cores} & \textbf{Threads} \\
+\hline
+Xeon Silver (xs) & 10 & 20 \\ 
+\hline
+Core i7 (i7) & 4 & 8 \\
+\hline
+
+\end{tabular}
+\label{table:processor_comparison}
+    
+
 
 \subsection*{Tutorial 2}
 \textbf{Task Dependence Graph}
@@ -1547,6 +1972,7 @@ for (i=0; i < size; i ++)
 
 \textbf{Programming Models}
 \begin{itemize}
+    \item \textbf{Distributed memory} requires explicitly communication between processess
     \item \textbf{Master-worker}
     \begin{itemize}
         \item Good for relatively simple and homogeneous worker threads and a master thread to organize them
@@ -1555,6 +1981,7 @@ for (i=0; i < size; i ++)
     \item \textbf{Task Pool}
     \begin{itemize}
         \item Good for heterogeneous tasks or those that finish at different times 
+        \item Good when you are unsure of finish timing
     \end{itemize}
     \item \textbf{Fork-join / Parbegin parend}
     \begin{itemize}
@@ -1562,7 +1989,15 @@ for (i=0; i < size; i ++)
     \end{itemize}
     \item \textbf{Pipelining}
     \begin{itemize}
-        \item 
+        \item Better for task parallelism. Bad for data parallelism where there is only one task 
+        \item Best when each stage takes similar time / are even in workload
+        \item If parbegin-parend, use OpenMP!
+    \end{itemize}
+    \item \textbf{Producer Consumer}
+    \begin{itemize}
+        \item Good when there is a pair of producer / consumer 
+        \item Need to have something that is produced and consumed!
+        \item If producers/consumers have uneven workload, then we need more producer/consumer to offset the difference
     \end{itemize}
 \end{itemize}
 
@@ -1600,8 +2035,82 @@ for (i=0; i < size; i ++)
 \end{itemize}
 
 
+\subsection*{Tutorial 5}
+
+\textbf{Dining Philosophers Vs Logical Ring}
+\begin{itemize}
+    \item Without the odd even soln, a deadlock can occur since send does not guarantee that the system buffer is large enough
+    \item Logical ring takes num message * 2 number of communications to complete 
+    \item Dining Philosopher can take many more steps! 
+    \item Logical ring looks like a pipeline but also comes with synchronisation issues since its not just unidirectional
+\end{itemize} 
+
+\textbf{Writing logical ring using non-blocking send recv}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+int rank, p, size = 8;
+int left, right ;
+char send_buffer1[8], recv_buffer1[8];
+char send_buffer2[8], recv_buffer2[8];
+gethostname(send_buffer1, size) //repeat for buffer2
+
+MPI_Comm_rank(MPI_COMM_WORLD, &rank)
+MPI_Comm_size(MPI_COMM_WORLD, &p)
+left = (rank - 1 + p) % p ;
+right = (rank + 1) % p ;
+MPI_Request reqs[4]; MPI_Status stats[4];
+MPI_ISend (send_buffer1, size, MPI_CHAR, left, TAG_LEFT , MPI_COMM_WORLD, &reqs[0]);
+MPI_IRecv (recv_buffer1, size, MPI_CHAR, right, TAG_LEFT , MPI_COMM_WORLD, &reqs[1]);
+MPI_ISend (send_buffer2, size, MPI_CHAR, right , TAG_RIGHT, MPI_COMM_WORLD, &reqs[2]);
+MPI_IRecv (recv_buffer2, size, MPI_CHAR, left , TAG_RIGHT , MPI_COMM_WORLD, &reqs[3]);
+MPI_Waitall(4, reqs, stats);
+...
+\end{lstlisting}
+
+\textbf{Wimpy and Brawny cores}
+\begin{itemize}
+    \item Single threaded performance: Brawny 
+    \item Multi threaded performance: Wimpy
+    \item Always good to use a mix of both!
+\end{itemize}
+
+
+\subsection*{Tutorial 6}
+\textbf{Omega network - 8 * 8}
+\includegraphics*[width=7cm]{omega2.png}
+
+\textbf{XOR Tag Routing}
+\includegraphics*[width=7cm]{xor_routing.png}
 % Labs
 \section*{Labs}
+
+\subsection*{Lab 2: OpenMP}
+\textbf{Work Sharing Constructs}
+\begin{itemize}
+    \item Get thread id: $omp\_get\_thread\_num()$
+    \item Get num threads: $omp\_get\_num\_threads()$
+    \item To share work across multiple threads, we need to use work-sharing constructs 
+    \includegraphics*[width=7cm]{work_sharing.png}
+    \item Static assigns work in a circular manner if $iter\_size$ is larger than the number of threads 
+    \item Dynamic will assign based on the given chunk size or iter size but in a random order 
+    \begin{itemize}
+        \item Pros: Appropriate when the iteration require different computational cots and the iterations are not balanced 
+        \item Cons: Scheduling has higher over head than static scheduling because it distributes iterations during run time 
+    \end{itemize}
+\end{itemize}
+
+\textbf{Nesting Work-Sharing constructs}
+\includegraphics*[width=7cm]{nested.png}
+\begin{itemize}
+    \item Nesting of work sharing constructs is not allowed 
+\end{itemize}
+
+\textbf{Sections}
+\includegraphics*[width=5cm]{section.png}
+\begin{itemize}
+    \item Each section will be assigned to any available thread, one ata a time
+    \item single section (pragma omp single) will be executed by only one thread, decided at run time 
+    \item master section (pragma omp master) will be executed by only the master thread
+\end{itemize}
 
 \subsection*{Lab 3: CUDA}
 \textbf{Basics}
@@ -1609,6 +2118,15 @@ for (i=0; i < size; i ++)
     \item Complex cores like CPU has low latency 
     \item Many simple cores like GPU has high throughput
     \item one SM runs one thread block and executes multiple warps of threads in parallel
+\end{itemize}
+
+\textbf{Synchronisation Constructs}
+\begin{itemize}
+    \item \textbf{pragma omp barrier}: Synchronizes all threads 
+    \item \textbf{pragma omp master}: Only master thread executes
+    \item \textbf{pragma omp critical}: Can only be executed by 1 thread at a time 
+    \includegraphics*[width=5cm]{critical.png}
+    \item \textbf{pragma omp atomic}: Only one thread can execute the atomic statement at a time
 \end{itemize}
 
 \textbf{Volta (CC7) Vs Pascal(CC6)}
@@ -1674,16 +2192,350 @@ for (i=0; i < size; i ++)
     \includegraphics*[width=7cm]{cuda_matrix_mult_3.png}
 \end{itemize}
 
+\subsection*{Lab 4 and 5: MPI}
+
+\textbf{MPI Blocking Communication}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+    int MPI_Send ( const void * buf , int count , MPI_Datatype datatype ,
+    int dest , int tag , MPI_Comm comm )
+
+    int MPI_Recv ( void * buf , int count , MPI_Datatype datatype ,
+int source , int tag , MPI_Comm comm , MPI_Status * status )
+    \end{lstlisting}
+
+\includegraphics*[width=7cm]{MPI_BLOCKING.png}
 
 
+\textbf{Non Blocking Communication}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+    int MPI_Isend ( const void * buf , int count , MPI_Datatype datatype ,
+    int dest , int tag , MPI_Comm comm , MPI_Request * request )
+
+    int MPI_Irecv ( void * buf , int count , MPI_Datatype datatype ,
+    int source , int tag , MPI_Comm comm , MPI_Request * request )
+
+    int MPI_Test ( MPI_Request * request , int * flag , MPI_Status * status )
+
+
+    int MPI_Wait ( MPI_Request * request , MPI_Status * status )
+
+    \end{lstlisting}
+    \begin{itemize}
+        \item other variations of test and wait: MPI\_Test , MPI\_Testall , MPI\_Testany , MPI\_Testsome
+        MPI\_Wait , MPI\_Waitany , MPI\_Waitsome
+        \item MPI does not guarantee fairness, starvation can still happen
+    \end{itemize}
+
+
+\textbf{Collective Communication}
+
+\textbf{Barrier}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+int MPI_Barrier ( MPI_Comm comm )
+
+# Example 
+if (rank == master_node_rank) {
+    // Master node
+    for (int i = 0; i < num_workers * ITERATIONS; i++) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Recv(&number, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        double print_delay = MPI_Wtime() - loop_start_time_s;
+        printf("Master node received number %d at time %.5f sec\n", number, print_delay);
+    }
+} else {
+    // Workers
+    for (int i = 0; i < num_workers  * ITERATIONS; i++) {
+    // Only 1 process will be able to send
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == (i % num_workers)) {
+        // Only this particular worker should send in this iteration
+        MPI_Send(&rank, 1, MPI_INT, master_node_rank, 0, MPI_COMM_WORLD);
+    }
+    // Random sleep to vary the workers
+    useconds_t sleepTime = (useconds_t)(((rand() % 5) + 1) * 100);
+    usleep(sleepTime);
+    }
+}
+    \end{lstlisting}
+
+
+\textbf{Data movement Operations}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+/* MPI_Bcast - broadcasts ( sends ) a message from the process with rank
+root to all other processes in the group */
+int MPI_Bcast ( void * buffer , int count , MPI_Datatype datatype ,
+int root , MPI_Comm comm )
+--------------------------------------
+/* MPI_Scatter - sends data from one process to all processes in
+a communicator */
+int MPI_Scatter ( const void * sendbuf , int sendcount ,
+MPI_Datatype sendtype , void * recvbuf ,
+int recvcount , MPI_Datatype recvtype ,
+int root , MPI_Comm comm )
+--------------------------------------
+/* MPI_Gather - gathers data from a group of processes into one root
+process */
+int MPI_Gather ( const void * sendbuf , int sendcount ,
+MPI_Datatype sendtype , void * recvbuf ,
+int recvcount , MPI_Datatype recvtype ,
+int root , MPI_Comm comm )
+--------------------------------------
+/* MPI_Allgather - gathers data from a group of processes into every
+process of that group */
+int MPI_Allgather ( const void * sendbuf , int sendcount ,
+MPI_Datatype sendtype , void * recvbuf , int recvcount ,
+MPI_Datatype recvtype , MPI_Comm comm )
+--------------------------------------
+/* MPI_Alltoall - each process in a group performs a
+scatter operation , sending a distinct message to all the
+processes in the group in order by their rank */
+int MPI_Alltoall ( const void * sendbuf , int sendcount ,
+MPI_Datatype sendtype , void * recvbuf , int recvcount ,
+MPI_Datatype recvtype , MPI_Comm comm )
+    \end{lstlisting}
+
+\textbf{Collective Computation}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+--------------------------------------
+/* MPI_Reduce - reduces values on all processes within a group ; the
+reduction operation must be one of the following :
+MPI_MAX maximum | MPI_MIN minimum | MPI_SUM sum | MPI_PROD product |
+MPI_LAND logical AND | MPI_BAND bit - wise AND | MPI_LOR logical OR |
+MPI_BOR bit - wise OR | MPI_LXOR logical XOR | MPI_BXOR bit - wise XOR |
+MPI_MAXLOC max value and location | MPI_MINLOC min value and location
+*/
+int MPI_Reduce ( const void * sendbuf , void * recvbuf , int count ,
+MPI_Datatype datatype , MPI_Op op , int root , MPI_Comm comm )
+--------------------------------------
+/* MPI_Allreduce - applies a reduction operation and places the
+result in all processes in the communicator
+( this is equivalent to an MPI_Reduce followed by an MPI_Bcast ) */
+int MPI_Allreduce ( const void * sendbuf , void * recvbuf , int count ,
+MPI_Datatype datatype , MPI_Op op , MPI_Comm comm )
+
+#Example
+source = 0;
+sendcount = 1;
+recvcount = 1;
+
+// Generate a random value for each process
+srand(rank);
+int localval = rand() % 10;
+printf("Rank %d generated value %d\n", rank, localval);
+
+int sum = 0;
+MPI_Allreduce(&localval, &sum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+MPI_Finalize();
+
+--------------------------------------
+/* MPI_Reduce_scatter - first performs an element - wise reduction on a
+vector across all processes in the group , then splits the result
+vector into disjoint segments to distribute across the processes
+( this is equivalent to an MPI_Reduce followed by an MPI_scatter ) */
+int MPI_Reduce_scatter ( const void * sendbuf , void * recvbuf ,
+const int recvcounts [] , MPI_Datatype datatype ,
+MPI_Op op , MPI_Comm comm )
+    \end{lstlisting}
+
+\textbf{Managing Communicators}
+\begin{itemize}
+    \item A communicator contains a set of process MPI GROUP with an asscoiated context 
+\end{itemize}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+--------------------------------------
+/* MPI_Comm_group - returns the group associated with a communicator */
+int MPI_Comm_group ( MPI_Comm comm , MPI_Group * group )
+--------------------------------------
+/* MPI_Group_incl - produces a group by reordering an existing group and
+taking only listed members */
+int MPI_Group_incl ( MPI_Group group , int n , const int ranks [] ,
+MPI_Group * newgroup )
+--------------------------------------
+/* MPI_Comm_create - creates a new communicator with a group of
+processes */
+int MPI_Comm_create ( MPI_Comm comm , MPI_Group group , MPI_Comm * newcomm )
+--------------------------------------
+/* MPI_Group_rank - returns the rank of the calling process in the given
+group */
+int MPI_Group_rank ( MPI_Group group , int * rank )
+--------------------------------------
+/* MPI_Comm_rank - returns the rank of the calling process in the given
+communicator */
+int MPI_Comm_rank ( MPI_Comm comm , int * rank )
+
+#Example
+ranks1[4]={0,1,2,3}, ranks2[4]={4,5,6,7};
+// Variables to hold the group of orig_group and new_group
+// What is held in new_group is not necessarily the same as what is 
+MPI_Group  orig_group, new_group;
+MPI_Comm   new_comm;
+
+MPI_Init(&argc,&argv);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+
+sendbuf = rank;
+
+/* Extract the original group handle */
+MPI_Comm_group(MPI_COMM_WORLD, &orig_group);
+
+/* Divide tasks into two distinct groups based upon rank */
+if (rank < NPROCS/2) {
+    MPI_Group_incl(orig_group, NPROCS/2, ranks1, &new_group);
+} else {
+    MPI_Group_incl(orig_group, NPROCS/2, ranks2, &new_group);
+}
+
+/* Create new new communicator and then perform collective communications */
+MPI_Comm_create(MPI_COMM_WORLD, new_group, &new_comm);
+MPI_Allreduce(&sendbuf, &recvbuf, 1, MPI_INT, MPI_SUM, new_comm);
+
+MPI_Group_rank (new_group, &new_rank);
+printf("rank= %d newrank= %d recvbuf= %d\n",rank,new_rank,recvbuf);
+
+MPI_Finalize();
+
+        \end{lstlisting}
+
+\textbf{Inter group communication}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+int MPI_Intercomm_create ( MPI_Comm local_comm , int local_leader ,
+MPI_Comm peer_comm , int remote_leader , int tag ,
+MPI_Comm * newintercomm )
+\end{lstlisting}
+
+\begin{itemize}
+    \item All inter group construcrtors are grouping and requires the local and remote groups to be disjoint to avoid deadlock 
+    \item The two groups communicate through Ring leaders 
+    \item MPI Barrier is a one to all operation. The one calling process in a sub group waits for all other processes to enter the barrier before continuing
+\end{itemize}
+
+\textbf{Cartesian Virtual Topology}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+--------------------------------------
+/* MPI_Cart_create - makes a new communicator to which Cartesian
+topology information has been attached */
+int MPI_Cart_create ( MPI_Comm comm_old , int ndims , const int dims [] ,
+const int periods [] , int reorder ,
+MPI_Comm * comm_cart )
+--------------------------------------
+/* MPI_Cart_coords - determines process coordinates in the Cartesian
+topology , given its rank in the group */
+int MPI_Cart_coords ( MPI_Comm comm , int rank , int maxdims , int coords [])
+--------------------------------------
+/* MPI_Cart_shift - returns the shifted source and destination ranks ,
+given a shift direction and amount */
+int MPI_Cart_shift ( MPI_Comm comm , int direction , int disp ,
+int * rank_source , int * rank_dest )
+
+
+#Example
+#define SIZE 16
+
+#define UP    0
+#define DOWN  1
+#define LEFT  2
+#define RIGHT 3
+
+int main(int argc, char *argv[])
+{
+int numtasks, rank, source, dest, outbuf, i, tag=1, 
+    inbuf[4]={
+    MPI_PROC_NULL,
+    MPI_PROC_NULL,
+    MPI_PROC_NULL,MPI_PROC_NULL,
+    }, 
+    // Row * Columns
+    nbrs[4], dims[2]={4,4}, 
+    periods[2]={0,0}, reorder=0, coords[2];
+
+MPI_Request reqs[8];
+MPI_Status stats[8];
+MPI_Comm cartcomm;
+
+MPI_Init(&argc,&argv);
+MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+
+if (numtasks == SIZE) {
+    
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, reorder, &cartcomm);
+    MPI_Comm_rank(cartcomm, &rank);
+    MPI_Cart_coords(cartcomm, rank, 2, coords);
+    MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UP], &nbrs[DOWN]);
+    MPI_Cart_shift(cartcomm, 1, 1, &nbrs[LEFT], &nbrs[RIGHT]);
+
+    outbuf = rank;
+
+    // for all 4 directions, send its rank to its neighbours
+    // and update the rank information
+    for (i=0; i<4; i++)	{
+        dest = nbrs[i];
+        source = nbrs[i];
+        MPI_Isend(&outbuf, 1, MPI_INT, dest, tag, MPI_COMM_WORLD, &reqs[i]);
+        MPI_Irecv(&inbuf[i], 1, MPI_INT, source, tag, MPI_COMM_WORLD, &reqs[i+4]);
+    }
+
+    MPI_Waitall(8, reqs, stats);
+    
+    for (i = 0; i < SIZE; i++) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == i) {
+            printf("rank= %d coords= %d %d  neighbors(u,d,l,r)= %d %d %d %d\n",
+                rank,coords[0],coords[1],nbrs[UP],nbrs[DOWN],nbrs[LEFT], 
+                nbrs[RIGHT]);
+            printf("rank= %d                 inbuf(u,d,l,r)= %d %d %d %d\n\n",
+                rank,inbuf[UP],inbuf[DOWN],inbuf[LEFT],inbuf[RIGHT]);
+        }
+        // Prevent overflowing the previous barrier
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+} else {
+    printf("Must specify %d processes. Terminating.\n",SIZE);
+}
+
+MPI_Finalize();
+}
+    \end{lstlisting}
+    
+
+    \end{multicols}
+    
+
+
+% Things i dont want to be in multi col
 \pagebreak
-% Misc
-\section*{xs-4114 Vs i7-7700}
-% TODO Add a table here
-% xs: 10 cores, 20 threads, designed for multithreading 
-%i7: 4 cores, 8 threads, more geared towards commercial applications
-% should have similar number of instructions compiled
 
+\centering
+\includegraphics*[width=14cm]{many_interconnects.png}
 
-\end{multicols}
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|c|c|c|c|c|}
+    \hline
+    \textbf{Network \( G \) with \( n \) nodes} & \textbf{Degree \( g(G) \)} & \textbf{Diameter \( \delta(G) \)} & \textbf{Edge-connectivity \( ec(G) \)} & \textbf{Bisection Bandwidth \( B(G) \)} \\
+    \hline
+    Complete graph & \( n - 1 \) & 1 & \( n - 1 \) & \( (\binom{n}{2})^2 \) \\
+    \hline
+    Linear array & 2 & \( n - 1 \) & 1 & 1 \\
+    \hline
+    Ring & 2 & \( \left\lfloor \frac{n}{2} \right\rfloor \) & 2 & 2 \\
+    \hline
+    \( d \)-dimensional mesh \( (n = r^d) \) & \( 2d \) & \( d(\sqrt[d]{n} - 1) \) & \( d \) & \( n^{\frac{d-1}{d}}\) \\
+    \hline
+    \( d \)-dimensional torus \( (n = r^d) \) & \( 2d \) & \( d \left\lfloor \frac{\sqrt[d]{n}}{2} \right\rfloor \) & \( 2d \) & \( \ 2n^{\frac{d-1}{d}} \) \\
+    \hline
+    \( k \)-dimensional hypercube \( (n = 2^k) \) & \( \log n \) & \( \log n \) & \( \log n \) & \( \frac{n}{2} \) \\
+    \hline
+    \( k \)-dimensional CCC-network \( (n = k2^k \text{ for } k \geq 3) \) & 3 & \( 2k - 1 + \left\lfloor \frac{k}{2} \right\rfloor \) & 3 & \( \frac{n}{2k} \) \\
+    \hline
+    Complete binary tree \( (n = 2^k - 1) \) & 3 & \( 2 \log \frac{n+1}{2} \) & 1 & 1 \\
+    \hline
+    \( k \)-ary \( d \)-cube \( (n = k^d) \) & \( 2d \) & \( d \left\lfloor \frac{k}{2} \right\rfloor \) & \( 2d \) & \( 2k^{d-1} \) \\
+    \hline
+    \end{tabular}
+    \caption{Network Characteristics}
+    \label{table:network_characteristics}
+    \end{table}
+    
+
 \end{document}

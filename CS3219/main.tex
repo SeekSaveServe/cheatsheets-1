@@ -139,220 +139,222 @@
     }
 \end{center}
 
-% LECTURES
 
-\section{Lectures}
-
-\subsection*{L0 and L1}
-\textbf{Software engineering is} systematic, disciplined, quantifiable approach to the development, 
-operation, and maintenance of software \\
-
-
-\textbf{Software Crisis 1.0 and 2.0}
+% Lec 1
+\textbf{Types of software application}
 \begin{itemize}
-    \item (1.0) development of more powerful machinary
-    \item (2.0) growing demand for more complex software due to hardware advances, cost reduction, data reduction, data availability, device proliferation and the rise in consumer technology
+  \item \textbf{Embdedded}:Limited and specific set of functions.
+  Found in industrial or consumer devices.
+  \item \textbf{Real-Time}: Where timing is important. Hard —
+  must be on time; firm — little room for flexibility;
+  soft — greater room.
+  \item \textbf{Concurrent}: Different computations run across the
+  same or overlapping time periods
+  \item \textbf{Distributed}: Runs across more than one computer.
+  Usually connected via a network.
+  \item \textbf{Edge Dominant}: Computation performed at end points instead of centrally.
 \end{itemize}
 
-\textbf{Software at the Edge}
+\textbf{Software Deployment}
 \begin{itemize}
-  \item Balance between the demands of centralized computing and localised decision making 
-  \item Cloud-based: latency that makes it unsuitable for real-time applications
-  \item Edge: Limited computation power and power source 
+  \item \textbf{Orchestrator Vs Container}: Container provide the platform for building and dsitributing, orchestrator scales and fault tolerates and communicates among containers 
+  \item \textbf{Serverless}: More lean than containers, automatic scaling 
+  \item \textbf{Benefits of Containers}: Runtimewith code, dependency and change management, environment management, isolation \& security
 \end{itemize}
 
-\textbf{Cloud Computing}
-\begin{itemize}
-  \item Software infrastructure hosted on an external data centre 
-  \item Cloud-enabled: Legacy enterprise applications designed for local datacentres but modified to run on the cloud 
-  \item E.g IAAS, PAAS, SAAS
-\end{itemize}
-\includegraphics*[width=7cm]{iaas.png}
+\textbf{SDLC, Scrum, CI/CD}
+\textbf{Agile}: emphasises iterative development and cross-functional collaboration.
+• Individuals and interactions over processes and tools.• Working software over comprehensive documentation• Customer collaboration over contract negotiation • Responding to change over following a plan.
+\textbf{SCRUM}: Agile framework. •Work done in sprints, where a subset of the product backlog
+is cleared. •There is often a daily 15 min SCRUM meeting
+\textbf{CICD}DevOps combine development and operations to reduce time between committing changes to production, while ensuring quality.
+• \textbf{C-Int}: Auto build, unit test, deploy to staging, and acceptance test. Allows teams to detect problems early.
+• \textbf{C-Del}: Same as above, except with manual deployment to production. Ensures that every good build is potentially ready for production release.
+• \textbf{C-Dep}: Same as above but with auto deployment to production. Automates the release of a good build\newline
 
-\textbf{Cloud-native applications}
-\begin{itemize}
-  \item The approach to build, deploy and manage modern applications in cloud computing environments 
-  \item Characteristic features:
-   \begin{enumerate}
-    \item Immutable infrastructure
-    \item Microservices-based applications 
-    \item API driven 
-    \item Service mesh 
-    \item Containers 
-    \item Dynamically managed 
-  \end{enumerate}
-\item Monolith: There will be API end points to gain certain functionalities 
-\item Microservice model (cloud-native) is similar to monolith except that functionalities are provided for you
-\end{itemize}
+% Lec 2
+\textbf{Software requirements process} A requirement is a capability needed by a user or must be met by a system, i.e. what should be implemented. Can be of the system behaviour, property or attribute. 
+• \textbf{Sources}: document, interview, questionnaires, event-response, prototyping, observations \\
+• \textbf{SRS} contain
+System Reqs, Functional Reqs, External Interfaces, Quality Attributes and Constraints. It describes what the software must do 
+• \textbf{Backlog} is a repository of work to be done and facilitates planning and prioritisation of work\\
+• \textbf{Types of Requirements}• \textbf{Business Reqs}: Why the organisation is implementing the system, e.g. reduce staff costs by 25%.
+• \textbf{User Reqs}: Goals the user must be able to perform with the product, e.g. check for a flight using the website.
+• \textbf{Functional Reqs}: The behaviour the product will exhibit, e.g. passenger shall be able to print boarding passes.
+• \textbf{Quality Attributes}: How well the system performs, A type of non-functional reqs.
+•\textbf{System Reqs}: Hardware or software issues, e.g. the invoice system must share data with the purchase order system. Affects functional reqs.
+• \textbf{Data Reqs}: Describes data items or structures, e.g. product number is alphanumeric.
+• \textbf{External Interfaces}: Connections between your system and environment, e.g. must import files as CSV. Affects functional reqs.
+• \textbf{Constraints}: Limitations on design and implementation choices, e.g. must be backwards compatible. A type of non-functional reqs.
+• \textbf{Business Rules}: Actual policies or regulations. Constrains business, user and functional reqs.
+Generally, the flow is: Business Reqs → Vision \& Scope
+Docs → User Reqs → User Reqs Specification → Functional Reqs. \\
+• \textbf{Quality Attributes} 
+(External)
+• \textbf{Availability}: Measure of the planned up time during
+which the system is fully operational.
+• \textbf{Installability}: How easy it is to install the system for the end-user.
+• \textbf{Integrity}: Preventing information loss and preserving data correctness.
+• \textbf{Interoperability}: How readily the system can exchange data and services with other software and hardware.
+• \textbf{Performance}: Responsiveness to user actions. May also compromise safety if e.g. a safety system responds poorly.
+• \textbf{Reliability}: Probability of the software executing without failure for a specific period of time.
+• \textbf{Robustness}: Degree to which a system performs when
+faced with invalid inputs, defects and attacks.
+• \textbf{Safety}: Prevents injury or damage to people or property.
+• \textbf{Security}: Authorisation, authentication, confidentiality, etc.
+• \textbf{Usability}: User-friendliness and ease of use.
+(Internal)
+• \textbf{Efficiency}: How well the system utilises the hardware,
+network etc.
+• \textbf{Modifiability}: How easily designs and code can be understood, changed and extended.
+• \textbf{Portability}: Effort needed to migrate the software
+from one environment to another.
+• \textbf{Reusability}: Effort required to convert a software
+component for use in other apps.
+• \textbf{Scalability}: Ability to grow to accommodate more users, servers, locations, etc. without compromising performance or correctness.
+• \textbf{Verifiability}: How well the software (components) can be evaluated to demonstrate that it functions as expected. \\
 
-\textbf{Deployment Considerations} \\
-\textbf{Quality Attributes}
-\begin{itemize}
-  \item Availability, performance, security, usability, interoperateability, scalability, maintainability, portability, reusability
-\end{itemize}
+\textbf{Prioritisation Techniques} High-Med-Low. Must-Should-Could-Wish. \$100 appro0ach. \\
 
-\textbf{Issues}
-\begin{itemize}
-  \item Exploit hardware advances 
-  \item Cater to devices
-  \item Network devices, users, applications
-  \item Manage Data
-  \item Large-scale content delivery, quality of service, number of end points 
-  \item Shift towards could-nativity 
-  \item Heterogeneity platforms, interoperatbility of different OS/Browser/Platform combinations
-\end{itemize}
+\textbf{Validation vs Verification} • \textbf{Validation} is about whether you have the right reqs, and if they trace back to business objectives. • \textbf{Verification} is whether you have written the reqs right, i.e. complete, correct, feasible, priority, unambiguous. Can be checked informally by passing the reqs
+around, or formally through formal inspection\\
 
-\includegraphics*[width=7cm]{deployment_mechanism}
-\textbf{Code to exectuable - Bare metal}
-\begin{itemize}
-    \item catering to specific platforms
-    \item customized build and linking 
-    \item Factors: availability of libraries and dependencies 
-    \item Cons: Potentially wasted hardware resources, cost, developer productivity, scalability (hardware, software)
-    \item Pros: Complete control, physical isolation
-\end{itemize}
+% Lec 4
+\textbf{Building blocks of architecture}
+Architecture Styles are recurring architecture designs. They describe structures of the system, which comprise software components, the externally visible properties of those components, and the relationships among them.
+• \textbf{Component}: Models application-specific function
+• \textbf{Connector}: Models interactions between components for transfer of control and/or data
+• \textbf{Configuration}: Topology or structure \\
 
-\includegraphics*[width=7cm]{deployment_models}
+\textbf{Message and Event} Message is some data sent to a specific address, Event is some data emitted from a component for listening components to consume. Events are ordered in sequence of creation and immutable \\ 
 
-\textbf{Virtual Machines}
-\begin{itemize}
-    \item Improve resource utilization and cost
-    \item Flexible (not limited to hardware like baremetal) and scalable, runs on different hardware
-    \item Still runs a full OS 
-    \item Side-channel attacks: VMs share the same physical hardware, so they can be attacked by exploiting the shared resources
-    \item Noisy neighbor: VMs compete for resources, so one VM can hog the resources and affect the performance of other VMs
-\end{itemize}
+\textbf{Decomposition \& Modularity}  • \textbf{Horizontal slicing}: design by layers (controller, service, repo)
+• \textbf{Vertical slicing}: design by feature (order, user, policy)
+• \textbf{Ports \& Adapters}: Keep domain separate from technical details •\textbf{Modularity} Shorter dev time, better flexibility and comprehensibility \\ 
 
-\textbf{Containers}
-\begin{itemize}
-    \item Lighter than VM (only has OS processes and libraries)
-    \item Better utilization of hardware resources
-    \item Allows for rapid deployment, runs everywhere 
-    \item Granular and controllable 
-    \item Abstracts away the hardware (managed by container engine) so it can run on any hardware -- improves performance
-    \item Reproducible, isolation, security
-    \item Cons: not suitable for performance critical software since containers goes through more layers than VMs or bare metal
-\end{itemize}
+\textbf{Cohesion}: Type, functional, layer, communicational, sequential, procedural, temporal, utility \textbf{Coupling}: Content, common, control,data, external, temporal, inclusion \ import \\
 
-\textbf{Containerised Deployment} 
-\begin{itemize}
-  \item Easy integration ofthe internet and related advances (build cloud-native apps)
-  \item Include runtime with code (caters to heterogeneous platforms and achieves interoperability and portability)
-  \item Supports dependenct and change management (improves maintainability and portability)
-  \item Environment management (dockerfile provides the environment description)
-  \item Reproducible (guaranteed to be identical on container-capable systems)
-  \item Isolation and security (avoid conflicting dependencies and provides sand-box for execution) 
-  \item Quick to launch 
-  \item Support DevOps best practices 
-  \item Can be used with orchestrators (e.g Kubernetes)
-\end{itemize}
+\textbf{Layered Architecture} Hierarchy with layers providing service to the layer above it and acting as a client to the layer below it. Layers contain various elements, and communicate via procedure calls (connector). 
+\textbf{Pros} Abstraction. Partitions complex problems. Easy to substitute one layer for another. Easy to reuse and port. 
+\textbf{Cons} Hard to ”layerise” some systems, esp. when high-level functions needs coupling with low-level implementations. Performance degradation due to communication between layers.\\
+\includegraphics*[width=7cm]{layered.png}
 
-\textbf{Container Vs orchestrator}
-\begin{itemize}
-  \item Containers: Provide platform for building and distributing services. Not good for runing complex applications, often requiring multiple containers that each do specific tasks 
-  \item Orchestrators: Integrate and coordinate containers, providing scaling of deploymend based on demand, fault tolerance, and communication among containers
-\end{itemize}
+\textbf{Pipe and Filter}  Filters are stateless stream transducers that incrementally transform data
+\textbf{Pipes} are stateless and simply transfer data. 
+\textbf{Constraints} Independence; i.e. filters should not share state.
+\textbf{Anonymity} i.e. filters should not know which filter is before or after them. 
+\textbf{Concurrency} i.e. should be able to
+run the filters concurrently. 
+\textbf{Pros} No complex component interaction. Easy to reuse. Easy to parallelise. Easy
+to maintain and enhance. Good for image processing.
+\textbf{Cons} Not good at interactive applications. May need a common representation,
+i.e. pack and unpack costs. \\ 
 
-\textbf{Serverless}
-\begin{itemize}
-  \item Cloud-native deployment model, servers and underlying infrastructure still exist but are abstracted away
-  \item Developers package containers, apps respond to demand and there are no cost when idle
-  \item Serverless allocate resource dynamically for the developer
-  \item Good for stateless applications (the state does not matter outside of the current execution)
-\end{itemize}
+\textbf{MVC}
+MVC provides SOC between data storage, data handling, data visualisation, user interaction through modularity. It also provides higher extensibility and testability.
+• \textbf{Model}: Contains core functionality and data. Updates the view when it changes.
+• \textbf{View}: Display info to user
+• \textbf{Controller}: Handle user input and pass info from view to model
+• \textbf{Web MVC}: Controller handles HTTP requests, model selection, view preparation, and the additional responsiblity of mapping requests to handler \\
+\includegraphics*[width=7cm]{web_mvc.png}
 
-\subsection*{L2: Software Development}
-\textbf{Waterfall}
-\includegraphics*[width=7cm]{waterfall}
-\begin{itemize}
-  \item Good for stable well-understood specifications, familiar domain and solution 
-  \item Variation: have feedback loops
-\end{itemize}
+\textbf{SPA} JS program downloaded int othe browser and runs continuosuly. Send query and retrievedata without refreshing the page. \textbf{Pros} Fuid experience, save bandwidth, reduce perceived latency 
+\textbf{Cons} vulnerable to XSS attacks \textbf{Webb MVC - SPA} MVC is in browser, and SPA makes HTTP API requests against a set of resources served by API Controllers that replies with JSON\\
 
-\textbf{Scrum}
+% Lec 5
+\textbf{REST Basics} 
+Defines constraints for transferring, accessing and manipulating textual data repr (of hypermedia) in a stateless manner to provide uniform interoperability between different web apps. \textbf{Pros} Less tightly coupled systems, scalable, usable, accessible. \textbf{Cons} Stateless may decrease network performance bby increasing repetitive data sent in series of queries, may degrade efficiency due to uniform interface.\\ 
+\textbf{REST Constraints} 
+• \textbf{Client-Server}: Client not concerned with data storage, server not concerned with user interface or user state.Separation of concerns. Client and server can evolve independently. 
+\textbf{Stateless} 
+Server-client interactions self contained, full information as part of query params, headers or URI. Improves scalability (server can free up resource), relaibility (recover from partial failures), monitoring (analyze request through request data)
+\textbf{Cacheable}
+response include if data is cacheablea nd for how long, improves network efficiency but can potentially retrieve stale data.
+\textbf{Layered System}
+Application organised as a layered system with each layer not seeing beyodn the immediate neighbor. Restricts complexity to individual layer, enables data transformation, allows load-balancing and caching at intermediary layers. 
+\textbf{Uniform Interface}
+Uniform way of interacting with a srver that is decoupled from hardware and efficient for large-grained hypermedia data transfer. Components understand resource by inspecting its representation.
+\begin{lstlisting}[language=C++, breaklines=false, breakatwhitespace=false]
+HTTP GET /device-management/managed-devices/{id}
+\end{lstlisting}
+\textbf{Code-on-demand} Simplifies the client from having to pre-implement all functionality, allows extensibility. \\
+% Lec 6
+\textbf{Microservice Definition} A microservice is an independent, standalone capability that communicates through lightweight communication.
+\textbf{Organised around business capabilities} as these capapbilities invariantly need transfer of info. \textbf{Loose Coupling}, components should not depend on each other's implementation and their interaction in the real domain \textbf{Owned by Small teams} loosely coupled organisations create more modular, less coupled systems \textbf{Independently deployable} each microservice has their own deployment, resources, scaling and monitoring requirements.\\
 
-\textbf{CI CD Delivery}
-\includegraphics*[width=7cm]{ci_cd}
-\begin{itemize}
-  \item CI is a dev practice that requries  devs to integrate code into a shared repository several times a day
-  \item Each check in is autmatically verified, allowing for early error detection
-  \item Continuous Delivery Vs Deployment: Software can be Vs automatically released into production at any time
-  \item \textbf{benefits}
-  \begin{enumerate}
-    \item low-risk releases
-    \item faster time to market and early feedback 
-    \item higher quality and lower cost
-  \end{enumerate}
-  \item \textbf{Blue-green deployment}: Maintain two copies of production environment, one active and one inactive. When a new version is released, it is deployed to the inactive environment and tested. Once it is verified, the inactive environment is switched to active
-\end{itemize}
+\textbf{Domain} A domain model represents a view of the problem domain and a critical and fundational concept behind business needs. \textbf{Subdomains - SOC}, which can be
+classified as Generic(facilitates the business and is found across multiple domains e.g. invoicing / communication. Can be off the shelf) Supporting (auxillary but not a key differentiator) Core(key differntiator of business)   \\ 
+\textbf{Domain Driven Design} domain model should be isolated from technical complexities
+\textbf{Ubiquitous Language - increase cohesion} A language structured around the domain model and used by all team members to connect all activities of the team with the software.
+\textbf{Bounded Context- SOC, single responsiblity} Separates ubiquitous languages. As we have many problems, we may not be able to use the same language throughout. But we can cluster sets of problems where the same specialised language can be used, and make boundaries. Contains code for a single subdomain.
+\textbf{Aggregate} cluster of related objects that is treated as one unit for data changes. Changes to the aggregate will either all succeed or none will succeed. Aggregate's state can only be modified using its public interface (aggregate root entity) \\
 
+\textbf{Identifying Microservice} 
+Small set of responsibilities, apply SRP. Services should encompass entire bounded context. Break services around aggregate boundarie.\\
 
-\textbf{DevOps}
-\begin{itemize}
-  \item Communication and collaboration 
-  \item Infrastructure as code 
-  \item monitoring and logging and integration
-  \item Software Reliability Engineer: Create software that improve the reliability of sys in prod, fix issues, respond to bugs, and on-call
-\end{itemize}
-
-\textbf{Recent trends}
-\begin{itemize}
-  \item AI to automate CICD
-  \item Pattern detection in code base to detect vulnerabilities
-  \item Collaborating with AI to do code sequence prediction and generation, brainstorm solutions, rapid prototyping
-  \item \textbf{Risks}
-  \begin{enumerate}
-    \item Garbage in garbage out 
-    \item Traceability of the source 
-    \item Data safety 
-    \item Susceptible to vulnerabilities 
-    \item Increasing technical debt
-  \end{enumerate}
-\end{itemize}
-
-\subsection*{L2: Software Requirements}
-\textbf{Definition}
-\begin{itemize}
-  \item Capabilities needed by a user to solve a problem or achieve an objective
-  \item Capabilities must be met or possessed by a system component
-  \item documented representation of the above 
-  \item \textbf{Usage centric:} As a user, I can ....
-  \item \textbf{Product centric:} [Refinement] the system will support the following ...
-\end{itemize}
-
-\textbf{Four phases of requirements dev}
-\includegraphics*[width=7cm]{req_phase}
-\begin{itemize}
-  \item Elicitation: discover requirements (docs, interviews, surveys, event-response tables, prorotyping, observations)
-  \item Analysis: negotiate requiements, identify gaps 
-  \item Specifications: written and illustrated requirements for comprehenon 
-  \item Validation: Confirm correct set of requirements that will enable developers to build a soln 
-\end{itemize}
-
-\textbf{SRS}
+\textbf{More about Microservices}
+\textbf{Database} Each service has its own DB, duplication of data. \textbf{Orchestration} rely on a central brain to guide the process. \textbf{Choreography} inform each part of the system of its job \textbf{Client side discovery pattern} Client queries a service registry and determines the network location of available service instances and decides which one to query based on load balancer. \textbf{Server-side discovery pattern} client makes a request to a service via load balancer, load balancer queries the service registry and route requests \textbf{Service registry pattern} data base of service instances and locations, client or router query the registry to find available instances \textbf{Deployment} servince instance per host or service instance per container \textbf{Service Routing \/ Collaboration} API Gateway, Orchestration, Choreography \textbf{Service Discovery}, client side, server side, service registry \textbf{Service Communication} sync - request reply, async - request, event-driven, pub-sub\\
+\includegraphics*[width=7cm]{orchestrate_choreograph.png}
 
 
-\textbf{SRS Vs Product backlog}
-\begin{itemize}
-  \item Both informs whats to be done 
-  \item Product backlog faciliates with planning while STS is an in-depth
-\end{itemize}
-% Tutorials
+% Lec 7
+\textbf{Event-definition} events are anything that happen within the scope of the business communication structure and acts as both data and means of async communication. \textbf{Unkeyed events} describe a singular statement \textbf{Entity} is unique and provides continual history of the tate of an entity \textbf{Keyed} Contains key but does not represent entity, used for partitioning stream of events to gurantee data locality\\
 
+\textbf{Event Driven Architecture} is where decoupled applications can asynchronously communicate by producing and consuming events via an event broken (facilitates loose coupling)  
+\textbf{Event Broker (kafka)} receives data and publishes it on source-specific topics \textbf{Producers} generate stream of events and \textbf{Producers} listen for events. Producer does not know hich consumers are listening \textbf{Advantages over request driven architecture} detach creation and control of data from consumption and decouple systems so they can be independently scaled and updated, handle high volumes of data with low latency, support real-time processing and analytics, be more scalable and resilient to failures, does not follow synchronous pattern. Request driven is better for web APIs, databse queries where a client needs specific infroamation, whereas event driven is better suited where components need to react to changes in state (e.g. IoT, real-time analytics, etc) \textbf{Advantages of Event Driven Microservices} Granularity (easy to rewrite), scalability, technological flexibility (different stacks), business requirement flexibility, Cont Del support (easy to ship), high testability \textbf{Event brokers} rabbitMQ (50k messages per second, persistent and supports one-to-one and many to many), kafka (1 mil messages per second, persistent but only supports one-to-many), reddis (1 mil messages per second, not persistent, both one-to-one and many to many)\textbf{Event driven frameworks} spring cloud stream\\
+\includegraphics*[width=7cm]{kafka.png}
 
-\textbf{Qualities of strong SRS}
+\textbf{Event Sourcing}
+A data storage pattern where the events are stored in an append-only log.Event log provides an audit of the system activities and allows current state to be recreated by rewinding the log in order. \\
 
-\textbf{FR Vs NFR}
-\begin{itemize}
-  \item FR speciefies what the system should do
-  \item E.g. The passenger shall be able to print boarding passes 
-  \item NFR describes something not directly related to the functionality of the system
-  \item E.g. Mean time between failure $\ge$ 900ms
-  \item NFR affects system choice and design
-\end{itemize}
+\textbf{Command Query responsiblity Separation pattern}
+CQRS separates write path - command interface from read path - query interface (SRP, SoC, ISP). If anything goes wrong, internal state of DB can be recovered from log, and writes and reads can be optimised independently. Writes enter kafka on the command side, and event stream can be transformed in a way that suits the query using KSQL \textbf{Benefits} a single write can be read by many reads \\ 
+\includegraphics*[width=7cm]{cqrs event source.png}
 
-\textbf{Software Quality Attributes}
-% Misc
+% Lec 8
+\textbf{Synch communication} caller/sender waits for response from sender/caller. Msg processed only once
+
+\textbf{Remote Procedure Call (RPC)}  allows a program to execute a procedure in another address space (distributed machine) that mimics serial thread execution. Client calls the client stub (local call) and parameters are packed into a message (marshalling) which is sent to the server machine. The server stub unpacks the parameters (unmarshalling).\\
+
+\textbf{Asynch communication (AMQP)} does not wait for response and continues executing whatever code is necessary, enables independent functioning of sender and receiver and one-to-many communication
+
+\textbf{HTTP/S, asynchronity in request-reply pattern} client sends request for a resource to a server and the server sends back a response. This decouples backend from the requester and allows for a response to be sent when the backend is async. 1. (client) Call API 2. Enqueue message 3. (server) Reply with status end point 4. Receive message 5. Process message write result to blob $\rightarrow$ [Storage Blob] 7. $\leftarrow$ check for blob 6. $\leftarrow$ (client) Poll status end point \\
+
+\textbf{Advanced Message Queueing Protocol (Rabbit MQ)} AMQP is a peer-to-peer messaging protocol that enables conforming client applications to communicate with conforming messaging brokers. Messages are published to exchanges that distribute message copies to queues based on messsaging attributes. Then brokers deliver  message  to consumers or consumers fetch messages from queues on demand. \textbf{Exchange types} Direct: Message is routed to the queues with matching binding keys. Fanout: routes messages to all of the queues bonund to it. Topic: The topic exchange does a wildcard match between the routing key and the routing pattern specified in the routing. 
+\textbf{Multireceiver} message can be published to topics which serves as a broadcasting station for subscribers.\\ 
+
+\textbf{Pub/Sub} pub of data does not specifically direct to a sub, instead pub classifies the message the the subscriber subscribes to receive messages it is interested in (from broker) 
+\textbf{Kafka} each kafka server or broken is responsible for delivering the message to the right consumer, more can be added without downtime which enables horizontal scaling. Messages are grouped by topics. Within each topic, msgs are partitioned by their key. Msgs are added in append only fashion and read in FIFO order. One consumer group works to consume a topic, with each partition only consumed by 1 member, allows hoirzontal scaling of consumers. \\
+\includegraphics*[width=7cm]{pubsub.png}
+
+% Lec 9
+\textbf{Message Intent} Command message specifies a function or method to invoke on the receiver. Document message transmits its data structures to receiver. Event message notifies the receiver of a change in the sender (just notification, no action specified). \textbf{Message Channels} Connect collaborating senders and receivers, has one way and two way. \textbf{Return Address}: Request contains an address to tell the replier where to send reply to.
+\textbf{Correlation ID}: Specifies which request the reply is for. Can be chained (allows tacing of message path).
+\textbf{Message Sequence}: Basically break the message down into smaller segments.
+\textbf{Point to Point (P2P)}: Request processed by single consumer.
+\textbf{Publish-Subscribe Channel}: Request broadcasted to all interested parties via topics.
+\textbf{Invalid Messages}: Queue to move a message to when it cannot be interpreted.
+\textbf{Dead Letter}: Queue to move a message to when it cannot be delivered.
+\textbf{Datatype Channel}: Separate channel for each type of data, e.g. XML, byte array, etc.\\
+
+\textbf{Message Routing} routers consume messages from one message channel and reinsert them into different message channels depending on conditions. 
+\textbf{Context based router} examines the message content and routes based on data contained, needs knowledge of all possible reciepients, a change in recipient list changes the router. Uses \textbf{Message Filter} which has only a single output channel.
+\textbf{Message splitter} splits 1 msg into many msgs.
+\textbf{Message Aggregator} combines many correlated msgs into 1 msg.\\ 
+\includegraphics*[width=7cm]{msg channel.png}
+
+\textbf{Message Scatter-Gather} broadcasts 1 msg to a number of consumers concurrently and aggregates the replies into a single message (good for requesting requests from multiple services)
+\textbf{Message Translator} converts messages from one form to another. Data can be first translated into a \textbf{Canonical Data Model} before being translated into the target format to reduce number of translators needed.\\
+
+\textbf{Message Endpoints} Interface between app and messaging system. Channel-specific, one instance handles either send or receive. Can be synchronous and proactive, i.e. polling consumer, or can be asynchronous and reactive, i.e. event-driven receiver \\ 
+
+% Lec 10
+\textbf{Modular Monolith} loosely coupled, highly cohesive modules. \textbf{Pros} independent modules, easier to  maintain, test, develop, reuse. Each module knows as little as it needs to know about other modules (relate behaviours tgt by boundaries, limit the number of different types of calls)\\
+
+\textbf{Code Smells} Duplicate code, large class, lazy class. \textbf{Design Smells} a deeper problem at the respective abstraction level (e.g. large classes with a lot of responsibilities). \textbf{Problem to interface} rely on interface (abstract class) to decouple from implementation. \textbf{Composition over inheritance} since inheritance has a tight coupling between class and subclass. \textbf{Encapsulate what varies} the component that changes frequently should be encapsulated (e.g. into a factory class).\\
+
+\textbf{Design Pattern} is a soln to a problem in a recurring context. \textbf{Creational} encapsulate details about the acutal creation (factory, singleton, builder), \textbf{Structural} define relationships between classes to form larger objects (adapter, decorator, facade), \textbf{Behavioural} define manners of communication between classes and objects (observer, strategy, template method)\\
+
 
 \end{multicols}
 \end{document}

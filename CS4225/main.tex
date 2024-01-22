@@ -215,8 +215,157 @@
 
 
 % TODO: L2  
+\subsection*{L3: Map reduce and data mining}
+\textbf{Secondary Sort}
+\begin{itemize}
+  \item (Natural Key, Secondary Key)
+  \item Partitioner needs to be customised to partition by the natural key only 
+  \item At each reducer, the secondary key (value) will be sorted
+\end{itemize}
 
-\subsection*{L3: No SQL Overview}
+\textbf{Projection in Map reduce}
+\begin{itemize}
+  \item Mapper takes in tuples and emit the appropriate key 
+  \item No reducer needed 
+\end{itemize}
+
+\textbf{Selection}
+\begin{itemize}
+  \item Mapper takes in a tuple and emit the keys that meet the condition 
+  \item No reducer needed 
+\end{itemize}
+
+
+\textbf{Group by aggregation}
+\begin{itemize}
+  \item E.g. SELECT product id, AVG(price) ... GROUP BY product id 
+  \item Framework automatically groups the tuples by the key
+  \item Compute average in reducers 
+\end{itemize}
+
+\textbf{Relational Joins}
+\begin{itemize}
+  \item \textbf{Broadcast Join}
+  \includegraphics*[width=7cm]{bcast_join.png}
+  \begin{itemize}
+    \item Requires one of the tables to fit in memory 
+    \item All mappers store a copy of the small table 
+    \item Iterate over big table to match with small table 
+    \item No need reducer
+  \end{itemize}
+  \item \textbf{Reduce-side common Join}
+  \includegraphics*[width=7cm]{common_join.png}
+  \begin{itemize}
+    \item Don't require a dataset to fit in memory 
+    \item Slower than broadcast join
+    \item Different mappers operate on each table, and emit records, with key as the variable to join by 
+    \item Secondary sort in reducer ensures that keys from X appear before Y
+    \item Then hold keys from X and use them to join against keys from Y
+    \includegraphics*[width=7cm]{common_reduce.png}
+  \end{itemize}
+\end{itemize}
+
+\textbf{Finding Similar Docs}
+\includegraphics*[width=7cm]{shingling.png}
+\begin{itemize}
+  \item \textbf{Shingling} Convert documents into shingles (short phrases)
+  \item \textbf{Min-Hashing} Convert phrases into signatures of each document while preserving similarity
+  \item Documents with the same signature are candidate pairs for finding near duplicates
+  \item K-shingle (k-gram) for a doc is a sequence of k tokens that appears in a doc 
+\end{itemize}
+
+\textbf{Similarity Metric}
+\includegraphics*[width=7cm]{k-shingle.png}
+\begin{itemize}
+  \item \textbf{Min hash} MinHash gives us a fast approximation to the result using Jacard similarity instead of doing pairwise comparison
+  \item Min hash converts large sets to short signatures while preserving similarity
+\end{itemize}
+
+
+\textbf{Min Hashing}
+\includegraphics*[width=7cm]{jaccard.png}
+\begin{itemize}
+  \item Hash column c to h(c), such that the table can fit in memory
+  \item sim(c1, c2) is high, then h(c1) == h(c2), if low h(c1) != h(c2)
+  \item Shingles:  { (the cat), (cat is), (is glad) }
+  \item Step 1: h(“the cat”) = 12, h(“cat is”) = 74, h(“is glad”) = 48
+  \item Step 2: Compute the minimum, min(12, 74, 48) = 12
+  \item The probability that two documents have the same min hash is the same as their Jaccard similarity
+  \item Multiple hash functions are used IRL, and the candidate pair is a pair with a sufficeint number of matching hash values
+\end{itemize}
+
+\textbf{MapReduce Implementation}
+\includegraphics*[width=7cm]{map_reduce_impl.png}
+
+\textbf{Clustering}
+\includegraphics*[width=7cm]{clustering.png}
+\begin{itemize}
+  \item Separates unlabelled data into groups of similar points 
+  \item Clusters have high intra cluster similaritty and low inter cluster similarity
+  \item \textbf{Steps}
+  \begin{enumerate}
+    \item Initialisation: Pick K random points as centres 
+    \item Repeat: 
+    \begin{itemize}
+      \item Assign each point to nearest cluster 
+      \item Move each cluster to average of its assigne centres 
+    \end{itemize}
+    \item stop if no assignment change 
+  \end{enumerate}
+\end{itemize}
+
+\textbf{Map Reduce V1}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+1: class Mapper
+2: method Configure()
+3:  c <- LoadClusters()
+4: method Map(id i, point p)
+5:  n <- NearestClusterID(clusters c, point p)
+6:  p <- ExtendPoint(point p)
+7:  Emit(clusterid n, point p)
+
+1: class Reducer
+2: method Reduce(clusterid n, points [p1, p2, ...])
+3:  s <- InitPointSum()
+4:  for all point p 2 points do
+5:    s <- s + p
+6:   m <- ComputeCentroid(point s)
+7:  Emit(clusterid n, centroid m)
+\end{lstlisting}  
+\begin{itemize}
+  \item O(nmd) disk IO, inefficient
+\end{itemize}
+
+\textbf{Map Reduce V2}
+\begin{lstlisting}[language=C++, breaklines=true, breakatwhitespace=true]
+1: class Mapper
+2: method Configure()
+3:  c <- LoadClusters()
+4:  H <- InitAssociativeArray()
+
+5: method Map(id i, point p)
+6:  n <- NearestClusterID(clusters c, point p)
+7:  p <- ExtendPoint(point p)
+# We emit the hashed array instead of emitting by point
+8:  H{n} <- H{n} + p
+
+9: method Close()
+10:   for all clusterid n 2 H do
+11:     Emit(clusterid n, point H{n})
+
+1: class Reducer
+2: method Reduce(clusterid n, points [p1, p2, ...])
+3:  s <- InitPointSum()
+4:  for all point p 2 points do
+5:    s <- s + p
+6:  m <- ComputeCentroid(point s)
+7: Emit(clusterid n, centroid m)
+\end{lstlisting}  
+\begin{itemize}
+  \item O(kmd) disk IO, inefficient
+\end{itemize}
+
+\subsection*{L4: No SQL Overview}
 
 \textbf{NoSQL}
 \begin{itemize}
@@ -349,7 +498,45 @@
 \end{itemize}
 
 % L5 : TODO
+\subsection*{L5: NoSQL and basics of Distributed system}
+\textbf{Distributed DB architecture}
+\begin{itemize}
+  \item Shared Everything: Single Node DBMS
+  \item Shared memory: Super Computer 
+  \item Shared Disks: Cloud databases 
+  \item Shared nothing: NoSQL (mostly)
+\end{itemize}
 
+\textbf{Horizontal Partioning}
+\begin{itemize}
+  \item \textbf{Partition Key}: variable used to decide which node each tuple will be stored on 
+  \item Choose partition key based on a column 
+  \item Partition key should have high cardinality but also avoid having a single key being too frequent (node not large enough)
+  \item One way to do this is by using a composite key
+  \item \textbf{Range Partition}: split partition based on range of values, good for ranged queries but can lead to imbalanced sharding
+  \item \textbf{Consistent Hashing}: 
+  \includegraphics*[width=7cm]{consistent_hash.png}
+  \begin{itemize}
+    \item Delete: Re-assign tuples clockwise to the next marker 
+    \item Replication: replicate and add the tuple in the next few nodes clockwise to the primary node 
+    \item Mutplie Markers: Have multiple markes  per node, such that after deletion we don't create a large imbalance
+  \end{itemize}
+\end{itemize}
+
+
+\textbf{Query Processing in NoSQL}
+\includegraphics*[width=7cm]{architecture_mongo_db.png}
+\begin{itemize}
+  \item Query is issued to a router and dispatched to the relevant shard with the help of the config server 
+  \item The shards will then run their own queries and return the result to the router 
+  \item If the query key is based on a key other than the shard key, it is relevant to all shards and will therefore be sent to all shards 
+  \item Write: Primary receives write operation and writes it onto the write log, secondaries will replicate this to their local data 
+  \item Read: user can specify if they want to read from the primary or secondary. Reading from the secondary decreases latency and spreads the load 
+  \item Election: If primary fails, one of the secondary takes over
+\end{itemize}
+
+\textbf{Scalability for NoSQL}
+\includegraphics*[width=7cm]{scalability for nosql.png}
 % L6
 \section{L6: Sparks Basics I}
 
@@ -472,6 +659,52 @@
   \includegraphics*[width=7cm]{ds1}
 \end{itemize}
 
+\subsection*{L7: Spark Basics II}
+\textbf{Spark Pros}
+\includegraphics*[width=7cm]{spark_pros.png}
+\begin{itemize}
+  \item Speed 
+  \item Ease of use (can write sql directly)
+  \item Modularity 
+  \item Extensibility 
+  \item Unified stack for distributed execution
+  \item Keeps track of schema and supports opimised sql operations
+\end{itemize}
+
+\textbf{RDD Vs. Dataframe}
+\includegraphics*[width=7cm]{rdd vs df.png}
+
+
+\textbf{Catalyst Optimiser}
+\begin{enumerate}
+  \item Analysis 
+  \item Logical Optimisation 
+  \item Physical Planning 
+  \item Code Generation
+\end{enumerate}
+
+\textbf{ML in Spark}
+\includegraphics*[width=7cm]{spark_ml.png}
+\begin{itemize}
+  \item \textbf{Missing data}: Fill in missing value(imputation) with mean, or fitting regression model, or by using dummy variables
+  \item imputer = Imputer(inputCols=["a", "b"],outputCols=["out a", "out b"])
+  \item model = imputer.fit(df)
+  \item \textbf{One Categorical Encoding}: Convert categorical values to binary (is Group1, is not Group1), good if there is no ordinal relationship between the categories
+  \item 
+\end{itemize}
+
+\textbf{True positive}
+\includegraphics*[width=7cm]{tpfp.png}
+\begin{itemize}
+  \item TN + TP = Accuracy 
+  \item $\frac{TP}{TP+FN}$ is sensitivity (actual positives detected)
+  \item $\frac{TN}{TN+FP}$ is specificity (actual negatives detected)
+\end{itemize}
+
+\textbf{Pipelines}
+\begin{itemize}
+  \item Better code reuse 
+\end{itemize}
 
 \subsection*{L8: Streams}
 \textbf{Motivation}
@@ -682,6 +915,197 @@
 
 \textbf{Spark vs Flink}
 \includegraphics*[width=7cm]{spark vs flink.png}
+
+
+\subsection*{L9: Graphs and Page Ranks}
+\textbf{Page Rank Algorithm}
+\includegraphics*[width=7cm]{page_rank.png}
+\begin{itemize}
+  \item Web as a directed graph, with each node as a webpage and each edge as a hyperlink
+  \item Quantify the importance of web pages on the internet
+  \item Use the 'votes' from other webpages to determine the importance of a webpage
+  \item The weight of each vote is determined by the importance of the webpage casting the vote
+  \item \textbf{Voting Formulation}
+  \includegraphics*[width=7cm]{page_rank_formulation.png}
+  \begin{itemize}
+    \item No unique solution
+    \item All solutions are rescalings of each other 
+    \item Additional constraint: $r_y + r_a + r_m = 1$
+    \item Even with the additional constraint, calculating page rank for a large graph is still difficult
+  \end{itemize}
+  \item \textbf{Matrix Formulation}
+  \includegraphics*[width=7cm]{flow eqn.png}
+  \item Suppoe M is i x j, $edge_{j,i}$ is the column j voting for web page i with the weight of the vote being $M_{i,j}$
+\end{itemize}
+
+\textbf{Power Iteration Method}
+\includegraphics*[width=7cm]{power_iteration.png}
+\begin{itemize}
+  \item Stop condition: stop when the 2 iterations differ by a small amount, convergence
+  \item For some convergence or weird topology, it may not converge 
+\end{itemize}
+
+\textbf{Random Walk Formulation}
+\includegraphics*[width=7cm]{random_walk.png}
+\begin{itemize}
+  \item Initially, the surfer has equal probability to go to anywhere on the graph 
+  \item At each step, the sufer updates the probabilities depending on the node he is at 
+  \item Repeat this till convergence
+\end{itemize}
+
+\textbf{Page Rank with teleport}
+\begin{itemize}
+  \item Motivation: page rank may not converge due to:
+  \begin{itemize}
+    \item Dead Ends: The surfer will always stay here, and other nodes will have 0 probability. There is convergence.
+    \item Spider Traps: Cycle. Rankdom walk cannot escape the cycle. No convergence.
+    \item Both will cause leaking out of important values
+  \end{itemize}
+  \item At each time stamp, the surfer can either 
+  \begin{enumerate}
+    \item Follow a link (need to factor in the probability for the link too) with probability $\beta$
+    \item Jump to some random page with probability $1-\beta$
+    \item Common $\beta$ value is 0.8 or 0.9
+  \end{enumerate}
+  \item If we are at spider trap, we will eventually escape 
+  \item Dead end: we will always teleport! 
+  \includegraphics*[width=7cm]{teleport_deadend.png}
+  \item Updated formulation:
+  \includegraphics*[width=7cm]{teleport_deadend.png}
+  \begin{itemize}
+    \item Chances that someone surfs from connected nodes + chances that someone randomly teleports to the node
+  \end{itemize}
+\end{itemize}
+
+
+\textbf{Issues with page rank}
+\begin{itemize}
+  \item Measures generic popularity based on specific topics 
+  \item soln: Topic Specific Page Rank
+  \item Uses a single measure of importance 
+  \item soln: hubs-and-authorities (other models of importance)
+  \item Susceptibe to link spam
+  \item soln: Trust Rank artificial link topologies created to boost page rank
+\end{itemize}
+
+\textbf{Topic Specific Page Rank}
+\includegraphics*[width=7cm]{topic_page_rank.png}
+\begin{itemize}
+  \item Teleport can only go to a relevant subset (teleport set) of pages relevant to the looker's interest 
+  \item S is the set of pages in the relevant set
+  \includegraphics*[width=7cm]{topic_page_rank_eg.png}
+  \item Node 1 has the highest probability since all the nodes in the teleport set points to it
+\end{itemize}
+
+\textbf{Characteristics of Graph Algorithms}
+\begin{itemize}
+  \item Local computation at each vertex 
+  \item Pass message to outdegrees
+  \item Algorithms are implemented from the point of view of a single vertex
+\end{itemize}
+
+\textbf{Pregel: Computation Model}
+\includegraphics*[width=7cm]{compute.png}
+\begin{itemize}
+  \item Computation conssits of supersteps
+  \item In each superstep, the framework invokes user-defined compute() for each vetex in parallel 
+  \item \textbf{Compute()} at vertex v and superstep s
+  \begin{itemize}
+    \item Read message sent to v at s-1
+    \item Send messages to neighbors at s + 1 
+    \item Read or write value of v and teh value of its outgoing edges (or add remove edges)
+  \end{itemize}
+  \item Termination: Computation halts if all vertices are inactive 
+  \item Can be woken up 
+\end{itemize}
+
+\textbf{Pregel: Implementation}
+\includegraphics*[width=7cm]{pregel_impl.png}
+\begin{itemize}
+  \item Master and Worker Architecture
+  \item Vertices are  hash partitioned and assigned to workers (edge cut) 
+  \item Worker maintains its the state of its portion in memory 
+  \item Computation happens in memory
+  \item At every superstep, each worker loops through its vertices and calls compute 
+  \item Messages from vertices can be sent to the same or different worker (buffered locally and sent as a batch to reduce network traffic)
+  \item \textbf{Fault Tolerance} 
+  \begin{itemize}
+    \item Checkpointing to persistent storage 
+    \item Failure detected through heartbeats 
+    \item Corrupt workers are reassigned and reloaded from checkpoints
+  \end{itemize}
+\end{itemize}
+
+\textbf{Pregel: Page Rank}
+\includegraphics*[width=7cm]{pregel_pagerank.png}
+\includegraphics*[width=7cm]{pregel_pagerank2.png}
+
+\textbf{Pregel: Spark}
+\includegraphics*[width=7cm]{spark_pregel.png}
+\includegraphics*[width=7cm]{spark_pregel2.png}
+
+\subsection*{L10: Delta Lake}
+
+\textbf{Data warehouse}
+\begin{itemize}
+  \item Central relational repository of itnegrated, historical data from multiple data sources
+  \item Reliable, high quality, strong ACID guarantees 
+  \item However, expensive to scale out and do not support non-sql based analytics
+\end{itemize}
+
+\textbf{Data lake}
+\includegraphics*[width=7cm]{datalake_choices.png}
+\begin{itemize}
+  \item Distributed, Cost effective central repository to store data at scale
+  \item Support many formats
+  \item Decouples storage and compute systems 
+  \item \textbf{Pros}
+  \begin{itemize}
+    \item Flexibility on choosing storage
+    \item Cheap 
+  \end{itemize}
+\item \textbf{Cons}
+\begin{itemize}
+  \item No ACID guarantees
+  \item Difficult to maintain 
+  \item Easy to ingest data but expensive to transform data to deliver insights 
+  \item Data quality issues 
+\end{itemize}
+\end{itemize}
+
+\textbf{Data lakehouse}
+\includegraphics*[width=7cm]{data_lakehouse.png}
+\begin{itemize}
+  \item Combines data lake and warehouse 
+  \item ACID + low cost + flexibility
+  \item Good for business insights and machine learning 
+\end{itemize}
+
+\textbf{Delta Lake}
+\begin{itemize}
+  \item Metadata, caching, indexing layer on top of a data lake storage 
+  \item Serves:
+  \begin{itemize}
+    \item ACID 
+    \item FULL Data Maniuplation Language (DML) support 
+    \item Audit history 
+    \item Unification of batch and streaming into one processing model
+    \item Schema enforcement and evolution 
+    \item Rich metadat and scaling
+  \end{itemize}
+\end{itemize}
+
+\textbf{Delat Lake Format}
+\includegraphics*[width=7cm]{delta_log.png}
+\includegraphics*[width=7cm]{parquet1.png}
+\includegraphics*[width=7cm]{parquet2.png}
+\begin{itemize}
+  \item Standard parquet file with additional metadata 
+  \item Uses delta log as a single source of truth and enables concurrent read and writes and atomic transactions and commits 
+  \item After 10 JSON files (logs), the logs are check pointed to reduce the number of logs read and support fault tolerence
+\end{itemize}
+
+
 % Misc
 
 \end{multicols}
